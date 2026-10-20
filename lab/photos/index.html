@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BodyTrack</title>
+<meta name="theme-color" content="#0f0e0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BodyTrack">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../../icons/icon-180.png">
+<link rel="icon" href="../../icons/icon-192.png">
+<style>
+:root{
+  --bg:#0f0e0c;--panel:#1a1815;--line:#2e2a24;--fg:#f3efe7;--mute:#a39b8e;--accent:#e9a23b;
+  --good:#5fbf7a;--bad:#e5604f;--r:14px;
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);
+  --sl:env(safe-area-inset-left,0px);--sr:env(safe-area-inset-right,0px);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
+  font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+body{overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+[hidden]{display:none!important}
+.app{min-height:100%;display:flex;flex-direction:column;
+  padding:calc(var(--st) + 12px) max(16px,var(--sr)) calc(var(--sb) + 16px) max(16px,var(--sl))}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+header h1{margin:0;font-size:20px;letter-spacing:.02em}
+header h1 small{display:block;font-size:12px;color:var(--mute);font-weight:500;letter-spacing:.08em}
+.tag{font-size:11px;color:var(--accent);border:1px solid #5a4320;border-radius:99px;padding:3px 9px;white-space:nowrap}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--panel);border-radius:12px;padding:4px;margin-bottom:14px}
+.tabs button{padding:9px 0;border-radius:9px;font-weight:600;color:var(--mute)}
+.tabs button[aria-selected=true]{background:#2b2620;color:var(--fg)}
+.chips{display:flex;gap:6px;margin-bottom:12px}
+.chips button{padding:7px 14px;border-radius:99px;border:1px solid var(--line);color:var(--mute);font-size:14px}
+.chips button[aria-pressed=true]{border-color:var(--accent);color:var(--fg);background:#2a2217}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:12px;font-weight:700;font-size:17px}
+.btn.primary{background:var(--accent);color:#1a1206}
+.btn.ghost{border:1px solid var(--line)}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.muted{color:var(--mute);font-size:14px}
+.empty{text-align:center;padding:28px 10px}
+.empty b{display:block;font-size:17px;margin-bottom:6px}
+/* camera */
+.cam{position:fixed;inset:0;background:#000;z-index:20;display:flex;flex-direction:column}
+.cam .stage{position:relative;flex:1;overflow:hidden}
+.cam video,.cam .ghost{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cam .ghost{opacity:.35;pointer-events:none}
+.cam .mirror{transform:scaleX(-1)}
+.cam .guides{position:absolute;inset:0;pointer-events:none}
+.cam .count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:120px;font-weight:800;text-shadow:0 4px 30px #000}
+.cam .top{position:absolute;top:0;inset-inline:0;display:flex;justify-content:space-between;align-items:center;
+  padding:calc(var(--st) + 10px) max(14px,var(--sr)) 10px max(14px,var(--sl));background:linear-gradient(#000a,#0000)}
+.cam .bar{display:flex;align-items:center;justify-content:space-around;gap:10px;
+  padding:14px max(16px,var(--sr)) calc(var(--sb) + 18px) max(16px,var(--sl));background:#000}
+.pill{white-space:nowrap;padding:8px 13px;border-radius:99px;background:#0008;border:1px solid #fff3;font-size:14px;font-weight:600}
+.pill[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+.shutter{width:76px;height:76px;border-radius:50%;border:4px solid #fff;background:#fff2;flex:none}
+.shutter:active{background:#fff6}
+/* review */
+.sheet{position:fixed;inset:0;z-index:30;background:var(--bg);overflow:auto;
+  padding:calc(var(--st) + 14px) max(16px,var(--sr)) calc(var(--sb) + 16px) max(16px,var(--sl))}
+.frame{position:relative;width:100%;max-width:520px;margin:0 auto;aspect-ratio:3/4;border-radius:var(--r);overflow:hidden;background:#000}
+.frame canvas,.frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.note{border-radius:12px;padding:11px 13px;font-size:14px;margin:12px 0}
+.note.warn{background:#3a1f19;color:#ffc9bf}
+.note.ok{background:#17301f;color:#c8f0d3}
+/* compare */
+.cmp{position:relative;width:100%;max-width:520px;margin:0 auto;aspect-ratio:3/4;border-radius:var(--r);overflow:hidden;background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+.cmp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.cmp .after{clip-path:inset(0 0 0 var(--cut,50%))}
+.cmp .handle{position:absolute;top:0;bottom:0;left:var(--cut,50%);width:2px;background:#fff;box-shadow:0 0 8px #000}
+.cmp .handle::after{content:"";position:absolute;top:50%;left:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:#fff;box-shadow:0 2px 10px #0008}
+.cmp .lbl{position:absolute;bottom:10px;padding:4px 9px;border-radius:8px;background:#000a;font-size:13px;font-weight:600}
+.side{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.side figure{margin:0;position:relative;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:#000}
+.side img{width:100%;height:100%;object-fit:cover}
+.side figcaption{position:absolute;bottom:6px;inset-inline:6px;font-size:12px;font-weight:600;text-align:center;background:#000a;border-radius:6px;padding:2px}
+select{width:100%;padding:11px;border-radius:10px;background:var(--panel);color:var(--fg);border:1px solid var(--line);font:inherit}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.grid button{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:#000;padding:0}
+.grid img{width:100%;height:100%;object-fit:cover}
+.grid span{position:absolute;bottom:4px;inset-inline:4px;font-size:11px;background:#000a;border-radius:5px;text-align:center}
+.toast{position:fixed;inset-inline:16px;bottom:calc(var(--sb) + 16px);z-index:50;background:#2b2620;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 10px 30px #0008}
+.toast button{color:var(--accent);font-weight:700}
+.stack{display:flex;flex-direction:column;gap:12px}
+.spin{display:inline-block;width:18px;height:18px;border-radius:50%;border:2px solid #fff4;border-top-color:#fff;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(1turn)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>BodyTrack<small>תמונות התקדמות · אב-טיפוס</small></h1>
+    <span class="tag" id="storeTag">נשמר רק במכשיר</span>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="shoot">צילום</button>
+    <button role="tab" aria-selected="false" data-tab="compare">השוואה</button>
+  </div>
+
+  <div class="chips" id="angles">
+    <button aria-pressed="true" data-angle="front">חזית</button>
+    <button aria-pressed="false" data-angle="side">צד</button>
+    <button aria-pressed="false" data-angle="back">גב</button>
+  </div>
+
+  <!-- SHOOT TAB -->
+  <section id="tab-shoot" class="stack">
+    <div class="card stack">
+      <div class="frame" id="lastFrame" hidden><img id="lastImg" alt="התמונה האחרונה בזווית הזאת"></div>
+      <div class="empty" id="shootEmpty"><b>עוד אין תמונה בזווית הזאת</b><span class="muted">התמונה הראשונה תהיה נקודת הייחוס לכל ההשוואות.</span></div>
+      <div class="muted" id="lastMeta"></div>
+    </div>
+    <button class="btn primary" id="openCam">צילום חדש</button>
+    <label class="btn ghost" for="filePick">ייבוא מהגלריה</label>
+    <input type="file" id="filePick" accept="image/*" hidden>
+    <p class="muted" id="modelState">מודל זיהוי הגוף נטען בפעם הראשונה ואז עובד גם בלי אינטרנט.</p>
+  </section>
+
+  <!-- COMPARE TAB -->
+  <section id="tab-compare" class="stack" hidden>
+    <div class="empty card" id="cmpEmpty"><b>צריך לפחות שתי תמונות</b><span class="muted">אחרי הצילום השני בזווית הזאת תוכל להשוות.</span></div>
+    <div id="cmpBody" class="stack" hidden>
+      <div class="chips" id="modes">
+        <button aria-pressed="true" data-mode="slider">מחוון</button>
+        <button aria-pressed="false" data-mode="side">זה לצד זה</button>
+        <button aria-pressed="false" data-mode="play">טיימלפס</button>
+      </div>
+      <div class="row"><select id="selA" aria-label="תמונה ראשונה"></select><select id="selB" aria-label="תמונה שנייה"></select></div>
+      <div class="cmp" id="slider">
+        <img id="imgB" alt=""><img id="imgA" class="after" alt="">
+        <div class="handle"></div>
+        <span class="lbl" id="lblA" style="right:10px"></span><span class="lbl" id="lblB" style="left:10px"></span>
+      </div>
+      <div class="side" id="side" hidden>
+        <figure><img id="sideA" alt=""><figcaption id="capA"></figcaption></figure>
+        <figure><img id="sideB" alt=""><figcaption id="capB"></figcaption></figure>
+      </div>
+      <div id="play" hidden class="stack">
+        <div class="frame"><img id="playImg" alt="טיימלפס"><span class="lbl" id="playLbl" style="position:absolute;bottom:10px;right:10px;padding:4px 9px;border-radius:8px;background:#000a;font-size:13px;font-weight:600"></span></div>
+        <button class="btn ghost" id="playBtn">הפעלה</button>
+      </div>
+      <div>
+        <p class="muted" style="margin:6px 0">כל התמונות בזווית הזאת</p>
+        <div class="grid" id="grid"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- CAMERA -->
+<div class="cam" id="cam" hidden>
+  <div class="stage">
+    <video id="video" playsinline muted autoplay></video>
+    <img class="ghost" id="ghost" alt="" hidden>
+    <svg class="guides" id="guides" viewBox="0 0 100 100" preserveAspectRatio="none" hidden></svg>
+    <div class="count" id="count" hidden></div>
+    <div class="top">
+      <button class="pill" id="camClose">סגירה</button>
+      <div class="row" style="flex:none;gap:6px">
+        <button class="pill" id="ghostBtn" aria-pressed="true">רוח</button>
+        <button class="pill" id="timerBtn">טיימר 5</button>
+      </div>
+    </div>
+  </div>
+  <div class="bar">
+    <button class="pill" id="flipBtn">החלפת מצלמה</button>
+    <button class="shutter" id="shutter" aria-label="צילום"></button>
+    <span class="pill" style="visibility:hidden">החלפת מצלמה</span>
+  </div>
+</div>
+
+<!-- REVIEW SHEET -->
+<div class="sheet" id="review" hidden>
+  <h2 style="margin:0 0 12px;font-size:19px">התמונה אחרי יישור</h2>
+  <div class="frame"><canvas id="outCanvas"></canvas></div>
+  <div id="reviewNote"></div>
+  <div class="stack">
+    <button class="btn primary" id="keepBtn">שמירה</button>
+    <button class="btn ghost" id="retakeBtn">צילום מחדש</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden><span id="toastMsg"></span><button id="toastAct"></button></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -356,5 +356,5 @@ function askDelete(p) {
 // ---------- boot ----------
 updateModelState();
 render();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) void 0.catch(() => {});
 window.__bt = { processPhoto, photosFor, putPhoto, allPhotos }; // test hook
