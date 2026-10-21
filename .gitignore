@@ -1,0 +1,8 @@
+node_modules/
+test-results/
+playwright-report/
+*.png.tmp
+screenshots/
+bodytrack-backup-*.json
+bodytrack-import*.json
+.DS_Store

@@ -40,7 +40,7 @@ All data is stored only on the phone. Hebrew, RTL.
 Reference: `docs/design/swiss-verdict.html`, `docs/design/swiss-analytics.html` (sample data).
 - **Feel:** a lab report. Black rules, numbered figures and tables ("איור 1", "טבלה 1"), lots of order, no decoration.
 - **Colors:** background `#F7F7F5`, ink `#111`, muted `#5E5E5A`, hairline `#D2D2CC`, good `#13703F`, bad `#B3261E`.
-- **Type:** Heebo (400/500/700/800/900), tabular digits. Hero rate 118px/800. Minimum 12px everywhere, including charts.
+- **Type:** Heebo (400/500/700/800/900), self-hosted under `fonts/` (no Google Fonts link in the app), tabular digits. Hero rate 118px/800. Minimum 12px everywhere, including charts.
 - **Components:** heading with a 3px rule; verdict word + hero number; centre-zero LTR scale −1..+1 with the ±0.2 band; 3-cell grid with hairline dividers; figure with range control; ruled table; dark full-width button.
 - **Charts:** honest. Axes labeled, same scale, SVG drawn at its real width (no shrinking text below 12px).
 - Open: a dark mode for the same language (not designed yet).
@@ -51,7 +51,7 @@ Reference: `docs/design/swiss-verdict.html`, `docs/design/swiss-analytics.html` 
 - Service worker network-first, version-numbered cache.
 - Backup: JSON via the share sheet to Files/iCloud; reminder after 30 days. Restore: merge or replace, validated before writing.
 - Records: weigh-ins, measurements, check-ins, goals, settings (meta).
-- Measurement sites (`js/model.js`): מותניים (טבור), מותן, ישבן, חזה, כתפיים, יד קדמית רפוי/לא רפוי, ירך, שוק, צוואר, שורש כף יד.
+- Measurement sites (`js/model.js`): מותניים (טבור), מותן, ישבן, חזה, כתפיים, יד קדמית רפוי/לא רפוי, ירך, שוק, צוואר, פרק כף יד.
 
 ## 6. How we work (permanent rules)
 1. Each new phase opens with a **tool scout** (skills/plugins/connectors), with a safety, users and cost check.
@@ -63,9 +63,31 @@ Reference: `docs/design/swiss-verdict.html`, `docs/design/swiss-analytics.html` 
 7. External tools (Stitch etc.) get sample data only.
 8. Commits as `Rizi-cmd@users.noreply.github.com`.
 
+## 6a. The team (`.claude/agents/`)
+| Agent | Role | Model |
+|---|---|---|
+| ui-designer | Screen/component spec, mockups under docs/design/ (sample data) | Opus |
+| frontend-dev | Builds screens in plain JS, owns the Playwright smoke test (WebKit, 440x956) | Sonnet |
+| data-engineer | Schema, migrations, backup/restore, pure functions + node:test | Sonnet |
+| fitness-analyst | Exact metric definitions; verify mode checks the code against them | Opus |
+| design-critic | The review gate: design, UI QA, code review. Read-only | Opus |
+| privacy-guardian | Before every commit/push and any new tool or network call. Read-only | Sonnet |
+| hebrew-writer | All Hebrew the owner reads, everyday speech. Read-only | Opus |
+
+Routing (agents can't call each other; the main agent routes and is the only one that edits this file):
+- Design → ui-designer → hebrew-writer → design-critic → owner.
+- Code → frontend-dev / data-engineer → design-critic → privacy-guardian → commit.
+- Metrics → fitness-analyst (define) → data-engineer (build + tests) → fresh fitness-analyst (verify) → design-critic.
+- Phase 1 first task: QA setup (`tests/`, invented fixture, WebKit smoke test).
+
+## 6b. Open items
+- Goal direction: PROJECT.md says derived from the phase; `js/model.js` hard-codes it per site. fitness-analyst defines, data-engineer migrates.
+- `lab/photos` loads outside scripts (jsDelivr, Google) on the same address as the app. Low risk (the home-screen app's storage is separate from Safari), but to be resolved.
+
 ## 7. Decisions log
 - 20.10 PWA instead of a Claude page. Pixel world and pets cancelled. Weekly check-in.
 - 20.10 No voice line on the verdict screen. Analytics screen added to phase 1.
 - 21.10 Stitch produced 6 directions → after two rounds of expert review, **Swiss Lab** was chosen.
 - 21.10 Import file rebuilt from the notes (screenshots), checked by an independent reviewer and loaded locally without errors. Data rule: a label that doesn't match a site → map to the site with the closest values; if unclear, drop it.
 - 21.10 Phase 0 closed: app installed on the iPhone from the home screen, historical data restored, first backup in iCloud Drive. Security check passed (only the owner's commits, no outside network calls in the app, live site matches the repo).
+- 21.10 Agent team created (7 agents), reviewed independently and fixed. Heebo will be self-hosted. Wrist site name = "פרק כף יד" (as in the source notes).
