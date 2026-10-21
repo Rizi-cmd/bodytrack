@@ -111,6 +111,11 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await page.locator('[data-range="quarter"]').click();
 
   // Circumferences tab shows the newest full set (waist 84 - 4.5 = 79.5).
+  await expect(page.locator('#histSec')).not.toHaveAttribute('open', '');   // closed by default
+  await expect(page.locator('#circSec')).not.toHaveAttribute('open', '');
+  await page.locator('#circSec summary').click();
+  await expect(page.locator('#circTable')).toBeVisible();
+  await page.locator('#histSec summary').click();
   await page.locator('[data-list="m"]').click();
   await expect(page.locator('#listM .mday')).toHaveCount(5);
   await expect(page.locator('#listM .mday').first()).toContainText('79.5');

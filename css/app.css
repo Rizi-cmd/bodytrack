@@ -23,6 +23,13 @@ h2{margin:0 0 8px;font-size:15px;font-weight:800}
 .sec{border-bottom:1px solid var(--rule);padding:14px 0}
 .stack{display:flex;flex-direction:column;gap:10px}
 .stack h2{margin:0}
+/* fold-away tables: closed by default, tap the title to open */
+.fold>summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary h2{margin:0}
+.fold>summary::after{content:"פתיחה ▾";font-size:12px;color:var(--mute);font-weight:500;white-space:nowrap}
+.fold[open]>summary::after{content:"סגירה ▴"}
+.fold[open]>summary{margin-bottom:8px}
 
 /* verdict */
 .verdict{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px}

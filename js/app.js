@@ -8,7 +8,7 @@ import {
   PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, changeView, footnotes, circRows, scaleGeometry, weightChart, fmtDay, fmtFull
 } from './report.js';
 
-export const VERSION = '0.2.2';
+export const VERSION = '0.2.3';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';

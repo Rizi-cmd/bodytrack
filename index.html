@@ -56,22 +56,22 @@
   </section>
 
   <!-- Table 1: circumferences -->
-  <section class="sec" id="circSec">
-    <h2 id="circTitle">טבלה 1 · היקפים</h2>
+  <details class="sec fold" id="circSec">
+    <summary><h2 id="circTitle">טבלה 1 · היקפים</h2></summary>
     <table id="circTable"></table>
     <p class="empty" id="circEmpty" hidden>אין עדיין מדידות היקף.</p>
-  </section>
+  </details>
 
   <!-- History -->
-  <section class="sec">
-    <h2>טבלה 2 · היסטוריה</h2>
+  <details class="sec fold" id="histSec">
+    <summary><h2>טבלה 2 · היסטוריה</h2></summary>
     <div class="seg wide" role="tablist">
       <button role="tab" aria-selected="true" data-list="w">שקילות</button>
       <button role="tab" aria-selected="false" data-list="m">היקפים</button>
     </div>
     <div class="list" id="listW"></div>
     <div class="list" id="listM" hidden></div>
-  </section>
+  </details>
 
   <!-- Backup -->
   <section class="sec stack">
