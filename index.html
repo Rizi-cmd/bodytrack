@@ -27,7 +27,7 @@
   <section class="sec" id="verdictSec">
     <div class="verdict">
       <span class="vword" id="vWord"></span>
-      <span class="lab" id="vLabel"></span>
+      <span class="vside"><span class="lab" id="vLabel"></span><button class="chip" id="phaseBtn" aria-haspopup="dialog"></button></span>
     </div>
     <div class="hero"><span class="big n" dir="ltr" id="rate"></span><span class="unit">ק״ג בשבוע</span></div>
     <div class="scale" id="scale"></div>
@@ -62,17 +62,6 @@
     <p class="empty" id="circEmpty" hidden>אין עדיין מדידות היקף.</p>
   </section>
 
-  <!-- Phase -->
-  <section class="sec">
-    <h2>שלב</h2>
-    <div class="seg wide" role="group" aria-label="שלב" id="phaseSeg">
-      <button data-phase="cut" aria-pressed="false">חיטוב</button>
-      <button data-phase="bulk" aria-pressed="false">מסה</button>
-      <button data-phase="maintenance" aria-pressed="false">תחזוקה</button>
-    </div>
-    <p class="lab" id="phaseInfo"></p>
-  </section>
-
   <!-- History -->
   <section class="sec">
     <h2>טבלה 2 · היסטוריה</h2>
@@ -105,6 +94,24 @@
     <button class="btn" id="impMerge">הוספה לנתונים הקיימים</button>
     <button class="btn danger" id="impReplace">החלפת כל הנתונים במכשיר</button>
     <button class="btn ghost" id="impCancel">ביטול</button>
+  </div>
+</div>
+
+<!-- phase sheet -->
+<div class="sheet" id="phaseSheet" hidden>
+  <div class="sheetBox stack" role="dialog" aria-label="שלב">
+    <h2>שלב</h2>
+    <div class="seg wide" role="group" aria-label="שלב">
+      <button data-phase="cut" aria-pressed="false">חיטוב</button>
+      <button data-phase="bulk" aria-pressed="false">מסה</button>
+      <button data-phase="maintenance" aria-pressed="false">תחזוקה</button>
+    </div>
+    <p class="lab" id="phaseInfo"></p>
+    <label class="lab" for="targetKg">משקל יעד בק״ג (לא חובה)</label>
+    <input class="field n" id="targetKg" inputmode="decimal" dir="ltr" autocomplete="off">
+    <p class="lab bad" id="targetErr" hidden>משקל יעד בין 30 ל־300 ק״ג, למשל 78.5</p>
+    <button class="btn" id="phaseSave">שמירה</button>
+    <button class="btn ghost" id="phaseCancel">ביטול</button>
   </div>
 </div>
 

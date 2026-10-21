@@ -69,7 +69,7 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
     await expect(page.locator('#vWord')).toHaveText('↓ יורד');
     await expect(page.locator('#vWord')).toHaveClass(/good/);
     await expect(page.locator('#vLabel')).toHaveText('לכיוון היעד');
-    await expect(page.locator('#meta')).toContainText('חיטוב');
+    await expect(page.locator('#phaseBtn')).toHaveText('חיטוב ▾');
     await expect(page.locator('#mcBox')).toHaveClass(/good/);
   };
 
@@ -93,8 +93,19 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect(page.locator('#vLabel')).toHaveText('לא נבחר שלב');
   await expect(page.locator('#vWord')).toHaveClass(/ink/);
   // Pick "cut": green toward the goal.
+  await expect(page.locator('#phaseBtn')).toHaveText('בחירת שלב ▾');
+  await page.locator('#phaseBtn').click();
   await page.locator('[data-phase="cut"]').click();
+  await page.locator('#targetKg').fill('abc');
+  await page.locator('#phaseSave').click();
+  await expect(page.locator('#targetErr')).toBeVisible();          // bad target is not saved
+  await page.locator('#targetKg').fill('78,5');
+  await page.locator('#phaseSave').click();
+  await expect(page.locator('#phaseSheet')).toBeHidden();
   await expectCut();
+  await page.locator('#phaseBtn').click();
+  await expect(page.locator('#targetKg')).toHaveValue('78.5');
+  await page.locator('#phaseCancel').click();
   await page.locator('[data-range="all"]').click();
   await expect(page.locator('#chart svg circle')).toHaveCount(16);
   await page.locator('[data-range="quarter"]').click();

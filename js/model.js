@@ -11,7 +11,7 @@ export const SITES = [
   { id: 'chest',       he: 'חזה',            goal: 'up' },
   { id: 'shoulders',   he: 'כתפיים',         goal: 'up' },
   { id: 'arm_relaxed', he: 'יד קדמית רפוי', goal: 'up' },
-  { id: 'arm_flexed',  he: 'יד קדמית לא רפוי', goal: 'up' },
+  { id: 'arm_flexed',  he: 'יד קדמית מכווצת', goal: 'up' },
   { id: 'thigh',       he: 'ירך',            goal: 'up' },
   { id: 'calf',        he: 'שוק',            goal: 'up' },
   { id: 'neck',        he: 'צוואר',          goal: 'none' },

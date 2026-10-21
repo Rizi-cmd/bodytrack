@@ -11,17 +11,39 @@ export const PHASES = [
 export const PHASE_HE = Object.fromEntries(PHASES.map(p => [p.id, p.he]));
 // A stored phase record the app can trust (restore and render both use this).
 export const isPhaseRecord = r => !!r && typeof r === 'object' && r.type === 'phase' && !r.deleted &&
-  Object.prototype.hasOwnProperty.call(PHASE_HE, r.phase) && isISODate(r.from);
+  Object.prototype.hasOwnProperty.call(PHASE_HE, r.phase) && isISODate(r.from) &&
+  (r.targetKg === undefined || r.targetKg === null || okTarget(r.targetKg));
+const okTarget = v => typeof v === 'number' && Number.isFinite(v) && v >= 30 && v <= 300;
+
+// Target weight typed by the owner: '' → null (no target), '82,5' → 82.5, anything else → NaN (rejected).
+export function parseTarget(text) {
+  const t = String(text ?? '').trim().replace(',', '.');
+  if (t === '') return null;
+  if (!/^\d{2,3}(\.\d{1,2})?$/.test(t)) return NaN;
+  const v = +t;
+  return okTarget(v) ? v : NaN;
+}
+
+// The phase record in force on a date (latest `from` on/before it; same date → later in the list).
+export function activePhase(records, date) {
+  let cur = null;
+  for (const r of (records || []).filter(isPhaseRecord).sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0)))
+    if (r.from <= date) cur = r;
+  return cur;
+}
 
 // Phase pick → the record to write. Rules: the very first pick covers all history (from = first weigh-in);
 // re-picking while only that first record exists replaces it; a later pick starts today, and picking again
 // on the same day replaces that day's record (so a mis-tap leaves no trace).
-export function phasePick(records, phase, today, firstWeighin, at) {
+// Same phase as now → only the target weight changes on the current record.
+export function phasePick(records, phase, today, firstWeighin, at, targetKg = null) {
   const recs = (records || []).filter(isPhaseRecord);
-  if (recs.length === 1 && recs[0].first) return { ...recs[0], phase, at };
-  if (!recs.length) return { id: `phase-${at}`, type: 'phase', from: firstWeighin && firstWeighin < today ? firstWeighin : today, phase, at, first: true };
+  const active = activePhase(recs, today);
+  if (active && active.phase === phase) return { ...active, targetKg, at };
+  if (recs.length === 1 && recs[0].first) return { ...recs[0], phase, targetKg, at };
+  if (!recs.length) return { id: `phase-${at}`, type: 'phase', from: firstWeighin && firstWeighin < today ? firstWeighin : today, phase, targetKg, at, first: true };
   const same = recs.find(r => r.from === today && !r.first);
-  return same ? { ...same, phase, at } : { id: `phase-${at}`, type: 'phase', from: today, phase, at };
+  return same ? { ...same, phase, targetKg, at } : { id: `phase-${at}`, type: 'phase', from: today, phase, targetKg, at };
 }
 export const TAG_HE = { sick: 'מחלה', vacation: 'חופשה', event: 'אירוע' };
 export const MIN_WEIGHINS = 5; // spec §3: 2 average points = 3 + 2 weigh-ins

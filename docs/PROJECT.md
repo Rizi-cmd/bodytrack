@@ -51,7 +51,7 @@ Reference: `docs/design/swiss-verdict.html`, `docs/design/swiss-analytics.html` 
 - Service worker network-first, version-numbered cache.
 - Backup: JSON via the share sheet to Files/iCloud; reminder after 30 days. Restore: merge or replace, validated before writing.
 - Records: weigh-ins, measurements, check-ins, goals, settings (meta).
-- Measurement sites (`js/model.js`): מותניים (טבור), מותן, ישבן, חזה, כתפיים, יד קדמית רפוי/לא רפוי, ירך, שוק, צוואר, פרק כף יד.
+- Measurement sites (`js/model.js`): מותניים (טבור), מותן, ישבן, חזה, כתפיים, יד קדמית רפוי/מכווצת, ירך, שוק, צוואר, פרק כף יד.
 
 ## 6. How we work (permanent rules)
 1. **Tool scout** only when the owner asks, or when a phase clearly needs a capability we don't have. Not automatically at every phase.
@@ -89,7 +89,6 @@ Rule of thumb: no agent is launched twice for the same thing in one block; a re-
 ## 6b. Open items
 - Restore count can overstate when two weigh-ins share a date without ids (pre-existing, low impact).
 - Heebo not self-hosted yet (font downloads blocked in the work environment); app uses the system font. Mockups in `docs/design/` still link Google Fonts.
-- Owner to decide: site name "יד קדמית לא רפוי" vs "יד קדמית מכווצת" (hebrew-writer suggestion).
 - `package-lock.json` is missing (npm is blocked in the work environment); `@playwright/test` is pinned to 1.56.0. Create a lockfile and switch CI to `npm ci` when possible.
 - Goal direction: PROJECT.md says derived from the phase; `js/model.js` hard-codes it per site. fitness-analyst defines, data-engineer migrates.
 - `lab/photos` loads outside scripts (jsDelivr, Google) on the same address as the app. Low risk (the home-screen app's storage is separate from Safari), but to be resolved.
@@ -108,5 +107,6 @@ Rule of thumb: no agent is launched twice for the same thing in one block; a re-
 - 21.10 Review by size adopted (owner): not every change goes through every agent; basic privacy check moved into CI. No manager agent.
 - 21.10 Trend engine built: `js/trend.js` (pure functions) + `tests/trend.test.js` (all spec vectors V1–V9 and VF, edge cases; 42 tests pass). fitness-analyst verify: pass, V8 confirmed; 2 nits fixed (phase change flag ignores cut→cut; same-date phase records: later wins) and 2 coverage tests added. Open choices settled: `windowDates` = all weigh-ins feeding the rate (after a gap it can reach back more than 28 days, so the UI footnote must not say "last 4 weeks"); phase input = string or list of {from, phase}; `gap_reset` never produced.
 - 21.10 Verdict screen 0.2.0 (Swiss Lab) is now the home screen: verdict word + arrow, rate, −1..+1 scale with stuck band, avg / change vs month / last weigh-in, weight chart (month / 3 months / all), circumference table vs previous measurement (neutral ink), footnotes (provisional rate, phase changed, tagged weigh-in), phase picker, history, backup. All text and numbers from `js/report.js` + `js/trend.js` (58 tests). Reviewed by design-critic (7 fixes applied: phase picker undo, phase records validated on restore, circumference dates, off-scale cue, header shows today, hero fits 375pt, LTR date) and hebrew-writer (fixes applied). Phase rules: first pick covers all history; re-picking while only the first exists replaces it; later picks start today and same-day picks replace each other. Not done: Heebo self-hosting (downloads blocked in the work environment; iPhone system font used). The "סיום" button waits for the check-in screen.
+- 21.10 Owner: phase choice moved next to the verdict ("לכיוון היעד" + phase button → sheet), phase removed from the header. Optional target weight per phase (`targetKg`, 30–300, for the goal projection on the analytics screen); same phase + new target only updates the current record. Site renamed "יד קדמית מכווצת" (id unchanged, data untouched). Next: check-in screen. Version 0.2.1.
 - 21.10 Weekly check-in reminder set in iPhone Reminders: every Saturday 11:00, with a link to the app. The in-app reminder idea is no longer needed.
 - 21.10 Simpler way of working (owner): no automatic tool scout or reviewer agent per phase/proposal; main agent works and self-reviews by default, agents only per "Review by size". Data rule replaced: unclear label → map only if reliable, otherwise keep the source and report (no silent drops).

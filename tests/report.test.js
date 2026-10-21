@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { trendSummary, day } from '../js/trend.js';
 import {
-  verdictText, tooEarlyReason, phasePick, isPhaseRecord, circCaption, changeView, footnotes, circRows, scaleGeometry, yTicks, weightChart, fmtDay
+  verdictText, tooEarlyReason, phasePick, isPhaseRecord, circCaption, parseTarget, activePhase, changeView, footnotes, circRows, scaleGeometry, yTicks, weightChart, fmtDay
 } from '../js/report.js';
 
 const M = '−';
@@ -128,7 +128,7 @@ test('phasePick: first pick covers history; re-pick replaces; same-day picks rep
   const b = phasePick([a], 'bulk', '2026-02-02', '2026-01-03', 2);   // fix a wrong first pick
   assert.equal(b.id, a.id); assert.equal(b.phase, 'bulk'); assert.equal(b.from, '2026-01-03');
   const recs = [a, { id: 'phase-9', type: 'phase', from: '2026-01-20', phase: 'bulk' }];
-  const c = phasePick(recs, 'bulk', '2026-02-02', '2026-01-03', 3);
+  const c = phasePick(recs, 'maintenance', '2026-02-02', '2026-01-03', 3);
   assert.equal(c.from, '2026-02-02'); assert.notEqual(c.id, a.id);
   const d = phasePick([...recs, c], 'cut', '2026-02-02', '2026-01-03', 4); // second tap the same day
   assert.equal(d.id, c.id); assert.equal(d.phase, 'cut');
@@ -172,4 +172,17 @@ test('circCaption: one date pair, or per-row dates when sites differ', () => {
     { date: '2026-01-01', site: 'neck', cm: 40 }, { date: '2026-01-08', site: 'neck', cm: 40 }
   ]));
   assert.deepEqual(same, { date: '8.1', prev: '1.1', perRow: false });
+});
+
+test('target weight: parse, validate, and same-phase save only changes the target', () => {
+  assert.equal(parseTarget(''), null); assert.equal(parseTarget('  '), null);
+  assert.equal(parseTarget('78,5'), 78.5); assert.equal(parseTarget('82'), 82);
+  for (const t of ['abc', '7', '301', '78.555', '-80', '1e2']) assert.ok(Number.isNaN(parseTarget(t)), t);
+  const a = phasePick([], 'cut', '2026-02-02', '2026-01-03', 1, 78);
+  assert.equal(a.targetKg, 78); assert.equal(isPhaseRecord(a), true);
+  const b = phasePick([a], 'cut', '2026-02-02', '2026-01-03', 2, 77.5);
+  assert.equal(b.id, a.id); assert.equal(b.from, '2026-01-03'); assert.equal(b.targetKg, 77.5);
+  assert.equal(isPhaseRecord({ ...a, targetKg: 'x' }), false);
+  assert.equal(activePhase([a], '2026-01-01'), null);
+  assert.equal(activePhase([a], '2026-02-02').id, a.id);
 });

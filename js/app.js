@@ -5,10 +5,10 @@ import { getAll, put, getMeta, requestPersistence } from './db.js';
 import { validate, restore, shareBackup } from './backup.js';
 import { trendSummary, fmtRate, fmtWeight, EMPTY } from './trend.js';
 import {
-  PHASE_HE, isPhaseRecord, phasePick, circCaption, verdictText, changeView, footnotes, circRows, scaleGeometry, weightChart, fmtDay, fmtFull
+  PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, changeView, footnotes, circRows, scaleGeometry, weightChart, fmtDay, fmtFull
 } from './report.js';
 
-export const VERSION = '0.2.0';
+export const VERSION = '0.2.1';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -87,7 +87,8 @@ function renderVerdict(W, M, C) {
   const n = s.series.length;
   const v = verdictText(s, n);
 
-  $('#meta').textContent = `היום ${fmtFull(todayISO())} · ${s.phase ? PHASE_HE[s.phase] : 'בלי שלב'}`;
+  $('#meta').textContent = `היום ${fmtFull(todayISO())}`;
+  $('#phaseBtn').textContent = s.phase ? `${PHASE_HE[s.phase]} ▾` : 'בחירת שלב ▾';
   const vw = $('#vWord'); vw.className = 'vword ' + v.tone;
   vw.textContent = (v.arrow ? v.arrow + ' ' : '') + v.word;
   $('#vLabel').textContent = v.label;
@@ -135,9 +136,6 @@ function renderVerdict(W, M, C) {
     tr.append(num, dl); tb.append(tr);
   }
 
-  document.querySelectorAll('[data-phase]').forEach(b => b.setAttribute('aria-pressed', b.dataset.phase === s.phase));
-  const cur = state.phases.filter(p => p.phase === s.phase).map(p => p.from).sort().pop();
-  $('#phaseInfo').textContent = s.phase ? `מאז ${fmtFull(cur)}` : 'בלי שלב אין יעד להשוואה. בחר שלב.';
 }
 
 async function render() {
@@ -180,16 +178,30 @@ async function render() {
 
 document.querySelectorAll('[data-range]').forEach(b => b.onclick = () => { state.range = b.dataset.range; drawChart(); });
 
-// Phase: the first pick applies to all history; a later change starts today.
-document.querySelectorAll('[data-phase]').forEach(b => b.onclick = async () => {
-  const phase = b.dataset.phase;
-  if (state.summary && state.summary.phase === phase) return;
+// Phase sheet: pick a phase (first pick covers all history, later ones start today) and an optional target weight.
+let picked = null;
+const markPicked = () => document.querySelectorAll('[data-phase]').forEach(b => b.setAttribute('aria-pressed', b.dataset.phase === picked));
+$('#phaseBtn').onclick = () => {
+  const act = activePhase(state.phases, todayISO());
+  picked = act ? act.phase : null; markPicked();
+  $('#phaseInfo').textContent = act ? `מאז ${fmtFull(act.from)}` : 'בלי שלב אין יעד להשוואה.';
+  $('#targetKg').value = act && act.targetKg != null ? String(act.targetKg) : '';
+  $('#targetErr').hidden = true;
+  $('#phaseSheet').hidden = false;
+};
+document.querySelectorAll('[data-phase]').forEach(b => b.onclick = () => { picked = b.dataset.phase; markPicked(); });
+$('#phaseCancel').onclick = () => { $('#phaseSheet').hidden = true; };
+$('#phaseSave').onclick = async () => {
+  if (!picked) { $('#phaseSheet').hidden = true; return; }
+  const target = parseTarget($('#targetKg').value);
+  if (Number.isNaN(target)) { $('#targetErr').hidden = false; return; }
   const firstW = state.summary && state.summary.series.length ? state.summary.series[0].date : null;
   try {
-    await put('goals', phasePick(state.phases, phase, todayISO(), firstW, Date.now()));
+    await put('goals', phasePick(state.phases, picked, todayISO(), firstW, Date.now(), target));
+    $('#phaseSheet').hidden = true;
     await render();
   } catch { toast('לא הצלחתי לשמור את השלב.'); }
-});
+};
 
 let rz;
 addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (state.summary) { drawScale(state.summary.rate); drawChart(); } }, 150); });
