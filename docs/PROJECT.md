@@ -24,7 +24,7 @@ All data is stored only on the phone. Hebrew, RTL.
 ## 3. Phases
 | Phase | Contents | Status |
 |---|---|---|
-| 0. Foundations | Installed shell, offline, versioned data layer (IndexedDB), backup/restore to a file, import of historical data | **Code done.** Remaining: enable GitHub Pages, install on iPhone, restore from `bodytrack-import.json`, first backup |
+| 0. Foundations | Installed shell, offline, versioned data layer (IndexedDB), backup/restore to a file, import of historical data | **Code done.** Remaining: enable GitHub Pages, install on iPhone, restore from `bodytrack-import.json` (rebuilt 21.10, validated), first backup |
 | 1. Weekly loop | Design system (Swiss Lab), check-in, trend engine, verdict screen, analytics screen, goals and directions, history with edit/delete/undo | **Next** |
 | 2. Voice | Coaching voice line (if at all, not on the verdict screen) | Deferred |
 | 3. Photos | Camera with ghost overlay, alignment, comparison, backup to gallery | Parked |
@@ -67,3 +67,4 @@ Reference: `docs/design/swiss-verdict.html`, `docs/design/swiss-analytics.html` 
 - 20.10 PWA instead of a Claude page. Pixel world and pets cancelled. Weekly check-in.
 - 20.10 No voice line on the verdict screen. Analytics screen added to phase 1.
 - 21.10 Stitch produced 6 directions → after two rounds of expert review, **Swiss Lab** was chosen.
+- 21.10 Import file rebuilt from the notes (screenshots), checked by an independent reviewer and loaded locally without errors. Data rule: a label that doesn't match a site → map to the site with the closest values; if unclear, drop it.
