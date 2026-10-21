@@ -7,7 +7,7 @@ export default defineConfig({
   timeout: 60_000,
   fullyParallel: false,
   workers: 1,
-  reporter: 'list',
+  reporter: process.env.CI ? [['github'], ['list']] : 'list', // github = failures as annotations
   outputDir: 'test-results', // git-ignored
   use: {
     // WebKit is the engine that matters (iPhone Safari). BT_BROWSER=chromium is only a fallback
