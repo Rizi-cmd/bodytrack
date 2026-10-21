@@ -19,7 +19,7 @@ All data is stored only on the phone. Hebrew, RTL.
 - **Numbers:** always LTR with the sign on the left (−0.30, +1.0), real minus sign U+2212.
 - **Goal direction:** per metric (weight, and each circumference site), derived from the phase (cut/bulk/maintenance).
 - **Verdict screen:** numbers and trend only, no voice line.
-- **Photos:** stored only on the phone; on-device alignment. Parked until phase 3 (prototype in `lab/photos`).
+- **Photos:** stored only on the phone. No ghost overlay: the owner takes the photo, then the app edits it automatically (see phase 3 spec). Prototype in `lab/photos`.
 
 ## 3. Phases
 | Phase | Contents | Status |
@@ -27,8 +27,15 @@ All data is stored only on the phone. Hebrew, RTL.
 | 0. Foundations | Installed shell, offline, versioned data layer (IndexedDB), backup/restore to a file, import of historical data | **Done** (21.10: installed on iPhone, data restored, first backup saved) |
 | 1. Weekly loop | Design system (Swiss Lab), check-in, trend engine, verdict screen, analytics screen, goals and directions, history with edit/delete/undo | **In progress** (QA setup + 2 bug fixes done 21.10; trend engine built and verified 21.10; verdict screen built 21.10; check-in + quick weigh-in built 21.10; history fix/delete/undo built 21.10; analytics spec approved 21.10; analytics calculations built and verified 21.10; analytics screen built 21.10; Heebo self-hosted 21.10. Owner approved the analytics screen. Dark mode deferred by the owner. Closed once the owner sees the new font on the iPhone) |
 | 2. Voice | Coaching voice line (if at all, not on the verdict screen) | Deferred |
-| 3. Photos | Camera with ghost overlay, alignment, comparison, backup to gallery | Parked |
+| 3. Photos | Take photo → automatic edit (align + crop, matched lighting) → ready before/after image | **Next** (scope approved 21.10; next: photos spec, then build) |
 | 4. Later | Training OS connection, timelapse export | TBD |
+
+### Phase 3: scope (owner, 21.10)
+- No ghost overlay. Owner takes the photo normally; the app edits it on the phone, with no outside network call.
+- Automatic edits: (1) align + crop: the body at the same size and place in every photo, same frame; (2) matched lighting: same brightness and colour across photos, the body itself never reshaped; (3) a ready before/after image: two photos side by side with date and weight, in the Swiss Lab style, to save to the photo gallery.
+- Not included: background replacement (heavier, edges not always clean).
+- Body detection: MediaPipe pose (free, Apache-2.0), self-hosted in the app (about 15 MB, loaded only on the photo screen, cached for offline). Replaces the prototype's jsDelivr/Google links. privacy-guardian review required (new tool + storing photos).
+- To settle in the spec: poses (front/side/back), photo storage and backup size, what happens when the body isn't detected.
 
 ### Phase 1: spec
 - **Check-in:** weight (required, defaults to the previous weigh-in), circumferences (previous value next to each site, can skip), tag (normal / sick / vacation / event) and a one-line note. Goal: under 2 minutes. Separate quick weigh-in without a full check-in.
@@ -123,3 +130,4 @@ Rule of thumb: no agent is launched twice for the same thing in one block; a re-
 - 21.10 Owner: the app is built for the owner only (personal fit first; if it is ever opened to others, that gets revisited then). Body-fat estimate removed: a tape formula is ±4 points at best and can't be made accurate for one person, and the owner wants only accurate numbers. So no height/sex settings. Spec §11 marked removed; code and tests taken out (in git history, commit 93fbca7).
 - 21.10 Analytics screen 0.6.0: "ניתוח ›" button in the verdict header opens it, "‹ חזרה" returns. Contents per spec v1: figure 1 trend vs weigh-ins with phase bands (6 months by default, same ranges as the verdict chart; tagged weigh-ins = open ring, last weigh-in = filled dot, no value label); table 1 rate kg/week + %/week with the 0–1.25% scale and target band; figure 2 weekly change bars (values staggered on narrow phones); table 2 volatility, weigh-ins per week, longest gap; table 3 circumferences (since phase start, since last; changes inside tape error in ink with a star note); table 4 waist÷hips, cm of waist per kg, recomposition; table 5 records and goal projection. Text and geometry in `js/analyticsView.js` (pure, tested; 135 tests), DOM in `js/analyticsScreen.js`. Smoke test covers empty data, no phase, and cut. Reviewed by design-critic (fixes applied: header tap size, LTR/RTL in the gap line, double star, legend clash, label overlap, projection span note, empty-data guard, word with the arrow when no phase) and hebrew-writer (fixes applied). Not added: long-press readout on this screen's chart (not in the spec).
 - 21.10 Owner: nothing critical to add to phase 1; dark mode deferred. Heebo self-hosted (0.6.1): 10 static woff2 files from the `@fontsource/heebo` npm package (Hebrew + Latin, weights 400/500/700/800/900, ~87 KB), split by unicode-range so a page loads only what it uses, cached by the service worker for offline. The variable-font file was tried first but WebKit in the test run drew every weight as regular, so static files were chosen. Checked in WebKit at 375 and 440: hero number fits, no horizontal scroll, fonts load from the app itself only.
+- 21.10 Owner chose to start phase 3 (photos) now. Ghost overlay dropped: after the photo is taken, the app edits it automatically to look like a standard transformation photo. Edits chosen: align + crop, matched lighting, ready before/after image. Background replacement not chosen. Body detection self-hosted (no outside calls).
