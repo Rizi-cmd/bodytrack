@@ -237,7 +237,7 @@ export function weightChart(series, range, width, height = 210) {
     x: spaced,
     dots: pts.slice(0, -1).map(p => ({ x: X(p.date), y: Y(p.kg) })),
     last: { x: X(last.date), y: Y(last.kg), label: fmtWeight(last.kg) },
-    line, count: pts.length,
+    line, count: pts.length, from: pts[0].date, xAt: X,
     // every weigh-in in view, for the long-press readout
     points: pts.map(p => ({ x: X(p.date), y: Y(p.kg), yAvg: p.avg === null ? null : Y(p.avg), date: p.date, kg: p.kg, avg: p.avg }))
   };

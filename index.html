@@ -19,6 +19,7 @@
   <header class="top">
     <h1>פסק הדין</h1>
     <span class="meta" id="meta"></span>
+    <button class="chip" id="anaBtn">ניתוח ›</button>
   </header>
 
   <p class="note" id="backupNag" hidden></p>
@@ -136,6 +137,100 @@
     <button type="button" class="btn ghost" id="ciCancel">ביטול</button>
   </div>
 </form>
+
+<!-- Analytics (spec docs/specs/analytics.md) -->
+<div class="app" id="anaView" hidden>
+  <header class="top">
+    <h1>ניתוח</h1>
+    <span class="meta" id="aMeta"></span>
+    <button type="button" class="chip" id="anaBack">‹ חזרה</button>
+  </header>
+
+  <!-- Figure 1: trend vs weigh-ins with phase bands -->
+  <section class="sec">
+    <div class="fig-h">
+      <b>איור 1 · מגמה מול שקילות (ק״ג)</b>
+      <div class="seg" role="group" aria-label="טווח הגרף">
+        <button data-arange="month" aria-pressed="false">חודש</button>
+        <button data-arange="quarter" aria-pressed="false">3 חודשים</button>
+        <button data-arange="half" aria-pressed="true">6 חודשים</button>
+        <button data-arange="all" aria-pressed="false">הכול</button>
+      </div>
+    </div>
+    <div id="aChart"></div>
+    <p class="empty" id="aChartEmpty" hidden>אין עדיין שקילות.</p>
+    <div class="cap" id="aChartCap"><span><i class="key-l"></i>ממוצע 4 שקילות</span><span><i class="key-d"></i>שקילה</span><span id="aKeyTag"><i class="key-r"></i>שקילה מסומנת</span></div>
+    <ul class="fnotes" id="aChartNotes"></ul>
+  </section>
+
+  <!-- Table 1: rate -->
+  <section class="sec">
+    <h2>טבלה 1 · קצב</h2>
+    <div class="kv">
+      <div><span class="v" id="aKgBox"><span class="n" dir="ltr" id="aKg"></span> <small class="lab">ק״ג בשבוע</small></span><span class="lab">שיפוע הממוצע</span></div>
+      <div><span class="v" id="aPctBox"><span class="n" dir="ltr" id="aPct"></span></span><span class="lab">ממשקל הגוף בשבוע</span></div>
+    </div>
+    <p class="d" id="aRateWord"></p>
+    <div class="scale" id="aScale"></div>
+    <p class="lab" id="aZone"></p>
+    <ul class="fnotes" id="aRateNotes"></ul>
+  </section>
+
+  <!-- Figure 2: weekly change in the trend -->
+  <section class="sec">
+    <div class="fig-h"><b>איור 2 · שינוי שבועי בממוצע (ק״ג)</b></div>
+    <div id="aBars"></div>
+    <p class="empty" id="aBarsEmpty" hidden>אין מספיק נתונים.</p>
+    <ul class="fnotes" id="aBarsNotes"></ul>
+  </section>
+
+  <!-- Table 2: data quality -->
+  <section class="sec">
+    <h2>טבלה 2 · יציבות הנתונים</h2>
+    <div class="kv">
+      <div><span class="v"><span class="n" dir="ltr" id="aVol"></span> <small class="lab" id="aVolUnit">ק״ג</small></span><span class="lab" id="aVolLab">תנודתיות סביב המגמה</span></div>
+      <div><span class="v"><span class="n" dir="ltr" id="aPerWeek"></span></span><span class="lab">שקילות בשבוע, 8 השבועות האחרונים</span></div>
+      <div class="wide"><span class="v"><span class="n" dir="ltr" id="aGap"></span> <small class="lab" id="aGapUnit">ימים</small></span><span class="lab">הכי הרבה ימים בלי שקילה, 8 השבועות האחרונים <span id="aGapSub"></span></span></div>
+    </div>
+    <ul class="fnotes" id="aDataNotes"></ul>
+  </section>
+
+  <!-- Table 3: circumferences -->
+  <section class="sec">
+    <h2>טבלה 3 · היקפים (ס״מ)</h2>
+    <table class="aCirc" id="aCirc"></table>
+    <p class="empty" id="aCircEmpty" hidden>אין עדיין מדידות היקף.</p>
+    <ul class="fnotes" id="aCircNotes"></ul>
+  </section>
+
+  <!-- Table 4: ratios and recomposition -->
+  <section class="sec">
+    <h2>טבלה 4 · יחסים</h2>
+    <div class="kv">
+      <div><span class="v"><span class="n" dir="ltr" id="aWhr"></span></span><span class="lab" id="aWhrLab">מותן ÷ ישבן</span></div>
+      <div><span class="v"><span class="n" dir="ltr" id="aWpk"></span> <small class="lab n" dir="ltr" id="aWpkErr"></small></span><span class="lab" id="aWpkLab"></span></div>
+    </div>
+    <div class="recomp">
+      <b>ריקומפוזיציה</b>
+      <span id="aRecomp"></span>
+      <span class="lab" id="aRecompFacts"></span>
+    </div>
+    <ul class="fnotes"><li>הסימן מבוסס רק על סרט מדידה, לא על בדיקת הרכב גוף.</li></ul>
+  </section>
+
+  <!-- Table 5: projection and records -->
+  <section class="sec">
+    <h2>טבלה 5 · שיאים וצפי</h2>
+    <div class="kv">
+      <div><span class="v"><span class="n" dir="ltr" id="aLow"></span></span><span class="lab" id="aLowLab">הממוצע הנמוך ביותר</span></div>
+      <div><span class="v"><span class="n" dir="ltr" id="aHigh"></span></span><span class="lab" id="aHighLab">הממוצע הגבוה ביותר</span></div>
+      <div class="wide"><span class="v"><span class="n" dir="ltr" id="aProj"></span> <small class="lab" id="aProjUnit"></small></span><span class="lab" id="aProjLab"></span></div>
+      <div class="wide"><span class="v"><span class="n" dir="ltr" id="aBest"></span> <small class="lab">ק״ג</small></span><span class="lab" id="aBestLab"></span></div>
+    </div>
+  </section>
+
+  <p class="foot">הממוצע הוא ממוצע 4 השקילות האחרונות בכל נקודה. הקצב הוא שיפוע הממוצע. ירוק ואדום רק לכיוון היעד של השלב, ושינויי היקף קטנים מטעות המדידה לא נצבעים.</p>
+</div>
 
 <!-- quick weigh-in sheet -->
 <div class="sheet" id="quickSheet" hidden>

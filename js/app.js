@@ -10,8 +10,9 @@ import { trendSummary, fmtRate, fmtWeight, EMPTY } from './trend.js';
 import {
   PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, weightChart, nearestPoint, pointReadout, fmtDay, fmtFull
 } from './report.js';
+import { renderAnalytics, redraw as redrawAnalytics } from './analyticsScreen.js';
 
-export const VERSION = '0.5.0';
+export const VERSION = '0.6.0';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -200,7 +201,9 @@ async function render() {
     .sort((a, b) => (a.at || 0) - (b.at || 0));
   const has = W.length || M.length;
   state.checkins = C;
+  state.data = { W, M, C };
   renderVerdict(W, M, C);
+  if (!$('#anaView').hidden) renderAnalytics({ ...state.data, phases: state.phases, today: todayISO() });
 
   const lw = $('#listW'); lw.replaceChildren();
   if (!W.length) lw.append(el('p', 'empty', 'אין שקילות.'));
@@ -261,7 +264,18 @@ $('#phaseSave').onclick = async () => {
 };
 
 let rz;
-addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (state.summary) { drawScale(state.summary.rate); drawChart(); } }, 150); });
+addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => {
+  if (state.summary) { drawScale(state.summary.rate); drawChart(); }
+  if (!$('#anaView').hidden) redrawAnalytics();
+}, 150); });
+
+// Analytics screen: opened from the header, recomputed from the stored records every time.
+$('#anaBtn').onclick = () => {
+  if (!state.data) return; // first render not finished yet
+  showView('analytics');
+  renderAnalytics({ ...state.data, phases: state.phases, today: todayISO() });
+};
+$('#anaBack').onclick = () => showView('main');
 
 document.querySelectorAll('[data-list]').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-list]').forEach(x => x.setAttribute('aria-selected', x === b));
@@ -317,7 +331,7 @@ async function rawData() {
 }
 const ci = { data: null, tag: 'normal', dirty: false };
 function showView(v) {
-  $('#main').hidden = v !== 'main'; $('#checkinView').hidden = v !== 'checkin';
+  $('#main').hidden = v !== 'main'; $('#checkinView').hidden = v !== 'checkin'; $('#anaView').hidden = v !== 'analytics';
   scrollTo(0, 0);
 }
 // After a check-in the verdict screen shows "סיום" at the bottom instead of the entry buttons (mockup).

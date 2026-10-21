@@ -93,6 +93,15 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect(page.locator('#rate')).toHaveText('—');
   await expect(page.locator('#chartEmpty')).toBeVisible();
   await expect(page.locator('#ver')).toContainText('גרסה');
+  // Analytics with no data: empty states, no errors.
+  await page.locator('#anaBtn').click();
+  await expect(page.locator('#aChartEmpty')).toBeVisible();
+  await expect(page.locator('#aBarsEmpty')).toBeVisible();
+  await expect(page.locator('#aCircEmpty')).toBeVisible();
+  await expect(page.locator('#aKg')).toHaveText('—');
+  await expect(page.locator('#aRateWord')).toHaveText('אין עדיין שקילות');
+  await layoutOk('analytics empty');
+  await page.locator('#anaBack').click();
 
   // 2. Restore through the real file input and confirm sheet.
   await page.locator('#importFile').setInputFiles(FIXTURE);
@@ -105,6 +114,12 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   // No phase yet: rate shown, no colour.
   await expect(page.locator('#vLabel')).toHaveText('לא נבחר שלב');
   await expect(page.locator('#vWord')).toHaveClass(/ink/);
+  await page.locator('#anaBtn').click();
+  await expect(page.locator('#aZone')).toContainText('לא נבחר שלב');
+  await expect(page.locator('#aRateWord')).toContainText('לא נבחר שלב');
+  await expect(page.locator('#aKgBox')).toHaveClass(/ink/);
+  await expect(page.locator('#aChart svg .phase-a')).toHaveCount(0);
+  await page.locator('#anaBack').click();
   // Pick "cut": green toward the goal.
   await expect(page.locator('#phaseBtn')).toHaveText('בחירת שלב ▾');
   await page.locator('#phaseBtn').click();
@@ -255,6 +270,33 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await page.locator('#toastAct').click();
   await expect(page.locator('#listW .row')).toHaveCount(16);
   await expect(page.locator('#lastKg')).toHaveText('80.2');
+
+  // Analytics screen: same numbers as the verdict, phase band, tables filled; back returns to the verdict.
+  await page.locator('#anaBtn').click();
+  await expect(page.locator('#anaView')).toBeVisible();
+  await expect(page.locator('#main')).toBeHidden();
+  await expect(page.locator('#aKg')).toHaveText(M + '0.33');
+  await expect(page.locator('#aKgBox')).toHaveClass(/good/);
+  await expect(page.locator('#aPct')).toContainText('%');
+  await expect(page.locator('#aZone')).toContainText('טווח היעד לחיטוב');
+  await expect(page.locator('#aChart svg .phase-a')).toHaveCount(1);
+  await expect(page.locator('#aChart svg .phase-t')).toContainText('חיטוב');
+  await expect(page.locator('#aBars svg .bar').first()).toBeVisible();
+  await expect(page.locator('#aCirc tr')).toHaveCount(12);           // header + 11 sites
+  await expect(page.locator('#aLow')).not.toHaveText('—');
+  await expect(page.locator('#aProjLab')).not.toBeEmpty();
+  await page.locator('[data-arange="all"]').click();
+  await expect(page.locator('[data-arange="all"]')).toHaveAttribute('aria-pressed', 'true');
+  await layoutOk('analytics');
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.locator('#toast').evaluate(e => { e.hidden = true; });
+  await page.screenshot({ path: testInfo.outputPath('analytics-375.png'), fullPage: true });
+  for (const id of ['aChart', 'aScale', 'aBars', 'aCirc']) await page.locator('#' + id).screenshot({ path: testInfo.outputPath(`ana-${id}.png`) });
+  await page.setViewportSize({ width: 440, height: 956 });
+  await page.screenshot({ path: testInfo.outputPath('analytics.png'), fullPage: true });
+  await page.locator('#anaBack').click();
+  await expect(page.locator('#main')).toBeVisible();
+  await expect(page.locator('#anaView')).toBeHidden();
 
   await layoutOk('verdict');
   await page.screenshot({ path: testInfo.outputPath('verdict.png'), fullPage: true });

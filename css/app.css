@@ -144,3 +144,23 @@ button.row,button.mday{width:100%;text-align:right;min-height:44px}
 .sheetBox{max-height:92vh;overflow-y:auto;overscroll-behavior:contain}
 .readout{max-width:min(82%,300px);white-space:normal}
 .readout .rnote{color:var(--mute)}
+
+/* analytics screen */
+.kv{display:grid;grid-template-columns:1fr 1fr}
+.kv>div{padding:10px 0;border-bottom:1px solid var(--hair);display:flex;flex-direction:column;gap:2px;min-width:0}
+.kv>div:nth-child(odd){padding-left:10px}
+.kv>div:nth-child(even){border-right:1px solid var(--hair);padding-right:10px}
+.kv>div.wide{grid-column:1/-1;padding:10px 0;border-right:0}
+.kv .v{font-size:24px;font-weight:800;letter-spacing:-.01em;line-height:1.1}
+.kv .v .lab{font-size:12px}
+.kv .v>.lab:first-child{font-size:14px}
+#aRateWord{margin:10px 0 0;font-size:15px}
+th{font-size:12px;color:var(--mute);font-weight:500;letter-spacing:.04em;border-bottom:1px solid var(--rule);padding:6px 0;text-align:right}
+th.dl{text-align:left;padding-right:8px}
+.aCirc td.dl{padding-right:8px}
+.aCirc td.num{font-size:15px}
+.recomp{display:flex;flex-direction:column;gap:4px;padding:10px 0}
+.key-r{display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--ink);vertical-align:middle;margin-left:4px}
+svg .phase-a{fill:#ECECE7}svg .phase-b{fill:#E0E0DA}svg .phase-t{fill:var(--mute);font-weight:700}
+svg .dot-ring{fill:var(--bg);stroke:var(--ink);stroke-width:1.5}svg .dot-now{fill:var(--ink)}
+svg .bar{fill:#3A3A37}
