@@ -1,6 +1,6 @@
 // Shared definitions. Pure data, no storage or UI.
 
-export const SCHEMA = 1; // bump only with a migration in db.js
+export const SCHEMA = 2; // bump only with a migration in db.js
 
 // Measurement sites, in the order the check-in asks for them.
 // `goal`: which direction counts as progress (used for colours and the voice in phase 1).

@@ -1,11 +1,11 @@
 // BodyTrack – progress photos prototype.
 // Privacy: photos never leave the device. They are stored in this site's IndexedDB on the phone.
-// The only network requests are the app files and the open-source MediaPipe library/model
+// The only network requests are the app's own files, including the self-hosted MediaPipe library/model
 // (downloaded once, then cached by the service worker so the app works offline).
 
 const MP_VER = '0.10.14';
-const MP_CDN = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}`;
-const MP_MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+const MP_CDN = '../../vendor/mediapipe/0.10.14'; // self-hosted (vendor/mediapipe/README.md)
+const MP_MODEL = `${MP_CDN}/pose_landmarker_lite.task`;
 
 // Output frame and where the torso lands in it (every aligned photo shares this geometry).
 const OUT_W = 900, OUT_H = 1200;
@@ -73,8 +73,8 @@ function getPose() {
   if (window.__mockPose) return Promise.resolve(window.__mockPose); // test hook
   if (!posePromise) {
     posePromise = (async () => {
-      const { PoseLandmarker, FilesetResolver } = await import(`${MP_CDN}/vision_bundle.mjs`);
-      const fs = await FilesetResolver.forVisionTasks(`${MP_CDN}/wasm`);
+      const { PoseLandmarker } = await import(`${MP_CDN}/vision_bundle.mjs`);
+      const fs = { wasmLoaderPath: `${MP_CDN}/vision_wasm_internal.js`, wasmBinaryPath: `${MP_CDN}/vision_wasm_internal.wasm` };
       const lm = await PoseLandmarker.createFromOptions(fs, {
         baseOptions: { modelAssetPath: MP_MODEL, delegate: 'CPU' },
         runningMode: 'IMAGE', numPoses: 1

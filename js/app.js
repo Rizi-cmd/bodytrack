@@ -11,8 +11,9 @@ import {
   PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, weightChart, nearestPoint, pointReadout, fmtDay, fmtFull
 } from './report.js';
 import { renderAnalytics, redraw as redrawAnalytics } from './analyticsScreen.js';
+import { initPhotos, openPhotos } from './photosScreen.js';
 
-export const VERSION = '0.6.1';
+export const VERSION = '0.7.0';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -277,6 +278,11 @@ $('#anaBtn').onclick = () => {
 };
 $('#anaBack').onclick = () => showView('main');
 
+// Photos screen: its own module; gets the toast and the weigh-ins (for the before/after captions).
+initPhotos({ toast, weighins: () => (state.data ? state.data.W : []) });
+$('#phoBtn').onclick = () => { showView('photos'); openPhotos(); };
+$('#phoBack').onclick = () => showView('main');
+
 document.querySelectorAll('[data-list]').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-list]').forEach(x => x.setAttribute('aria-selected', x === b));
   $('#listW').hidden = b.dataset.list !== 'w'; $('#listM').hidden = b.dataset.list !== 'm';
@@ -332,6 +338,7 @@ async function rawData() {
 const ci = { data: null, tag: 'normal', dirty: false };
 function showView(v) {
   $('#main').hidden = v !== 'main'; $('#checkinView').hidden = v !== 'checkin'; $('#anaView').hidden = v !== 'analytics';
+  $('#phoView').hidden = v !== 'photos';
   scrollTo(0, 0);
 }
 // After a check-in the verdict screen shows "סיום" at the bottom instead of the entry buttons (mockup).

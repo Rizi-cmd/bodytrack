@@ -6,3 +6,4 @@ screenshots/
 bodytrack-backup-*.json
 bodytrack-import*.json
 .DS_Store
+bodytrack-photos-*.json

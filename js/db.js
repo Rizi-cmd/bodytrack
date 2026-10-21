@@ -10,6 +10,10 @@ const MIGRATIONS = {
   1(db) {
     for (const s of STORES) if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'id' });
     if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'key' });
+  },
+  // Progress photos (spec docs/specs/photos.md §5). Kept out of STORES: the data backup doesn't carry them.
+  2(db) {
+    if (!db.objectStoreNames.contains('photos')) db.createObjectStore('photos', { keyPath: 'id' });
   }
 };
 
@@ -21,9 +25,10 @@ export function open() {
     r.onupgradeneeded = e => {
       for (let v = e.oldVersion + 1; v <= SCHEMA; v++) MIGRATIONS[v](r.result, r.transaction);
     };
-    r.onsuccess = () => res(r.result);
+    // A newer version opening elsewhere (after an update) asks this connection to step aside.
+    r.onsuccess = () => { r.result.onversionchange = () => r.result.close(); res(r.result); };
     r.onerror = () => rej(r.error);
-    r.onblocked = () => rej(new Error('blocked'));
+    // blocked: an older copy still holds the database; the open goes through as soon as it closes.
   });
   return dbp;
 }
@@ -42,6 +47,8 @@ const req = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); 
 
 export const getAll = store => run([store], 'readonly', t => req(t.objectStore(store).getAll()));
 export const put = (store, rec) => run([store], 'readwrite', t => { t.objectStore(store).put(rec); });
+// Several records into one store, all or nothing.
+export const putMany = (store, recs) => run([store], 'readwrite', t => { const os = t.objectStore(store); for (const r of recs) os.put(r); });
 
 export async function getMeta(key, fallback = null) {
   const r = await run(['meta'], 'readonly', t => req(t.objectStore('meta').get(key)));

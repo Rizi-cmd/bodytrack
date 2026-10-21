@@ -174,3 +174,38 @@ th.dl{text-align:left;padding-right:8px}
 svg .phase-a{fill:#ECECE7}svg .phase-b{fill:#E0E0DA}svg .phase-t{fill:var(--mute);font-weight:700}
 svg .dot-ring{fill:var(--bg);stroke:var(--ink);stroke-width:1.5}svg .dot-now{fill:var(--ink)}
 svg .bar{fill:#3A3A37}
+
+/* photos screen (spec docs/specs/photos.md) */
+.top .navs{display:flex;gap:6px;flex:none}
+.photo{margin:0;display:flex;flex-direction:column;gap:6px}
+.photo img,.photo-cmp,.photo-prev{display:block;width:100%;height:auto;background:#000;border:1px solid var(--rule)}
+.photo-cmp{background:var(--bg)}
+.photo-prev{max-height:52vh;object-fit:contain}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pair label{display:flex;flex-direction:column;gap:4px}
+.pair select{font-size:16px;font-weight:700;-webkit-appearance:none;appearance:none}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.thumb{display:flex;flex-direction:column;gap:4px;text-align:right;min-width:0}
+.thumb img{width:100%;aspect-ratio:3/4;object-fit:cover;background:#000;display:block}
+.thumbs .empty{grid-column:1/-1}
+/* camera: full screen, dark like any viewfinder */
+.cam{position:fixed;inset:0;z-index:40;background:#000;color:#fff}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cam video.mirror{transform:scaleX(-1)}
+.cam .chip{border-color:#fff;color:#fff;background:#0008}
+.camTop{position:absolute;top:calc(var(--st) + 10px);inset-inline:16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.camTop b{font-size:17px;font-weight:800;background:#0008;padding:6px 10px}
+.camCount{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:160px;font-weight:900;text-shadow:0 0 18px #000}
+.camBar{position:absolute;bottom:calc(var(--sb) + 22px);inset-inline:16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.camBar .chip{min-width:92px}
+.shutter{width:78px;height:78px;border-radius:50%;border:5px solid #fff;background:#fff8;flex:none}
+.shutter:active{background:#fff}
+.camFlip{position:absolute;bottom:calc(var(--sb) + 116px);left:16px}
+.sheet.top-sheet{z-index:45}
+.cam .chip:disabled{opacity:.4}
+.cmpCap{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmpCap div{display:flex;flex-direction:column;gap:2px}
+.cmpCap b{font-size:15px;font-weight:800}
+.top h1{white-space:nowrap}
+/* narrow phones: the date drops under the title so the title and both buttons fit on one line */
+@media (max-width:400px){.top{flex-wrap:wrap}.top .meta{order:3;flex-basis:100%;text-align:right}}

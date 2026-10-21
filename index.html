@@ -19,7 +19,7 @@
   <header class="top">
     <h1>פסק הדין</h1>
     <span class="meta" id="meta"></span>
-    <button class="chip" id="anaBtn">ניתוח ›</button>
+    <span class="navs"><button class="chip" id="phoBtn">תמונות ›</button><button class="chip" id="anaBtn">ניתוח ›</button></span>
   </header>
 
   <p class="note" id="backupNag" hidden></p>
@@ -230,6 +230,111 @@
   </section>
 
   <p class="foot">הממוצע הוא ממוצע 4 השקילות האחרונות בכל נקודה. הקצב הוא שיפוע הממוצע. ירוק ואדום רק לכיוון היעד של השלב, ושינויי היקף קטנים מטעות המדידה לא נצבעים.</p>
+</div>
+
+<!-- Photos (spec docs/specs/photos.md) -->
+<div class="app" id="phoView" hidden>
+  <header class="top">
+    <h1>תמונות</h1>
+    <button type="button" class="chip" id="phoBack">‹ חזרה</button>
+  </header>
+  <p class="note" id="pNag" hidden></p>
+
+  <section class="sec">
+    <div class="seg wide" role="group" aria-label="תנוחה" id="pPoses">
+      <button data-pose="front" aria-pressed="true">חזית</button>
+      <button data-pose="side" aria-pressed="false">צד</button>
+      <button data-pose="back" aria-pressed="false">גב</button>
+    </div>
+  </section>
+
+  <!-- Figure 1: latest photo of the pose -->
+  <section class="sec">
+    <div class="fig-h"><b id="pLastTitle"></b></div>
+    <figure class="photo" id="pLastFig"><img id="pLast" alt=""><figcaption class="lab" id="pLastCap"></figcaption></figure>
+    <p class="empty" id="pLastEmpty" hidden></p>
+  </section>
+  <div class="actions">
+    <button class="btn" id="shootBtn">צילום</button>
+    <label class="btn ghost" for="pFile">בחירה מהגלריה</label>
+    <input type="file" id="pFile" accept="image/*" hidden>
+    <p class="lab" id="pModel"></p>
+  </div>
+
+  <!-- Figure 2: before / after -->
+  <section class="sec">
+    <div class="fig-h"><b>איור 2 · לפני ואחרי</b></div>
+    <div id="pCmpBox" class="stack">
+      <div class="pair">
+        <label class="lab">לפני<select class="field n" id="pBefore" dir="ltr"></select></label>
+        <label class="lab">אחרי<select class="field n" id="pAfter" dir="ltr"></select></label>
+      </div>
+      <img class="photo-cmp" id="pCmp" alt="תמונת לפני ואחרי">
+      <div class="cmpCap" id="pCmpCap"></div>
+      <p class="note" id="pCmpNote" hidden></p>
+      <button class="btn" id="pCmpSave">שמירת התמונה</button>
+    </div>
+    <p class="empty" id="pCmpEmpty" hidden></p>
+  </section>
+
+  <!-- Figure 3: every photo of the pose -->
+  <details class="sec fold" id="pAllSec">
+    <summary><h2 id="pAllTitle"></h2></summary>
+    <p class="lab hint">לחיצה על תמונה פותחת אותה.</p>
+    <div class="thumbs" id="pGrid"></div>
+  </details>
+
+  <!-- Photo backup -->
+  <section class="sec stack">
+    <h2>גיבוי תמונות</h2>
+    <p class="lab" id="pBackupInfo"></p>
+    <button class="btn" id="pExport">שמירת גיבוי תמונות לקבצים</button>
+    <label class="btn ghost" for="pImport">שחזור תמונות מקובץ</label>
+    <input type="file" id="pImport" accept="application/json,.json" hidden>
+  </section>
+
+  <p class="foot">התמונות נשמרות רק במכשיר הזה ולא נכנסות לגלריה, אלא אם שומרים אותן. זיהוי הגוף והעריכה נעשים בטלפון, בלי לשלוח כלום.</p>
+</div>
+
+<!-- camera (photo session: front → side → back) -->
+<div class="cam" id="cam" hidden>
+  <video id="camVideo" playsinline muted autoplay></video>
+  <div class="camTop"><b id="camStep"></b><button type="button" class="chip" id="camClose">סגירה</button></div>
+  <div class="camCount n" id="camCount" hidden></div>
+  <div class="camBar">
+    <button type="button" class="chip" id="camTimer"></button>
+    <button type="button" class="shutter" id="camShoot" aria-label="צילום"></button>
+    <button type="button" class="chip" id="camSkip">דילוג</button>
+  </div>
+  <button type="button" class="chip camFlip" id="camFlip">החלפת מצלמה</button>
+</div>
+
+<!-- photo review: the edited result before it is saved -->
+<div class="sheet top-sheet" id="pReview" hidden>
+  <div class="sheetBox stack" role="dialog" aria-labelledby="prTitle">
+    <h2 id="prTitle"></h2>
+    <img class="photo-prev" id="prImg" alt="">
+    <div id="prNotes"></div>
+    <div class="stack" id="prDateBox" hidden>
+      <label class="lab" for="prDate">תאריך התמונה</label>
+      <input class="field n" type="date" id="prDate" dir="ltr">
+      <p class="lab bad" id="prDateErr" hidden>צריך תאריך, ולא תאריך עתידי.</p>
+    </div>
+    <button type="button" class="btn" id="prKeep">שמירה</button>
+    <button type="button" class="btn ghost" id="prRetake">צילום חוזר</button>
+    <button type="button" class="btn ghost" id="prCancel">ביטול</button>
+  </div>
+</div>
+
+<!-- one photo: view or delete -->
+<div class="sheet" id="pDetail" hidden>
+  <div class="sheetBox stack" role="dialog" aria-labelledby="pdTitle">
+    <h2 id="pdTitle"></h2>
+    <img class="photo-prev" id="pdImg" alt="">
+    <p class="lab" id="pdInfo"></p>
+    <button type="button" class="btn danger" id="pdDelete">מחיקת התמונה</button>
+    <button type="button" class="btn ghost" id="pdClose">סגירה</button>
+  </div>
 </div>
 
 <!-- quick weigh-in sheet -->

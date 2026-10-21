@@ -2,21 +2,22 @@
 // Fails if:
 //  1. an app file (what the phone loads) mentions an outside URL,
 //  2. any tracked file holds an email address other than the noreply one,
-//  3. a JSON file that looks like a real backup sits outside tests/fixtures,
+//  3. a JSON file that looks like a real backup (data or photos) sits outside tests/fixtures, or any file is named like one,
 //  4. the fixture isn't marked as invented sample data.
-// Known, accepted exceptions live in PROJECT.md 6b (lab/photos, design mockups) and are skipped here.
+// Known, accepted exception: design mockups under docs/design (PROJECT.md 6b), not checked here.
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const files = execSync('git ls-files', { encoding: 'utf8' }).split('\n').filter(Boolean);
 const problems = [];
 
-const APP = /^(index\.html|sw\.js|manifest\.webmanifest|js\/.+\.js|css\/.+\.css)$/;
+const APP = /^(index\.html|sw\.js|manifest\.webmanifest|js\/.+\.js|css\/.+\.css|vendor\/.+\.m?js|lab\/.+\.(js|html))$/;
 const ALLOWED_URL = /^https?:\/\/www\.w3\.org\//; // SVG/XML namespaces only
 const NOREPLY = 'rizi-cmd@users.noreply.github.com';
 const TEXT = /\.(html|js|mjs|css|json|md|webmanifest|yml|yaml|txt)$/;
 
 for (const f of files) {
+  if (/(^|\/)bodytrack-(backup|photos)-[^/]*$/.test(f)) problems.push(`${f}: a backup file (data or photos) must never be committed`);
   if (!TEXT.test(f)) continue;
   const src = readFileSync(f, 'utf8');
 
@@ -31,7 +32,7 @@ for (const f of files) {
     if (m[0].toLowerCase() !== NOREPLY) problems.push(`${f}: email address: ${m[0]}`);
   }
 
-  if (f.endsWith('.json') && !f.startsWith('tests/fixtures/') && /"app"\s*:\s*"bodytrack"/.test(src)) {
+  if (f.endsWith('.json') && !f.startsWith('tests/fixtures/') && /"app"\s*:\s*"bodytrack(-photos)?"/.test(src)) {
     problems.push(`${f}: looks like a backup file outside tests/fixtures`);
   }
 }
