@@ -104,27 +104,32 @@ export function monthChange(series) {
 }
 
 // Phase input: a string ('cut' | 'bulk' | 'maintenance'), or a list of {from:'YYYY-MM-DD', phase}.
-function phaseInfo(phase, lastDate, windowStart) {
+// asOf = the date whose phase counts (defaults to the last weigh-in; the app passes today so a phase
+// picked today applies at once).
+function phaseInfo(phase, lastDate, windowStart, asOf) {
   if (!Array.isArray(phase)) return { phase: phase ?? null, changed: false };
+  const at = asOf && (!lastDate || asOf > lastDate) ? asOf : lastDate;
   const recs = phase.filter(p => p && isISODate(p.from)).sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
   // Stable sort: on the same `from` date, the record later in the list wins.
   let current = null, changed = false;
   for (const p of recs) {
-    if (!lastDate || p.from > lastDate) break;
-    if (windowStart && p.from > windowStart && p.phase !== current) changed = true; // a real change, not cut → cut
+    if (!at || p.from > at) break;
+    // A real change only: not cut → cut, and not the very first phase being set.
+    if (windowStart && p.from > windowStart && current !== null && p.phase !== current) changed = true;
     current = p.phase;
   }
   return { phase: current, changed };
 }
 
 // §7: everything the verdict screen needs, recomputed from scratch.
-export function trendSummary(weighins, phase) {
+export function trendSummary(weighins, phase, asOf) {
   const points = cleanWeighins(weighins);
   const series = trendSeries(points);
   const last = series[series.length - 1] || null;
   const wr = weeklyRate(series);
   const mc = monthChange(series);
-  const ph = phaseInfo(phase, last && last.date, wr.windowStart);
+  const ph = phaseInfo(phase, last && last.date, wr.windowStart, asOf);
+  const phaseName = ph.phase;
   const direction = weightDirection(ph.phase);
   const v = verdict(wr.rate, direction);
   return {
@@ -136,7 +141,7 @@ export function trendSummary(weighins, phase) {
     windowDates: wr.windowDates,
     monthChange: mc.monthChange,
     monthRefDate: mc.monthRefDate,
-    direction,
+    phase: phaseName, direction,
     verdict: v.verdict, colour: v.colour, arrow: v.arrow,
     phaseChangedInWindow: ph.changed,
     reason: wr.reason,

@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BodyTrack</title>
-<meta name="theme-color" content="#0f0e0c">
+<meta name="theme-color" content="#F7F7F5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BodyTrack">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -16,46 +16,84 @@
 </head>
 <body>
 <div class="app">
-  <header>
-    <h1>BodyTrack</h1>
-    <span class="tag" id="ver"></span>
+  <header class="top">
+    <h1>פסק הדין</h1>
+    <span class="meta" id="meta"></span>
   </header>
 
-  <div class="note warn" id="backupNag" hidden></div>
+  <p class="note" id="backupNag" hidden></p>
 
-  <section class="card" id="summary">
-    <div class="empty" id="emptyState">
-      <b>אין עדיין נתונים במכשיר</b>
-      <span class="muted">מייבאים קובץ גיבוי, או מתחילים לרשום בשלב הבא.</span>
+  <!-- Verdict -->
+  <section class="sec" id="verdictSec">
+    <div class="verdict">
+      <span class="vword" id="vWord"></span>
+      <span class="lab" id="vLabel"></span>
     </div>
-    <div id="sumBody" hidden>
-      <div class="muted">שקילה אחרונה</div>
-      <div class="big"><span id="lastKg"></span><small>ק״ג</small></div>
-      <div class="muted" id="lastDate"></div>
-      <div class="stats">
-        <div><b id="nW"></b><span>שקילות</span></div>
-        <div><b id="nM"></b><span>ימי מדידה</span></div>
-        <div><b id="since"></b><span>מאז</span></div>
-      </div>
-    </div>
+    <div class="hero"><span class="big n" dir="ltr" id="rate"></span><span class="unit">ק״ג לשבוע</span></div>
+    <div class="scale" id="scale"></div>
+    <ul class="fnotes" id="notes"></ul>
   </section>
 
-  <div class="seg" role="tablist">
-    <button role="tab" aria-selected="true" data-list="w">שקילות</button>
-    <button role="tab" aria-selected="false" data-list="m">היקפים</button>
+  <div class="grid3">
+    <div><span class="v"><span class="n" dir="ltr" id="avg"></span></span><span class="lab">ממוצע 4 שקילות</span></div>
+    <div><span class="v" id="mcBox"><span class="n" dir="ltr" id="mc"></span></span><span class="lab"><span class="d" id="mcWord"></span> מול החודש הקודם</span></div>
+    <div><span class="v"><span class="n" dir="ltr" id="lastKg"></span></span><span class="lab" id="lastLab">שקילה אחרונה</span></div>
   </div>
-  <section class="card list" id="listW"></section>
-  <section class="card list" id="listM" hidden></section>
 
-  <section class="card stack">
+  <!-- Figure 1: weight -->
+  <section class="sec" id="figSec">
+    <div class="fig-h">
+      <b>איור 1 · משקל (ק״ג)</b>
+      <div class="seg" role="group" aria-label="טווח הגרף">
+        <button data-range="month" aria-pressed="false">חודש</button>
+        <button data-range="quarter" aria-pressed="true">3 חודשים</button>
+        <button data-range="all" aria-pressed="false">הכול</button>
+      </div>
+    </div>
+    <div id="chart"></div>
+    <p class="empty" id="chartEmpty" hidden>אין עדיין שקילות.</p>
+    <div class="cap" id="chartCap"><span><i class="key-l"></i>ממוצע 4 שקילות</span><span><i class="key-d"></i>שקילה</span><span class="push" id="chartCount"></span></div>
+  </section>
+
+  <!-- Table 1: circumferences -->
+  <section class="sec" id="circSec">
+    <h2>טבלה 1 · היקפים מול המדידה הקודמת</h2>
+    <table id="circTable"></table>
+    <p class="empty" id="circEmpty" hidden>אין עדיין מדידות היקף.</p>
+  </section>
+
+  <!-- Phase -->
+  <section class="sec">
+    <h2>שלב</h2>
+    <div class="seg wide" role="group" aria-label="שלב" id="phaseSeg">
+      <button data-phase="cut" aria-pressed="false">חיטוב</button>
+      <button data-phase="bulk" aria-pressed="false">מסה</button>
+      <button data-phase="maintenance" aria-pressed="false">תחזוקה</button>
+    </div>
+    <p class="lab" id="phaseInfo"></p>
+  </section>
+
+  <!-- History -->
+  <section class="sec">
+    <h2>טבלה 2 · היסטוריה</h2>
+    <div class="seg wide" role="tablist">
+      <button role="tab" aria-selected="true" data-list="w">שקילות</button>
+      <button role="tab" aria-selected="false" data-list="m">היקפים</button>
+    </div>
+    <div class="list" id="listW"></div>
+    <div class="list" id="listM" hidden></div>
+  </section>
+
+  <!-- Backup -->
+  <section class="sec stack">
     <h2>גיבוי</h2>
-    <p class="muted" id="backupInfo"></p>
-    <button class="btn primary" id="exportBtn">שמירת גיבוי לקבצים</button>
+    <p class="lab" id="backupInfo"></p>
+    <button class="btn" id="exportBtn">שמירת גיבוי לקבצים</button>
     <label class="btn ghost" for="importFile">שחזור מקובץ גיבוי</label>
     <input type="file" id="importFile" accept="application/json,.json" hidden>
   </section>
 
-  <p class="muted foot">הנתונים נשמרים רק במכשיר הזה. מחיקת האפליקציה ממסך הבית מוחקת אותם, ולכן חשוב לגבות.</p>
+  <p class="foot">הנתונים נשמרים רק במכשיר הזה. מחיקת האפליקציה ממסך הבית מוחקת אותם, ולכן חשוב לגבות. <span id="ver"></span></p>
 </div>
 
 <!-- import confirm sheet -->
@@ -64,7 +102,7 @@
     <h2>שחזור מגיבוי</h2>
     <p id="importSummary"></p>
     <div id="importErrors"></div>
-    <button class="btn primary" id="impMerge">הוספה לנתונים הקיימים</button>
+    <button class="btn" id="impMerge">הוספה לנתונים הקיימים</button>
     <button class="btn danger" id="impReplace">החלפת כל הנתונים במכשיר</button>
     <button class="btn ghost" id="impCancel">ביטול</button>
   </div>

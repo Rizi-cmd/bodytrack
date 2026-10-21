@@ -52,21 +52,33 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
     if (!['data:', 'blob:', 'about:'].includes(u.protocol)) hosts.add(u.host);
   });
 
+  const M = '\u2212';
   const expectData = async () => {
-    await expect(page.locator('#sumBody')).toBeVisible();
-    await expect(page.locator('#emptyState')).toBeHidden();
-    await expect(page.locator('#lastKg')).toHaveText('80.20');
-    await expect(page.locator('#lastDate')).toHaveText('10.10.2026');
-    await expect(page.locator('#nW')).toHaveText('16');     // the soft-deleted duplicate is not counted
-    await expect(page.locator('#nM')).toHaveText('5');      // 4 full sets + 1 waist-only day
-    await expect(page.locator('#since')).toHaveText('6.6.2026');
-    await expect(page.locator('#listW .row')).toHaveCount(16);
-    await expect(page.locator('#listW')).not.toContainText('99.90');
+    await expect(page.locator('#lastKg')).toHaveText('80.2');
+    await expect(page.locator('#lastLab')).toContainText('10.10');
+    await expect(page.locator('#avg')).toHaveText('80.6');
+    await expect(page.locator('#rate')).toHaveText(M + '0.33');
+    await expect(page.locator('#mc')).toHaveText(M + '1.3');
+    await expect(page.locator('#listW .row')).toHaveCount(16);   // the soft-deleted duplicate is not counted
+    await expect(page.locator('#listW')).not.toContainText('99.9');
+    await expect(page.locator('#chart svg circle')).toHaveCount(11); // "3 months" view
+    await expect(page.locator('#circTable tr')).toHaveCount(11);
+    await expect(page.locator('#notes')).toContainText('מחלה');    // invented sick-tagged weigh-in in the window
+  };
+  const expectCut = async () => {
+    await expect(page.locator('#vWord')).toHaveText('↓ יורד');
+    await expect(page.locator('#vWord')).toHaveClass(/good/);
+    await expect(page.locator('#vLabel')).toHaveText('לכיוון היעד');
+    await expect(page.locator('#meta')).toContainText('חיטוב');
+    await expect(page.locator('#mcBox')).toHaveClass(/good/);
   };
 
   // 1. Fresh start: empty state.
   await page.goto(origin + '/');
-  await expect(page.locator('#emptyState')).toBeVisible();
+  await expect(page.locator('#vWord')).toHaveText('מוקדם להגיד');
+  await expect(page.locator('#vLabel')).toHaveText('אין עדיין שקילות');
+  await expect(page.locator('#rate')).toHaveText('—');
+  await expect(page.locator('#chartEmpty')).toBeVisible();
   await expect(page.locator('#ver')).toContainText('גרסה');
 
   // 2. Restore through the real file input and confirm sheet.
@@ -77,6 +89,15 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect(page.locator('#importSheet')).toBeHidden();
   await expect(page.locator('#toastMsg')).toContainText('שוחזרו');
   await expectData();
+  // No phase yet: rate shown, no colour.
+  await expect(page.locator('#vLabel')).toHaveText('לא נבחר שלב');
+  await expect(page.locator('#vWord')).toHaveClass(/ink/);
+  // Pick "cut": green toward the goal.
+  await page.locator('[data-phase="cut"]').click();
+  await expectCut();
+  await page.locator('[data-range="all"]').click();
+  await expect(page.locator('#chart svg circle')).toHaveCount(16);
+  await page.locator('[data-range="quarter"]').click();
 
   // Circumferences tab shows the newest full set (waist 84 - 4.5 = 79.5).
   await page.locator('[data-list="m"]').click();
@@ -84,8 +105,14 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect(page.locator('#listM .mday').first()).toContainText('79.5');
   await page.locator('[data-list="w"]').click();
 
-  // No horizontal scroll at phone width.
+  // No horizontal scroll at phone width, and no text smaller than 12px (charts included).
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  const small = await page.evaluate(() => [...document.querySelectorAll('body *')]
+    .filter(e => e.childNodes.length && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+    .filter(e => e.getClientRects().length && parseFloat(getComputedStyle(e).fontSize) < 12)
+    .map(e => e.tagName + ':' + e.textContent.trim().slice(0, 20)));
+  expect(small, 'text under 12px').toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath('verdict.png'), fullPage: true });
 
   // 3. Wait until the service worker controls the page and has cached the shell.
   await page.evaluate(() => navigator.serviceWorker.ready);
@@ -98,6 +125,7 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   // 4. Online reload: data persisted in IndexedDB.
   await page.reload();
   await expectData();
+  await expectCut();
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
 
   // 5. Offline reload: the service worker must serve the shell, IndexedDB still has the data.
@@ -107,6 +135,7 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await stopServer();
   await page.reload();
   await expectData();
+  await expectCut();
   await expect(page.locator('#ver')).toContainText('גרסה');
 
   await page.screenshot({ path: testInfo.outputPath('smoke.png'), fullPage: true }); // test-results/, git-ignored
