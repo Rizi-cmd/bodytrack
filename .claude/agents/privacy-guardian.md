@@ -1,6 +1,6 @@
 ---
 name: privacy-guardian
-description: BodyTrack privacy and security guardian. Use PROACTIVELY before every commit/push and before adding any library, external tool or network call. Checks that no personal data leaves the phone or enters the public repo.
+description: BodyTrack privacy and security guardian. Use only before adding a library, external tool or network call, or before changing how data is stored or exported (the basic per-push check runs in CI). Checks that no personal data leaves the phone or enters the public repo.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
