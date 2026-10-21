@@ -25,7 +25,7 @@ All data is stored only on the phone. Hebrew, RTL.
 | Phase | Contents | Status |
 |---|---|---|
 | 0. Foundations | Installed shell, offline, versioned data layer (IndexedDB), backup/restore to a file, import of historical data | **Done** (21.10: installed on iPhone, data restored, first backup saved) |
-| 1. Weekly loop | Design system (Swiss Lab), check-in, trend engine, verdict screen, analytics screen, goals and directions, history with edit/delete/undo | **Next** (first: build the agent team) |
+| 1. Weekly loop | Design system (Swiss Lab), check-in, trend engine, verdict screen, analytics screen, goals and directions, history with edit/delete/undo | **In progress** (QA setup done 21.10; next: fix 2 bugs found by the tests) |
 | 2. Voice | Coaching voice line (if at all, not on the verdict screen) | Deferred |
 | 3. Photos | Camera with ghost overlay, alignment, comparison, backup to gallery | Parked |
 | 4. Later | Training OS connection, timelapse export | TBD |
@@ -81,6 +81,8 @@ Routing (agents can't call each other; the main agent routes and is the only one
 - Phase 1 first task: QA setup (`tests/`, invented fixture, WebKit smoke test).
 
 ## 6b. Open items
+- Bugs found by the new tests (marked `todo` in `tests/model.test.js`): `isISODate` accepts 2026-02-30 (and differs between Node and Safari); `validate()` throws when the lists in a backup file aren't arrays, so the restore sheet doesn't open. Owner: data-engineer.
+- `package-lock.json` is missing (npm is blocked in the work environment); `@playwright/test` is pinned to 1.56.0. Create a lockfile and switch CI to `npm ci` when possible.
 - Goal direction: PROJECT.md says derived from the phase; `js/model.js` hard-codes it per site. fitness-analyst defines, data-engineer migrates.
 - `lab/photos` loads outside scripts (jsDelivr, Google) on the same address as the app. Low risk (the home-screen app's storage is separate from Safari), but to be resolved.
 
@@ -91,4 +93,6 @@ Routing (agents can't call each other; the main agent routes and is the only one
 - 21.10 Import file rebuilt from the notes (screenshots), checked by an independent reviewer and loaded locally without errors. Data rule: a label that doesn't match a site → map to the site with the closest values; if unclear, drop it.
 - 21.10 Phase 0 closed: app installed on the iPhone from the home screen, historical data restored, first backup in iCloud Drive. Security check passed (only the owner's commits, no outside network calls in the app, live site matches the repo).
 - 21.10 Agent team created (7 agents), reviewed independently and fixed. Heebo will be self-hosted. Wrist site name = "פרק כף יד" (as in the source notes).
+- 21.10 Phase 1 tool scout: no new tools; existing Playwright and installed skills are enough (owner approved).
+- 21.10 QA setup: `npm test` (node:test), Playwright smoke test (WebKit 440x956, invented fixture, offline reload, blocks outside hosts and console errors). WebKit can't be downloaded in the work environment, so CI runs it: GitHub Actions on every push to main (free for public repos, read-only, no secrets). Reviewed by design-critic and privacy-guardian, fixes applied.
 - 21.10 Weekly check-in reminder set in iPhone Reminders: every Saturday 11:00, with a link to the app. The in-app reminder idea is no longer needed.

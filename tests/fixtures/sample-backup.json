@@ -1,0 +1,438 @@
+{
+ "app": "bodytrack",
+ "schema": 1,
+ "exportedAt": "2026-10-11T08:00:00.000Z",
+ "sample": "INVENTED SAMPLE DATA - not a real person",
+ "settings": {},
+ "weighins": [
+  {
+   "id": "w-2026-06-06",
+   "date": "2026-06-06",
+   "kg": 84.2,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-06-13",
+   "date": "2026-06-13",
+   "kg": 83.9,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-06-20",
+   "date": "2026-06-20",
+   "kg": 84,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-06-27",
+   "date": "2026-06-27",
+   "kg": 83.4,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-07-04",
+   "date": "2026-07-04",
+   "kg": 83.5,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-07-11",
+   "date": "2026-07-11",
+   "kg": 83,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-07-18",
+   "date": "2026-07-18",
+   "kg": 82.8,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-07-25",
+   "date": "2026-07-25",
+   "kg": 82.9,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-08-22",
+   "date": "2026-08-22",
+   "kg": 82,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-08-29",
+   "date": "2026-08-29",
+   "kg": 82.4,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-09-05",
+   "date": "2026-09-05",
+   "kg": 81.5,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-09-12",
+   "date": "2026-09-12",
+   "kg": 81.6,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-09-19",
+   "date": "2026-09-19",
+   "kg": 81,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-09-26",
+   "date": "2026-09-26",
+   "kg": 80.7,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-10-03",
+   "date": "2026-10-03",
+   "kg": 80.4,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-10-10",
+   "date": "2026-10-10",
+   "kg": 80.2,
+   "deleted": false
+  },
+  {
+   "id": "w-2026-06-13-dup",
+   "date": "2026-06-13",
+   "kg": 99.9,
+   "deleted": true
+  }
+ ],
+ "measurements": [
+  {
+   "id": "m-2026-06-06-waist_navel",
+   "date": "2026-06-06",
+   "site": "waist_navel",
+   "cm": 88,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-06-06-waist",
+   "date": "2026-06-06",
+   "site": "waist",
+   "cm": 84,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-06-06-hips",
+   "date": "2026-06-06",
+   "site": "hips",
+   "cm": 99,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-06-06-chest",
+   "date": "2026-06-06",
+   "site": "chest",
+   "cm": 102,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-06-06-shoulders",
+   "date": "2026-06-06",
+   "site": "shoulders",
+   "cm": 118,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-06-06-arm_relaxed",
+   "date": "2026-06-06",
+   "site": "arm_relaxed",
+   "cm": 34,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-06-06-arm_flexed",
+   "date": "2026-06-06",
+   "site": "arm_flexed",
+   "cm": 37,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-06-06-thigh",
+   "date": "2026-06-06",
+   "site": "thigh",
+   "cm": 58,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-06-06-calf",
+   "date": "2026-06-06",
+   "site": "calf",
+   "cm": 38,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-06-06-neck",
+   "date": "2026-06-06",
+   "site": "neck",
+   "cm": 38,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-06-06-wrist",
+   "date": "2026-06-06",
+   "site": "wrist",
+   "cm": 17,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-waist_navel",
+   "date": "2026-07-11",
+   "site": "waist_navel",
+   "cm": 86.5,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-waist",
+   "date": "2026-07-11",
+   "site": "waist",
+   "cm": 82.5,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-hips",
+   "date": "2026-07-11",
+   "site": "hips",
+   "cm": 97.5,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-chest",
+   "date": "2026-07-11",
+   "site": "chest",
+   "cm": 102,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-shoulders",
+   "date": "2026-07-11",
+   "site": "shoulders",
+   "cm": 118,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-arm_relaxed",
+   "date": "2026-07-11",
+   "site": "arm_relaxed",
+   "cm": 34,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-arm_flexed",
+   "date": "2026-07-11",
+   "site": "arm_flexed",
+   "cm": 37,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-thigh",
+   "date": "2026-07-11",
+   "site": "thigh",
+   "cm": 57.5,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-calf",
+   "date": "2026-07-11",
+   "site": "calf",
+   "cm": 38,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-neck",
+   "date": "2026-07-11",
+   "site": "neck",
+   "cm": 38,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-07-11-wrist",
+   "date": "2026-07-11",
+   "site": "wrist",
+   "cm": 17,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-waist_navel",
+   "date": "2026-09-05",
+   "site": "waist_navel",
+   "cm": 85,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-waist",
+   "date": "2026-09-05",
+   "site": "waist",
+   "cm": 81,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-hips",
+   "date": "2026-09-05",
+   "site": "hips",
+   "cm": 96,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-chest",
+   "date": "2026-09-05",
+   "site": "chest",
+   "cm": 102,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-shoulders",
+   "date": "2026-09-05",
+   "site": "shoulders",
+   "cm": 118,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-arm_relaxed",
+   "date": "2026-09-05",
+   "site": "arm_relaxed",
+   "cm": 34,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-arm_flexed",
+   "date": "2026-09-05",
+   "site": "arm_flexed",
+   "cm": 37,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-thigh",
+   "date": "2026-09-05",
+   "site": "thigh",
+   "cm": 57,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-calf",
+   "date": "2026-09-05",
+   "site": "calf",
+   "cm": 38,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-neck",
+   "date": "2026-09-05",
+   "site": "neck",
+   "cm": 38,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-09-05-wrist",
+   "date": "2026-09-05",
+   "site": "wrist",
+   "cm": 17,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-waist_navel",
+   "date": "2026-10-10",
+   "site": "waist_navel",
+   "cm": 83.5,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-waist",
+   "date": "2026-10-10",
+   "site": "waist",
+   "cm": 79.5,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-hips",
+   "date": "2026-10-10",
+   "site": "hips",
+   "cm": 94.5,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-chest",
+   "date": "2026-10-10",
+   "site": "chest",
+   "cm": 102,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-shoulders",
+   "date": "2026-10-10",
+   "site": "shoulders",
+   "cm": 118,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-arm_relaxed",
+   "date": "2026-10-10",
+   "site": "arm_relaxed",
+   "cm": 34,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-arm_flexed",
+   "date": "2026-10-10",
+   "site": "arm_flexed",
+   "cm": 37,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-thigh",
+   "date": "2026-10-10",
+   "site": "thigh",
+   "cm": 56.5,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-calf",
+   "date": "2026-10-10",
+   "site": "calf",
+   "cm": 38,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-neck",
+   "date": "2026-10-10",
+   "site": "neck",
+   "cm": 38,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-10-10-wrist",
+   "date": "2026-10-10",
+   "site": "wrist",
+   "cm": 17,
+   "deleted": false
+  },
+  {
+   "id": "m-2026-08-01-waist",
+   "date": "2026-08-01",
+   "site": "waist",
+   "cm": 83,
+   "deleted": false
+  }
+ ],
+ "checkins": [
+  {
+   "id": "c-2026-08-29",
+   "date": "2026-08-29",
+   "weighinId": "w-2026-08-29",
+   "tag": "sick",
+   "note": "SAMPLE: invented note"
+  }
+ ],
+ "goals": []
+}
