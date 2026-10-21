@@ -101,15 +101,15 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
 
   // 5. Offline reload: the service worker must serve the shell, IndexedDB still has the data.
-  // Stop the server too: outside Chromium, setOffline may not block the service worker's own fetches.
-  await context.setOffline(true);
+  // "Offline" = the server is gone. Playwright's setOffline is not used: in WebKit it makes the reload fail
+  // with an internal error before the service worker can answer, and outside Chromium it may not block
+  // the worker's own fetches anyway.
   await stopServer();
   await page.reload();
   await expectData();
   await expect(page.locator('#ver')).toContainText('גרסה');
 
   await page.screenshot({ path: testInfo.outputPath('smoke.png'), fullPage: true }); // test-results/, git-ignored
-  await context.setOffline(false);
 
   // 6. Gates.
   const foreign = [...hosts].filter(h => h !== new URL(origin).host);
