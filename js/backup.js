@@ -14,20 +14,33 @@ export function validate(obj) {
   if (obj.app !== 'bodytrack') errors.push('זה לא קובץ גיבוי של BodyTrack.');
   else if (typeof obj.schema !== 'number') errors.push('הקובץ פגום: חסר מספר גרסה.');
   else if (obj.schema > SCHEMA) errors.push('הקובץ נוצר בגרסה חדשה יותר של האפליקציה. צריך לעדכן את האפליקציה.');
-  const clean = { settings: obj.settings && typeof obj.settings === 'object' ? obj.settings : {} };
+  const clean = { settings: obj.settings && typeof obj.settings === 'object' && !Array.isArray(obj.settings) ? obj.settings : {} };
+  const okId = id => (typeof id === 'string' && id !== '') || (typeof id === 'number' && Number.isFinite(id));
+  const okDate = d => isISODate(d) && +d.slice(0, 4) >= 1900 && +d.slice(0, 4) <= 2100;
   for (const s of STORES) clean[s] = [];
 
-  (obj.weighins || []).forEach((w, i) => {
-    if (!w || !isISODate(w.date) || typeof w.kg !== 'number' || w.kg < 20 || w.kg > 300)
+  const listOf = (key, label) => {
+    if (obj[key] === undefined) return [];
+    if (Array.isArray(obj[key])) return obj[key];
+    errors.push(`הקובץ פגום: רשימת ה${label} לא תקינה.`);
+    return [];
+  };
+  listOf('weighins', 'שקילות').forEach((w, i) => {
+    if (!w || !okDate(w.date) || typeof w.kg !== 'number' || w.kg < 20 || w.kg > 300)
       return errors.push(`שקילה מספר ${i + 1} לא תקינה.`);
-    clean.weighins.push({ id: String(w.id || 'w-' + w.date), date: w.date, kg: w.kg, deleted: !!w.deleted });
+    clean.weighins.push({ id: okId(w.id) ? String(w.id) : 'w-' + w.date, date: w.date, kg: w.kg, deleted: !!w.deleted });
   });
-  (obj.measurements || []).forEach((m, i) => {
-    if (!m || !isISODate(m.date) || !SITE[m.site] || typeof m.cm !== 'number' || m.cm < 5 || m.cm > 300)
+  listOf('measurements', 'מדידות').forEach((m, i) => {
+    if (!m || !okDate(m.date) || typeof m.site !== 'string' || !Object.prototype.hasOwnProperty.call(SITE, m.site) || typeof m.cm !== 'number' || m.cm < 5 || m.cm > 300)
       return errors.push(`מדידה מספר ${i + 1} לא תקינה.`);
-    clean.measurements.push({ id: String(m.id || `m-${m.date}-${m.site}`), date: m.date, site: m.site, cm: m.cm, deleted: !!m.deleted });
+    clean.measurements.push({ id: okId(m.id) ? String(m.id) : `m-${m.date}-${m.site}`, date: m.date, site: m.site, cm: m.cm, deleted: !!m.deleted });
   });
-  for (const s of ['checkins', 'goals']) if (Array.isArray(obj[s])) clean[s] = obj[s].filter(r => r && r.id);
+  for (const [s, label] of [['checkins', 'צ׳ק-אין'], ['goals', 'יעדים']]) {
+    listOf(s, label).forEach((r, i) => {
+      if (r && typeof r === 'object' && okId(r.id)) clean[s].push(r);
+      else errors.push(`${{ checkins: 'צ׳ק-אין', goals: 'יעד' }[s]} מספר ${i + 1} לא תקין.`);
+    });
+  }
 
   return {
     ok: errors.length === 0, data: clean, errors,

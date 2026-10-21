@@ -19,13 +19,16 @@ test('isISODate rejects wrong shapes and non-strings', () => {
   for (const v of [null, undefined, 20261021, {}, [], true]) assert.equal(isISODate(v), false, String(v));
 });
 
-// Known gap: impossible calendar days pass because Date.parse rolls them over. Reported to the owner;
-// marked todo so it documents the gap without failing the suite. Remove `todo` once isISODate is fixed.
-// Engines differ: Node accepts 2026-02-30, Safari's Date.parse returns NaN, so one backup can validate on
-// one engine and fail on another. The fix must compare the parsed y/m/d back to the input, not trust Date.parse.
-test('isISODate rejects impossible calendar days (2026-02-30, 2026-02-29)', { todo: 'isISODate accepts impossible days' }, () => {
+test('isISODate rejects impossible calendar days (2026-02-30, 2026-02-29)', () => {
   assert.equal(isISODate('2026-02-30'), false);
   assert.equal(isISODate('2026-02-29'), false);
+  for (const s of ['2026-13-01', '2026-00-10', '2026-04-31', '2026-01-00', '2026-01-32', '1900-02-29'])
+    assert.equal(isISODate(s), false, s);
+});
+
+test('isISODate accepts leap days and month ends', () => {
+  for (const s of ['2028-02-29', '2000-02-29', '2026-12-31', '2026-04-30', '0099-01-01'])
+    assert.equal(isISODate(s), true, s);
 });
 
 test('fmtDate prints d.m.yyyy without leading zeros', () => {
@@ -122,9 +125,43 @@ test('validate rejects bad input without throwing', () => {
   assert.equal(v.errors.length, 3);
 });
 
-// Known bug: validate() throws when weighins/measurements are not arrays (js/app.js calls it outside a try,
-// so the restore sheet never opens). Fix in backup.js: Array.isArray(x) ? x : []. Remove `todo` once fixed.
-test('validate does not throw when lists are not arrays', { todo: 'validate throws on non-array lists' }, () => {
-  assert.doesNotThrow(() => validate({ app: 'bodytrack', schema: SCHEMA, weighins: 'x', measurements: {} }));
-  assert.doesNotThrow(() => validate({ app: 'bodytrack', schema: SCHEMA, weighins: {}, measurements: 'x' }));
+test('validate reports non-array lists as errors without throwing', () => {
+  for (const bad of ['x', {}, null, 5, true]) {
+    for (const key of ['weighins', 'measurements']) {
+      let v;
+      assert.doesNotThrow(() => { v = validate({ app: 'bodytrack', schema: SCHEMA, [key]: bad }); }, `${key}=${JSON.stringify(bad)}`);
+      assert.equal(v.ok, false, `${key}=${JSON.stringify(bad)}`);
+      assert.equal(v.errors.length, 1);
+    }
+  }
+  assert.equal(validate({ app: 'bodytrack', schema: SCHEMA, weighins: 'x', measurements: {} }).errors.length, 2);
+});
+
+test('validate never throws on any JSON value, and rejects prototype-key sites', () => {
+  for (const v of [null, true, 0, 'x', [], [1], {}, { app: 'bodytrack', schema: SCHEMA, weighins: [null, 1, 'a', []], measurements: [null, {}, []] }])
+    assert.doesNotThrow(() => validate(v), JSON.stringify(v));
+  for (const id of [{ toString: 1 }, { valueOf: 1 }]) {
+    const o = { app: 'bodytrack', schema: SCHEMA, weighins: [{ id, date: '2026-10-21', kg: 80 }],
+      measurements: [{ id, date: '2026-10-21', site: 'waist', cm: 80 }], checkins: [{ id }], goals: [{ id }] };
+    let v; assert.doesNotThrow(() => { v = validate(o); });
+    assert.equal(v.data.weighins[0].id, 'w-2026-10-21');
+    assert.equal(v.data.measurements[0].id, 'm-2026-10-21-waist');
+    assert.equal(v.ok, false);
+  }
+  const f = fixture(); f.measurements[0].site = 'constructor';
+  assert.equal(validate(f).ok, false);
+  assert.equal(validate({ app: 'bodytrack', schema: SCHEMA }).ok, true);
+});
+
+test('validate bounds years to 1900-2100, rejects array settings, requires checkin/goal ids', () => {
+  const base = { app: 'bodytrack', schema: SCHEMA };
+  for (const d of ['0026-10-21', '1899-12-31', '2101-01-01'])
+    assert.equal(validate({ ...base, weighins: [{ date: d, kg: 80 }] }).ok, false, d);
+  assert.equal(validate({ ...base, weighins: [{ date: '1900-01-01', kg: 80 }, { date: '2100-12-31', kg: 80 }] }).ok, true);
+  assert.deepEqual(validate({ ...base, settings: [1] }).data.settings, {});
+  const v = validate({ ...base, checkins: [{ id: 'c1' }, { id: {} }, null], goals: [{ id: 7 }, {}] });
+  assert.equal(v.ok, false);
+  assert.equal(v.errors.length, 3);
+  assert.equal(v.data.checkins.length, 1);
+  assert.equal(v.data.goals.length, 1);
 });

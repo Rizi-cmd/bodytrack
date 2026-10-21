@@ -13,7 +13,7 @@ All data is stored only on the phone. Hebrew, RTL.
 **Out of scope (don't bring back):** characters, game worlds, pixel art, animations, the pets, the daily ritual, an AI coach in chat (belongs to Training OS), the motivational/"voice" line on the verdict screen.
 
 ## 2. Product decisions (approved)
-- **Weigh-ins:** about once a week. The trend = average of the last 4 weigh-ins. Rate = slope of the average over the last 4 weeks, in kg/week.
+- **Weigh-ins:** about once a week. The trend = average of the last 4 weigh-ins. Rate = slope of the average over the last 4 weeks, in kg/week. Exact definition: `docs/specs/trend-engine.md`.
 - **Stuck:** a change of less than 0.2 kg/week (shown as a band on the scale).
 - **Colors:** green only for movement toward the goal, red only away from it, always with an arrow and a Hebrew word. Nothing else is green or red.
 - **Numbers:** always LTR with the sign on the left (−0.30, +1.0), real minus sign U+2212.
@@ -25,7 +25,7 @@ All data is stored only on the phone. Hebrew, RTL.
 | Phase | Contents | Status |
 |---|---|---|
 | 0. Foundations | Installed shell, offline, versioned data layer (IndexedDB), backup/restore to a file, import of historical data | **Done** (21.10: installed on iPhone, data restored, first backup saved) |
-| 1. Weekly loop | Design system (Swiss Lab), check-in, trend engine, verdict screen, analytics screen, goals and directions, history with edit/delete/undo | **In progress** (QA setup done 21.10; next: fix 2 bugs found by the tests) |
+| 1. Weekly loop | Design system (Swiss Lab), check-in, trend engine, verdict screen, analytics screen, goals and directions, history with edit/delete/undo | **In progress** (QA setup + 2 bug fixes done 21.10; trend engine spec defined; next: build the trend engine) |
 | 2. Voice | Coaching voice line (if at all, not on the verdict screen) | Deferred |
 | 3. Photos | Camera with ghost overlay, alignment, comparison, backup to gallery | Parked |
 | 4. Later | Training OS connection, timelapse export | TBD |
@@ -81,7 +81,8 @@ Routing (agents can't call each other; the main agent routes and is the only one
 - Phase 1 first task: QA setup (`tests/`, invented fixture, WebKit smoke test).
 
 ## 6b. Open items
-- Bugs found by the new tests (marked `todo` in `tests/model.test.js`): `isISODate` accepts 2026-02-30 (and differs between Node and Safari); `validate()` throws when the lists in a backup file aren't arrays, so the restore sheet doesn't open. Owner: data-engineer.
+- Restore count can overstate when two weigh-ins share a date without ids (pre-existing, low impact).
+- Mockups in `docs/design/` link Google Fonts; closes when Heebo is self-hosted.
 - `package-lock.json` is missing (npm is blocked in the work environment); `@playwright/test` is pinned to 1.56.0. Create a lockfile and switch CI to `npm ci` when possible.
 - Goal direction: PROJECT.md says derived from the phase; `js/model.js` hard-codes it per site. fitness-analyst defines, data-engineer migrates.
 - `lab/photos` loads outside scripts (jsDelivr, Google) on the same address as the app. Low risk (the home-screen app's storage is separate from Safari), but to be resolved.
@@ -95,4 +96,6 @@ Routing (agents can't call each other; the main agent routes and is the only one
 - 21.10 Agent team created (7 agents), reviewed independently and fixed. Heebo will be self-hosted. Wrist site name = "פרק כף יד" (as in the source notes).
 - 21.10 Phase 1 tool scout: no new tools; existing Playwright and installed skills are enough (owner approved).
 - 21.10 QA setup: `npm test` (node:test), Playwright smoke test (WebKit 440x956, invented fixture, offline reload, blocks outside hosts and console errors). WebKit can't be downloaded in the work environment, so CI runs it: GitHub Actions on every push to main (free for public repos, read-only, no secrets). Reviewed by design-critic and privacy-guardian, fixes applied. First CI run green in WebKit. "Offline" in the smoke test = stopping the local server (Playwright's setOffline breaks reloads in WebKit).
+- 21.10 Bug fixes 0.1.1: `isISODate` rejects impossible days the same way on every engine; `validate()` can't throw on any JSON (fuzzed) and rejects bad lists, odd ids and years outside 1900–2100; restore errors show a message.
+- 21.10 Trend engine spec v1 (`docs/specs/trend-engine.md`). Owner decisions: maintenance "holding" is green (staying put is the goal there); verdict and rate need 5 weigh-ins; the trend never resets after a gap.
 - 21.10 Weekly check-in reminder set in iPhone Reminders: every Saturday 11:00, with a link to the app. The in-app reminder idea is no longer needed.

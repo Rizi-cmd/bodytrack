@@ -3,7 +3,7 @@ import { SITES, SITE, fmtDate, fmtKg, fmtCm } from './model.js';
 import { getAll, getMeta, requestPersistence } from './db.js';
 import { validate, restore, shareBackup } from './backup.js';
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.1.1';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
@@ -75,7 +75,7 @@ $('#importFile').onchange = async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
   let obj; try { obj = JSON.parse(await f.text()); } catch { obj = null; }
-  const v = validate(obj);
+  let v; try { v = validate(obj); } catch { v = { ok: false, errors: ['הקובץ לא בפורמט JSON תקין.'] }; }
   const errs = $('#importErrors'); errs.replaceChildren();
   if (!v.ok) {
     pendingObj = null;
@@ -91,7 +91,8 @@ $('#importFile').onchange = async e => {
 };
 async function doRestore(replace) {
   if (!pendingObj) return;
-  const v = await restore(pendingObj, { replace });
+  let v;
+  try { v = await restore(pendingObj, { replace }); } catch { v = { ok: false }; }
   pendingObj = null; $('#importSheet').hidden = true;
   await requestPersistence();
   toast(v.ok ? `שוחזרו ${v.counts.weighins} שקילות ו-${v.counts.measurements} מדידות.` : 'השחזור נכשל, שום דבר לא השתנה.');
