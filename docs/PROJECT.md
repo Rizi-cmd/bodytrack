@@ -91,3 +91,4 @@ Routing (agents can't call each other; the main agent routes and is the only one
 - 21.10 Import file rebuilt from the notes (screenshots), checked by an independent reviewer and loaded locally without errors. Data rule: a label that doesn't match a site → map to the site with the closest values; if unclear, drop it.
 - 21.10 Phase 0 closed: app installed on the iPhone from the home screen, historical data restored, first backup in iCloud Drive. Security check passed (only the owner's commits, no outside network calls in the app, live site matches the repo).
 - 21.10 Agent team created (7 agents), reviewed independently and fixed. Heebo will be self-hosted. Wrist site name = "פרק כף יד" (as in the source notes).
+- 21.10 Weekly check-in reminder set in iPhone Reminders: every Saturday 11:00, with a link to the app. The in-app reminder idea is no longer needed.
