@@ -12,7 +12,7 @@ import {
 } from './report.js';
 import { renderAnalytics, redraw as redrawAnalytics } from './analyticsScreen.js';
 
-export const VERSION = '0.6.0';
+export const VERSION = '0.6.1';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';

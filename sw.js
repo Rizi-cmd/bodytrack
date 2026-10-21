@@ -1,7 +1,8 @@
 // Offline support: caches the app files. User data never passes through here (it lives in IndexedDB).
-const VERSION = 'bt-0.6.0';
+const VERSION = 'bt-0.6.1';
 const SHELL = ['./', './index.html', './css/app.css', './js/app.js', './js/db.js', './js/model.js', './js/backup.js', './js/trend.js', './js/report.js', './js/checkin.js', './js/analytics.js', './js/analyticsView.js', './js/analyticsScreen.js',
-  './manifest.webmanifest', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];
+  './manifest.webmanifest', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png',
+  './fonts/heebo-hebrew-400-normal.woff2', './fonts/heebo-latin-400-normal.woff2', './fonts/heebo-hebrew-500-normal.woff2', './fonts/heebo-latin-500-normal.woff2', './fonts/heebo-hebrew-700-normal.woff2', './fonts/heebo-latin-700-normal.woff2', './fonts/heebo-hebrew-800-normal.woff2', './fonts/heebo-latin-800-normal.woff2', './fonts/heebo-hebrew-900-normal.woff2', './fonts/heebo-latin-900-normal.woff2'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
