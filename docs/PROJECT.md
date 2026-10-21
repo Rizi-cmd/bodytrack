@@ -54,15 +54,15 @@ Reference: `docs/design/swiss-verdict.html`, `docs/design/swiss-analytics.html` 
 - Measurement sites (`js/model.js`): מותניים (טבור), מותן, ישבן, חזה, כתפיים, יד קדמית רפוי/לא רפוי, ירך, שוק, צוואר, פרק כף יד.
 
 ## 6. How we work (permanent rules)
-1. Each new phase opens with a **tool scout** (skills/plugins/connectors), with a safety, users and cost check.
-2. Before any proposal is shown to the user, it passes a **review by an independent expert** matching the phase (design → design critic, code → code review), fixes are applied, and only then is it presented.
-   **Proportional review (21.10):** the depth of review matches the size of the change (see 6a, "Review by size"). No extra manager agent: the main agent is the manager.
+1. **Tool scout** only when the owner asks, or when a phase clearly needs a capability we don't have. Not automatically at every phase.
+2. **Review:** by default the main agent reviews its own work against the spec and runs the tests. An independent agent is used only as listed in 6a ("Review by size") or when the owner asks. No extra manager agent: the main agent is the manager.
 3. No paid tools without asking. Prefer free.
-4. Questions as multiple-choice options.
+4. Questions as multiple-choice options, only when a real decision belongs to the owner.
 5. Do everything yourself; don't hand the user technical steps unless there's no other way (passwords, GitHub settings).
 6. Every decision is updated here in `docs/PROJECT.md` in the same session.
 7. External tools (Stitch etc.) get sample data only.
 8. Commits as `Rizi-cmd@users.noreply.github.com`.
+9. **Data import:** map an unclear field name only when the match is reliable. If there is no safe match, keep the source data and report what wasn't imported. Never invent or silently drop data.
 
 ## 6a. The team (`.claude/agents/`)
 | Agent | Role | Model |
@@ -75,18 +75,14 @@ Reference: `docs/design/swiss-verdict.html`, `docs/design/swiss-analytics.html` 
 | privacy-guardian | Before every commit/push and any new tool or network call. Read-only | Sonnet |
 | hebrew-writer | All Hebrew the owner reads, everyday speech. Read-only | Opus |
 
-Routing (agents can't call each other; the main agent routes and is the only one that edits this file):
-- Design → ui-designer → hebrew-writer → design-critic → owner.
-- Code → frontend-dev / data-engineer → design-critic → privacy-guardian → commit.
-- Metrics → fitness-analyst (define) → data-engineer (build + tests) → fresh fitness-analyst (verify) → design-critic.
-- Phase 1 first task: QA setup (`tests/`, invented fixture, WebKit smoke test). Done.
+Default (owner decision 21.10, simplified): the main agent does the work itself. The agents stay available and are called only per the table below or when the owner asks. Agents can't call each other; the main agent routes and is the only one that edits this file.
 
-Review by size (owner decision 21.10, to avoid overkill):
+Review by size:
 | Change | Who reviews |
 |---|---|
-| Small: bug fix or tweak, under ~50 lines, no new screen | design-critic (code review) only. Hebrew strings batched and reviewed once at the end of the work block. |
-| New calculation | fitness-analyst defines → data-engineer builds → fresh fitness-analyst verifies → design-critic. |
-| New screen or design | Full chain: ui-designer → hebrew-writer → design-critic → owner. |
+| Small: bug fix or tweak, under ~50 lines, no new screen | No agent. Main agent self-review + tests + CI. |
+| New calculation | fitness-analyst defines; main agent builds with tests; one fitness-analyst verify at the end. |
+| New screen or design | Main agent builds; design-critic once (hebrew-writer for the screen's text) before showing the owner. |
 | Privacy | Basic check runs automatically in CI on every push (`npm run privacy`: no outside URLs in the app, no emails except noreply, no backup files outside fixtures, fixture marked invented). privacy-guardian agent only when adding a dependency, a network call, a new tool, or touching how data is stored or exported. |
 Rule of thumb: no agent is launched twice for the same thing in one block; a re-review covers only what changed.
 
@@ -110,3 +106,4 @@ Rule of thumb: no agent is launched twice for the same thing in one block; a re-
 - 21.10 Trend engine spec v1 (`docs/specs/trend-engine.md`). Owner decisions: maintenance "holding" is green (staying put is the goal there); verdict and rate need 5 weigh-ins; the trend never resets after a gap.
 - 21.10 Review by size adopted (owner): not every change goes through every agent; basic privacy check moved into CI. No manager agent.
 - 21.10 Weekly check-in reminder set in iPhone Reminders: every Saturday 11:00, with a link to the app. The in-app reminder idea is no longer needed.
+- 21.10 Simpler way of working (owner): no automatic tool scout or reviewer agent per phase/proposal; main agent works and self-reviews by default, agents only per "Review by size". Data rule replaced: unclear label → map only if reliable, otherwise keep the source and report (no silent drops).
