@@ -76,6 +76,7 @@
       <button role="tab" aria-selected="true" data-list="w">שקילות</button>
       <button role="tab" aria-selected="false" data-list="m">היקפים</button>
     </div>
+    <p class="lab hint">לחיצה על שורה פותחת תיקון או מחיקה.</p>
     <div class="list" id="listW"></div>
     <div class="list" id="listM" hidden></div>
   </details>
@@ -150,6 +151,26 @@
     <p class="lab bad" id="qKgErr" hidden></p>
     <button type="submit" class="btn" id="qSave">שמירה</button>
     <button type="button" class="btn ghost" id="qCancel">ביטול</button>
+  </form>
+</div>
+
+<!-- history: fix or delete a weigh-in / a day of circumferences -->
+<div class="sheet" id="editSheet" hidden>
+  <form class="sheetBox stack" role="dialog" aria-labelledby="eTitle" id="editForm" novalidate>
+    <h2 id="eTitle"></h2>
+    <p class="lab" id="eDate"></p>
+    <div class="stack" id="eKgBox">
+      <div class="stepper">
+        <button type="button" class="step" data-step="-0.1" data-for="eKg" aria-label="פחות 0.1 ק״ג">−</button>
+        <input class="field big-field n" id="eKg" inputmode="decimal" dir="ltr" autocomplete="off" aria-label="משקל בק״ג">
+        <button type="button" class="step" data-step="0.1" data-for="eKg" aria-label="עוד 0.1 ק״ג">+</button>
+      </div>
+      <p class="lab bad" id="eKgErr" hidden></p>
+    </div>
+    <table class="ciTable" id="eSites"></table>
+    <button type="submit" class="btn" id="eSave">שמירה</button>
+    <button type="button" class="btn danger" id="eDelete"></button>
+    <button type="button" class="btn ghost" id="eCancel">ביטול</button>
   </form>
 </div>
 

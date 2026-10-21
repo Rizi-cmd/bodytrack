@@ -250,4 +250,12 @@ export function nearestPoint(points, x) {
   for (const p of points || []) if (!best || Math.abs(p.x - x) < Math.abs(best.x - x)) best = p;
   return best;
 }
-export const pointReadout = p => ({ date: fmtFull(p.date), kg: fmtWeight(p.kg), avg: p.avg === null ? null : fmtWeight(p.avg) });
+// With that day's check-in: the week type (only when not "normal") and the note.
+export function pointReadout(p, checkins) {
+  const c = (checkins || []).find(x => x && !x.deleted && x.date === p.date);
+  const note = c && typeof c.note === 'string' && c.note.trim() ? c.note.trim() : null;
+  return {
+    date: fmtFull(p.date), kg: fmtWeight(p.kg), avg: p.avg === null ? null : fmtWeight(p.avg),
+    tag: c && TAG_HE[c.tag] ? TAG_HE[c.tag] : null, note
+  };
+}

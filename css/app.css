@@ -137,3 +137,10 @@ html{touch-action:pan-x pan-y}
 svg .hl-line{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
 svg .hl-dot{fill:var(--bg);stroke:var(--ink);stroke-width:2.2}
 svg .hl-avg{fill:var(--ink)}
+
+/* history rows open the fix/delete sheet */
+button.row,button.mday{width:100%;text-align:right;min-height:44px}
+.hint{margin-top:8px}
+.sheetBox{max-height:92vh;overflow-y:auto;overscroll-behavior:contain}
+.readout{max-width:min(82%,300px);white-space:normal}
+.readout .rnote{color:var(--mute)}

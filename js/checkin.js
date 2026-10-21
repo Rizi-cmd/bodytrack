@@ -93,34 +93,31 @@ function pack(writes) {
   return { apply, undo };
 }
 
-// Full check-in. form = { date, kg, cm: {siteId: text}, tag, note }.
-// Returns { ok, errors: {date?, kg?, sites: {siteId: msg}}, apply, undo, weighinId }.
-export function buildCheckin(form, data, today, at) {
-  const errors = { sites: {} };
-  const date = form.date;
-  checkDate(date, today, errors);
-  const kg = parseNum(form.kg, KG);
-  if (kg === null) errors.kg = 'צריך משקל כדי לשמור.';
-  else if (Number.isNaN(kg)) errors.kg = `משקל בין ${KG.lo} ל־${KG.hi} ק״ג, למשל 80.4`;
+const KG_ERR = { empty: 'צריך משקל כדי לשמור.', bad: `משקל בין ${KG.lo} ל־${KG.hi} ק״ג, למשל 80.4` };
+function readKg(text, errors) {
+  const kg = parseNum(text, KG);
+  if (kg === null) errors.kg = KG_ERR.empty;
+  else if (Number.isNaN(kg)) errors.kg = KG_ERR.bad;
+  return kg;
+}
+function readSites(cm, errors) {
   const cms = {};
   for (const s of SITES) {
-    const v = parseNum((form.cm || {})[s.id], CM);
+    const v = parseNum((cm || {})[s.id], CM);
     if (Number.isNaN(v)) errors.sites[s.id] = `בין ${CM.lo} ל־${CM.hi} ס״מ`;
     else cms[s.id] = v;
   }
-  const tag = TAG_IDS.has(form.tag) ? form.tag : 'normal';
-  const note = String(form.note ?? '').replace(/\s+/g, ' ').trim().slice(0, NOTE_MAX);
-  const ok = !errors.date && !errors.kg && !Object.keys(errors.sites).length;
-  if (!ok) return { ok, errors };
-
-  const writes = weighinWrites(data, date, kg, at);
-  const weighinId = writes[0].rec.id;
+  return cms;
+}
+// Circumferences for a date: update that day's value per site, add new ones, and soft-delete
+// values saved earlier that day that were cleared (undoable).
+function measurementWrites(data, date, cms, at) {
+  const writes = [];
   const M = live(data.measurements);
   for (const s of SITES) {
     const same = M.filter(m => m.site === s.id && m.date === date);
     const v = cms[s.id];
     if (v === null) {
-      // Cleared a value saved earlier that day → remove it (soft, undoable).
       for (const m of same) writes.push({ store: 'measurements', rec: { ...m, deleted: true, at }, old: m });
       continue;
     }
@@ -131,6 +128,25 @@ export function buildCheckin(form, data, today, at) {
       writes.push({ store: 'measurements', rec: { id: freeId(`m-${date}-${s.id}`, data.measurements, at), date, site: s.id, cm: v, deleted: false, at }, old: null });
     }
   }
+  return writes;
+}
+
+// Full check-in. form = { date, kg, cm: {siteId: text}, tag, note }.
+// Returns { ok, errors: {date?, kg?, sites: {siteId: msg}}, apply, undo, weighinId }.
+export function buildCheckin(form, data, today, at) {
+  const errors = { sites: {} };
+  const date = form.date;
+  checkDate(date, today, errors);
+  const kg = readKg(form.kg, errors);
+  const cms = readSites(form.cm, errors);
+  const tag = TAG_IDS.has(form.tag) ? form.tag : 'normal';
+  const note = String(form.note ?? '').replace(/\s+/g, ' ').trim().slice(0, NOTE_MAX);
+  const ok = !errors.date && !errors.kg && !Object.keys(errors.sites).length;
+  if (!ok) return { ok, errors };
+
+  const writes = weighinWrites(data, date, kg, at);
+  const weighinId = writes[0].rec.id;
+  writes.push(...measurementWrites(data, date, cms, at));
   const prevC = live(data.checkins).find(c => c.date === date);
   const c = { id: prevC ? prevC.id : freeId('c-' + date, data.checkins, at), date, weighinId, tag, note, at };
   writes.push({ store: 'checkins', rec: prevC ? { ...prevC, ...c } : c, old: prevC || null });
@@ -141,9 +157,56 @@ export function buildCheckin(form, data, today, at) {
 export function buildWeighin(form, data, today, at) {
   const errors = {};
   checkDate(form.date, today, errors);
-  const kg = parseNum(form.kg, KG);
-  if (kg === null) errors.kg = 'צריך משקל כדי לשמור.';
-  else if (Number.isNaN(kg)) errors.kg = `משקל בין ${KG.lo} ל־${KG.hi} ק״ג, למשל 80.4`;
+  const kg = readKg(form.kg, errors);
   if (errors.date || errors.kg) return { ok: false, errors };
   return { ok: true, errors, ...pack(weighinWrites(data, form.date, kg, at)) };
+}
+
+// Typo guard: a weight more than JUMP_KG away from the weigh-in before it asks "are you sure?" first.
+export const JUMP_KG = 2;
+export function bigJump(kg, prev) {
+  if (!prev || typeof kg !== 'number' || !Number.isFinite(kg)) return null;
+  const d = roundN(kg - prev.kg, 2);
+  return Math.abs(d) > JUMP_KG ? { delta: d, prevKg: prev.kg, prevDate: prev.date } : null;
+}
+// The weigh-in just before a date (for the typo guard when fixing an old one).
+export const prevWeighin = (data, date) => {
+  const p = before(data.weighins, date).pop();
+  return p ? { kg: p.kg, date: p.date } : null;
+};
+
+// History: fix one weigh-in's weight (its date stays).
+export function editWeighin(data, id, kgText, at) {
+  const errors = {};
+  const w = live(data.weighins).find(x => String(x.id) === String(id));
+  if (!w) return { ok: false, errors: { kg: 'השקילה הזאת כבר לא קיימת.' } };
+  const kg = readKg(kgText, errors);
+  if (errors.kg) return { ok: false, errors };
+  return { ok: true, errors, kg, ...pack([{ store: 'weighins', rec: { ...w, kg, at }, old: w }]) };
+}
+
+// History: delete one weigh-in (soft). That day's check-in (tag, note) goes with it when no other
+// weigh-in is left on that date.
+export function deleteWeighin(data, id, at) {
+  const w = live(data.weighins).find(x => String(x.id) === String(id));
+  if (!w) return { ok: false, errors: {} };
+  const writes = [{ store: 'weighins', rec: { ...w, deleted: true, at }, old: w }];
+  if (!live(data.weighins).some(x => x !== w && x.date === w.date))
+    for (const c of live(data.checkins).filter(c => c.date === w.date))
+      writes.push({ store: 'checkins', rec: { ...c, deleted: true, at }, old: c });
+  return { ok: true, errors: {}, ...pack(writes) };
+}
+
+// History: fix the circumferences of one day (empty field = remove that site's value).
+export function editMeasureDay(data, date, cm, at) {
+  const errors = { sites: {} };
+  const cms = readSites(cm, errors);
+  if (Object.keys(errors.sites).length) return { ok: false, errors };
+  const writes = measurementWrites(data, date, cms, at);
+  return { ok: true, errors, ...pack(writes) };
+}
+export function deleteMeasureDay(data, date, at) {
+  const writes = live(data.measurements).filter(m => m.date === date)
+    .map(m => ({ store: 'measurements', rec: { ...m, deleted: true, at }, old: m }));
+  return writes.length ? { ok: true, errors: {}, ...pack(writes) } : { ok: false, errors: {} };
 }

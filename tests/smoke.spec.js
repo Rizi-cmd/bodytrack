@@ -172,6 +172,14 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect(page.locator('#lastKg')).toHaveText('79.9');
   await expect(page.locator('#listW .row')).toHaveCount(17);
   await expect(page.locator('#notes')).toContainText('חופשה');
+  // Long press on the newest weigh-in shows that day's week type and note.
+  await page.locator('#chart').scrollIntoViewIfNeeded();
+  const nb = await page.locator('#chart svg').boundingBox();
+  await page.mouse.move(nb.x + nb.width - 2, nb.y + nb.height / 2);
+  await page.mouse.down();
+  await expect(page.locator('#chartRead')).toContainText('79.9');
+  await expect(page.locator('#chartRead')).toContainText('חופשה · SAMPLE note');
+  await page.mouse.up();
   await expect(page.locator('#actions')).toBeHidden();
   await expect(page.locator('#circSec')).toHaveAttribute('open', '');
   await expect(page.locator('#doneBar')).toBeVisible();
@@ -196,6 +204,21 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect(page.locator('#lastKg')).toHaveText('80.2');
   await expect(page.locator('#listW .row')).toHaveCount(16);
 
+  // Typo guard: more than 2 kg from the previous weigh-in asks first. "No" saves nothing; "yes" saves.
+  await page.locator('#quickBtn').click();
+  await page.locator('#qKg').fill('85');
+  let asked = '';
+  page.once('dialog', d => { asked = d.message(); d.dismiss(); });
+  await page.locator('#qSave').click();
+  await expect.poll(() => asked).toContain('4.8 ק״ג יותר');
+  await expect(page.locator('#quickSheet')).toBeVisible();
+  await expect(page.locator('#lastKg')).toHaveText('80.2');
+  page.once('dialog', d => d.accept());
+  await page.locator('#qSave').click();
+  await expect(page.locator('#lastKg')).toHaveText('85.0');
+  await page.locator('#toastAct').click();
+  await expect(page.locator('#lastKg')).toHaveText('80.2');
+
   // Circumferences tab shows the newest full set (waist 84 - 4.5 = 79.5).
   await expect(page.locator('#histSec')).not.toHaveAttribute('open', '');   // closed by default
   await expect(page.locator('#circSec')).not.toHaveAttribute('open', '');
@@ -205,7 +228,33 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await page.locator('[data-list="m"]').click();
   await expect(page.locator('#listM .mday')).toHaveCount(5);
   await expect(page.locator('#listM .mday').first()).toContainText('79.5');
+  // History: fix a day of circumferences, then undo.
+  await page.locator('#listM .mday').first().click();
+  await expect(page.locator('#editSheet')).toBeVisible();
+  await expect(page.locator('#eSites tr')).toHaveCount(11);
+  await expect(page.locator('#e-waist')).toHaveValue('79.5');
+  await page.locator('#e-waist').fill('79.1');
+  await page.locator('#eSave').click();
+  await expect(page.locator('#editSheet')).toBeHidden();
+  await expect(page.locator('#listM .mday').first()).toContainText('79.1');
+  await page.locator('#toastAct').click();
+  await expect(page.locator('#listM .mday').first()).toContainText('79.5');
   await page.locator('[data-list="w"]').click();
+  // History: fix the newest weigh-in, then undo; delete it, then undo.
+  await page.locator('#listW .row').first().click();
+  await expect(page.locator('#eKg')).toHaveValue('80.2');
+  await page.locator('#eKg').fill('80.4');
+  await page.locator('#eSave').click();
+  await expect(page.locator('#lastKg')).toHaveText('80.4');
+  await page.locator('#toastAct').click();
+  await expect(page.locator('#lastKg')).toHaveText('80.2');
+  await page.locator('#listW .row').first().click();
+  await page.locator('#eDelete').click();
+  await expect(page.locator('#listW .row')).toHaveCount(15);
+  await expect(page.locator('#toastMsg')).toHaveText('השקילה נמחקה.');
+  await page.locator('#toastAct').click();
+  await expect(page.locator('#listW .row')).toHaveCount(16);
+  await expect(page.locator('#lastKg')).toHaveText('80.2');
 
   await layoutOk('verdict');
   await page.screenshot({ path: testInfo.outputPath('verdict.png'), fullPage: true });

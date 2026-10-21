@@ -2,14 +2,16 @@
 // Every number shown comes from js/trend.js and js/report.js (pure, tested); check-in records from js/checkin.js.
 import { SITES, fmtDate, fmtCm, todayISO } from './model.js';
 import { getAll, put, writeAll, getMeta, requestPersistence } from './db.js';
-import { TAGS, stepKg, checkinDefaults, buildCheckin, buildWeighin } from './checkin.js';
+import {
+  TAGS, stepKg, checkinDefaults, buildCheckin, buildWeighin, bigJump, prevWeighin, editWeighin, deleteWeighin, editMeasureDay, deleteMeasureDay
+} from './checkin.js';
 import { validate, restore, shareBackup } from './backup.js';
 import { trendSummary, fmtRate, fmtWeight, EMPTY } from './trend.js';
 import {
   PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, weightChart, nearestPoint, pointReadout, fmtDay, fmtFull
 } from './report.js';
 
-export const VERSION = '0.4.2';
+export const VERSION = '0.5.0';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -99,10 +101,11 @@ function showPoint(clientX) {
   svg.append(sv('line', { class: 'hl hl-line', x1: p.x, x2: p.x, y1: c.padT, y2: c.plotBottom }));
   if (p.yAvg !== null) svg.append(sv('rect', { class: 'hl hl-avg', x: p.x - 3.5, y: p.yAvg - 3.5, width: 7, height: 7 }));
   svg.append(sv('circle', { class: 'hl hl-dot', cx: p.x, cy: p.y, r: 5.5 }));
-  const t = pointReadout(p), box = $('#chartRead');
+  const t = pointReadout(p, state.checkins), box = $('#chartRead');
   box.replaceChildren(num(t.date, 'n'), el('br'), 'שקילה: ', num(t.kg, 'n'));
   box.firstChild.style.fontWeight = '800';
   if (t.avg !== null) box.append(el('br'), 'ממוצע 4 שקילות: ', num(t.avg, 'n'));
+  if (t.tag || t.note) box.append(el('br'), el('span', 'rnote', [t.tag, t.note].filter(Boolean).join(' · ')));
   box.className = 'readout ' + (p.x > c.width / 2 ? 'at-l' : 'at-r'); // keep it away from the finger
   box.hidden = false;
 }
@@ -196,13 +199,15 @@ async function render() {
   state.phases = (await getAll('goals')).filter(isPhaseRecord)
     .sort((a, b) => (a.at || 0) - (b.at || 0));
   const has = W.length || M.length;
+  state.checkins = C;
   renderVerdict(W, M, C);
 
   const lw = $('#listW'); lw.replaceChildren();
   if (!W.length) lw.append(el('p', 'empty', 'אין שקילות.'));
   W.slice().reverse().forEach(w => {
-    const r = el('div', 'row'); const b = el('b', 'n', fmtWeight(w.kg)); b.dir = 'ltr';
+    const r = el('button', 'row'); r.type = 'button'; const b = el('b', 'n', fmtWeight(w.kg)); b.dir = 'ltr';
     r.append(el('span', 'dt', fmtDate(w.date)), b); lw.append(r);
+    r.onclick = () => openEditW(w.id);
   });
 
   const days = new Map();
@@ -210,7 +215,8 @@ async function render() {
   const lm = $('#listM'); lm.replaceChildren();
   if (!days.size) lm.append(el('p', 'empty', 'אין מדידות.'));
   [...days.keys()].sort().reverse().forEach(d => {
-    const box = el('div', 'mday'); box.append(el('h3', null, fmtDate(d)));
+    const box = el('button', 'mday'); box.type = 'button'; box.onclick = () => openEditM(d);
+    box.append(el('h3', null, fmtDate(d)));
     const g = el('div', 'mgrid');
     const byId = Object.fromEntries(days.get(d).map(m => [m.site, m]));
     SITES.filter(s => byId[s.id]).forEach(s => {
@@ -332,26 +338,41 @@ function kgInfo(box, d) {
 }
 const markTags = () => document.querySelectorAll('[data-tag]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tag === ci.tag));
 
+// One row per site: name (+ error), previous value and date, input. Ids: `${prefix}-${site}`, `${prefix}-err-${site}`.
+function siteRows(tb, sites, prefix) {
+  tb.replaceChildren();
+  for (const s of sites) {
+    const tr = el('tr');
+    const name = el('td'); const lab = el('label', null, s.he); lab.htmlFor = `${prefix}-${s.id}`;
+    name.append(lab, el('span', 'lab bad err', ''));
+    name.lastChild.hidden = true; name.lastChild.id = `${prefix}-err-${s.id}`;
+    const prev = el('td', 'prev lab');
+    if (s.prev) prev.append('קודם ', num(fmtWeight(s.prev.cm)), ' · ', num(fmtDay(s.prev.date)));
+    else prev.append('מדידה ראשונה');
+    const inp = el('input', 'field n'); inp.id = `${prefix}-${s.id}`; inp.inputMode = 'decimal'; inp.dir = 'ltr';
+    inp.autocomplete = 'off'; inp.value = s.value;
+    const cell = el('td', 'in'); cell.append(inp);
+    tr.append(name, prev, cell); tb.append(tr);
+  }
+}
+const siteValues = prefix => Object.fromEntries(SITES.map(s => [s.id, document.getElementById(`${prefix}-${s.id}`).value]));
+const siteErrors = (prefix, errs) => {
+  for (const s of SITES) showErr(document.getElementById(`${prefix}-${s.id}`), document.getElementById(`${prefix}-err-${s.id}`), errs[s.id]);
+};
+// Typo guard: a weight more than 2 kg from the weigh-in before it is saved only after "are you sure?".
+function jumpOk(kg, prev) {
+  const j = bigJump(kg, prev);
+  if (!j) return true;
+  return confirm(`${fmtWeight(kg)} ק״ג זה ${fmtWeight(Math.abs(j.delta))} ק״ג ${j.delta > 0 ? 'יותר' : 'פחות'} מהשקילה הקודמת (${fmtWeight(j.prevKg)} ב־${fmtDay(j.prevDate)}). לשמור בכל זאת?`);
+}
+
 function fillCheckin(date) {
   const d = checkinDefaults(ci.data, date);
   $('#ciDate').value = date; $('#ciDate').max = todayISO();
   $('#ciKg').value = d.kg;
   kgInfo($('#ciKgInfo'), d);
   showErr($('#ciDate'), $('#ciDateErr'), null); showErr($('#ciKg'), $('#ciKgErr'), null);
-  const tb = $('#ciSites'); tb.replaceChildren();
-  for (const s of d.sites) {
-    const tr = el('tr');
-    const name = el('td'); const lab = el('label', null, s.he); lab.htmlFor = 'ci-' + s.id;
-    name.append(lab, el('span', 'lab bad err', ''));
-    name.lastChild.hidden = true; name.lastChild.id = 'ci-err-' + s.id;
-    const prev = el('td', 'prev lab');
-    if (s.prev) prev.append('קודם ', num(fmtWeight(s.prev.cm)), ' · ', num(fmtDay(s.prev.date)));
-    else prev.append('מדידה ראשונה');
-    const inp = el('input', 'field n'); inp.id = 'ci-' + s.id; inp.inputMode = 'decimal'; inp.dir = 'ltr';
-    inp.autocomplete = 'off'; inp.value = s.value;
-    const cell = el('td', 'in'); cell.append(inp);
-    tr.append(name, prev, cell); tb.append(tr);
-  }
+  siteRows($('#ciSites'), d.sites, 'ci');
   ci.tag = d.tag; markTags();
   $('#ciNote').value = d.note;
   $('#ciEditing').hidden = !d.editing;
@@ -391,14 +412,12 @@ document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
 
 $('#checkinView').onsubmit = async e => {
   e.preventDefault();
-  const form = {
-    date: $('#ciDate').value, kg: $('#ciKg').value, tag: ci.tag, note: $('#ciNote').value,
-    cm: Object.fromEntries(SITES.map(s => [s.id, document.getElementById('ci-' + s.id).value]))
-  };
+  const form = { date: $('#ciDate').value, kg: $('#ciKg').value, tag: ci.tag, note: $('#ciNote').value, cm: siteValues('ci') };
   const r = buildCheckin(form, ci.data, todayISO(), Date.now());
   showErr($('#ciDate'), $('#ciDateErr'), r.errors.date); showErr($('#ciKg'), $('#ciKgErr'), r.errors.kg);
-  for (const s of SITES) showErr(document.getElementById('ci-' + s.id), document.getElementById('ci-err-' + s.id), r.errors.sites[s.id]);
+  siteErrors('ci', r.errors.sites);
   if (!r.ok) { const bad = $('#checkinView [aria-invalid=true]'); if (bad) bad.focus(); return; }
+  if (!jumpOk(r.apply.weighins[0].kg, prevWeighin(ci.data, form.date))) return;
   try { await writeAll(r.apply); } catch { toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
   await requestPersistence();
   showView('main');
@@ -425,6 +444,7 @@ $('#quickForm').onsubmit = async e => {
   const r = buildWeighin({ date: todayISO(), kg: $('#qKg').value }, ci.data, todayISO(), Date.now());
   showErr($('#qKg'), $('#qKgErr'), r.errors.kg || r.errors.date);
   if (!r.ok) { $('#qKg').focus(); return; }
+  if (!jumpOk(r.apply.weighins[0].kg, prevWeighin(ci.data, todayISO()))) return;
   try { await writeAll(r.apply); } catch { toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
   await requestPersistence();
   $('#quickSheet').hidden = true;
@@ -434,6 +454,69 @@ $('#quickForm').onsubmit = async e => {
     await render(); toast('השקילה בוטלה.');
   });
 };
+
+// ---- history: fix or delete ----
+const ed = { mode: null, id: null, date: null, data: null };
+// Save the change, close the sheet, redraw, and offer undo.
+async function commit(r, done, undone) {
+  try { await writeAll(r.apply); } catch { toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
+  $('#editSheet').hidden = true;
+  await render();
+  toast(done, 8000, async () => {
+    try { await writeAll(r.undo); } catch { toast('לא הצלחתי לבטל.'); return; }
+    await render(); toast(undone);
+  });
+}
+async function openEditW(id) {
+  ed.data = await rawData();
+  const w = ed.data.weighins.find(x => !x.deleted && x.id === id);
+  if (!w) return;
+  Object.assign(ed, { mode: 'w', id, date: w.date });
+  $('#eTitle').textContent = 'תיקון שקילה';
+  $('#eDate').replaceChildren(num(fmtFull(w.date)));
+  $('#eKgBox').hidden = false; $('#eSites').hidden = true;
+  $('#eKg').value = String(w.kg); showErr($('#eKg'), $('#eKgErr'), null);
+  $('#eDelete').textContent = 'מחיקת השקילה';
+  $('#editSheet').hidden = false;
+}
+async function openEditM(date) {
+  ed.data = await rawData();
+  Object.assign(ed, { mode: 'm', id: null, date });
+  $('#eTitle').textContent = 'תיקון היקפים';
+  $('#eDate').replaceChildren(num(fmtFull(date)), ' · שדה ריק מוחק את המדידה');
+  $('#eKgBox').hidden = true; $('#eSites').hidden = false;
+  siteRows($('#eSites'), checkinDefaults(ed.data, date).sites, 'e');
+  $('#eDelete').textContent = 'מחיקת כל ההיקפים של היום';
+  $('#editSheet').hidden = false;
+}
+$('#editForm').addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'eKg') clearErr(t, $('#eKgErr'));
+  else if (t.id.startsWith('e-')) clearErr(t, document.getElementById('e-err-' + t.id.slice(2)));
+});
+$('#editForm').onsubmit = async e => {
+  e.preventDefault();
+  const at = Date.now();
+  if (ed.mode === 'w') {
+    const r = editWeighin(ed.data, ed.id, $('#eKg').value, at);
+    showErr($('#eKg'), $('#eKgErr'), r.errors.kg);
+    if (!r.ok) { $('#eKg').focus(); return; }
+    if (!jumpOk(r.kg, prevWeighin(ed.data, ed.date))) return;
+    await commit(r, 'השקילה תוקנה.', 'התיקון בוטל.');
+  } else {
+    const r = editMeasureDay(ed.data, ed.date, siteValues('e'), at);
+    siteErrors('e', r.errors.sites);
+    if (!r.ok) { const bad = $('#editForm [aria-invalid=true]'); if (bad) bad.focus(); return; }
+    await commit(r, 'ההיקפים תוקנו.', 'התיקון בוטל.');
+  }
+};
+$('#eDelete').onclick = async () => {
+  const at = Date.now();
+  const r = ed.mode === 'w' ? deleteWeighin(ed.data, ed.id, at) : deleteMeasureDay(ed.data, ed.date, at);
+  if (!r.ok) { $('#editSheet').hidden = true; return; }
+  await commit(r, ed.mode === 'w' ? 'השקילה נמחקה.' : 'ההיקפים של היום נמחקו.', 'המחיקה בוטלה.');
+};
+$('#eCancel').onclick = () => { $('#editSheet').hidden = true; };
 
 $('#ver').textContent = 'גרסה ' + VERSION + '.';
 render();

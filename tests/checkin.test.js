@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { parseNum, stepKg, checkinDefaults, buildCheckin, buildWeighin, KG, CM, NOTE_MAX } from '../js/checkin.js';
+import { parseNum, stepKg, checkinDefaults, buildCheckin, buildWeighin, bigJump, prevWeighin, editWeighin, deleteWeighin, editMeasureDay, deleteMeasureDay, KG, CM, NOTE_MAX } from '../js/checkin.js';
 import { trendSummary } from '../js/trend.js';
 import { footnotes } from '../js/report.js';
 import { SITES } from '../js/model.js';
@@ -167,4 +167,61 @@ test('unknown tag falls back to normal; note is trimmed to one line and capped',
 test('quick weigh-in writes only a weigh-in', () => {
   const r = buildWeighin({ date: TODAY, kg: '80.1' }, fx(), TODAY, AT);
   assert.deepEqual(Object.keys(r.apply), ['weighins']);
+});
+
+test('typo guard: more than 2 kg from the previous weigh-in asks first', () => {
+  const prev = { kg: 80.2, date: '2026-10-10' };
+  assert.equal(bigJump(82.2, prev), null);          // exactly 2.0 is fine
+  assert.equal(bigJump(78.2, prev), null);
+  assert.deepEqual(bigJump(82.0 + 0.3, prev), { delta: 2.1, prevKg: 80.2, prevDate: '2026-10-10' });
+  assert.equal(bigJump(78.1, prev).delta, -2.1);
+  assert.equal(bigJump(90, null), null);            // first weigh-in ever: nothing to compare
+  assert.deepEqual(prevWeighin(fx(), '2026-07-12'), { kg: 83, date: '2026-07-11' });
+  assert.equal(prevWeighin(fx(), '2026-06-06'), null);
+});
+
+test('history: fix a weigh-in keeps its id and date; undo restores it', () => {
+  const data = fx();
+  const w = data.weighins.find(x => x.date === '2026-07-11');
+  const r = editWeighin(data, w.id, '83,4', AT);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.apply.weighins, [{ ...w, kg: 83.4, at: AT }]);
+  assert.deepEqual(apply(apply(data, r.apply), r.undo).weighins, data.weighins);
+  assert.equal(editWeighin(data, w.id, '', AT).errors.kg, 'צריך משקל כדי לשמור.');
+  assert.equal(editWeighin(data, 'nope', '80', AT).ok, false);
+});
+
+test('history: delete a weigh-in is soft, takes that day\'s check-in along, undo brings both back', () => {
+  const data = fx();
+  const r = deleteWeighin(data, 'w-2026-08-29', AT);
+  const after = apply(data, r.apply);
+  assert.ok(!liveW(after).some(w => w.date === '2026-08-29'));
+  assert.ok(after.weighins.some(w => w.date === '2026-08-29' && w.deleted)); // still there, marked
+  assert.ok(after.checkins.every(c => c.deleted));
+  const back = apply(after, r.undo);
+  assert.deepEqual(back.weighins, data.weighins);
+  assert.deepEqual(back.checkins, data.checkins);
+  // Another weigh-in left on that date → the check-in stays.
+  const two = { weighins: [{ id: 'a', date: TODAY, kg: 80 }, { id: 'b', date: TODAY, kg: 81 }], checkins: [{ id: 'c', date: TODAY, tag: 'sick' }] };
+  assert.equal(deleteWeighin(two, 'a', AT).apply.checkins, undefined);
+});
+
+test('history: fix or delete one day of circumferences; undo restores', () => {
+  const data = fx();
+  const day = liveM(data).map(m => m.date).sort().pop();
+  const before = liveM(data).filter(m => m.date === day);
+  const cm = Object.fromEntries(before.map(m => [m.site, String(m.cm)]));
+  cm.waist = '78'; cm.hips = '';
+  const r = editMeasureDay(data, day, cm, AT);
+  const after = apply(data, r.apply);
+  const today = liveM(after).filter(m => m.date === day);
+  assert.equal(today.find(m => m.site === 'waist').cm, 78);
+  assert.equal(today.find(m => m.site === 'hips'), undefined);
+  assert.equal(today.length, before.length - 1);
+  assert.deepEqual(liveM(apply(after, r.undo)), liveM(data));
+  assert.equal(editMeasureDay(data, day, { waist: 'x' }, AT).ok, false);
+  const del = deleteMeasureDay(data, day, AT);
+  assert.equal(liveM(apply(data, del.apply)).filter(m => m.date === day).length, 0);
+  assert.deepEqual(liveM(apply(apply(data, del.apply), del.undo)), liveM(data));
+  assert.equal(deleteMeasureDay(data, '1999-01-01', AT).ok, false);
 });

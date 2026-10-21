@@ -110,7 +110,14 @@ test('weight chart: ranges, points inside the plot, month labels', () => {
   assert.equal(nearestPoint(all.points, 9999), all.points[all.points.length - 1]);
   const mid = all.points[5];
   assert.equal(nearestPoint(all.points, mid.x + 1), mid);
-  assert.deepEqual(pointReadout(all.points[all.points.length - 1]), { date: '10.10.2026', kg: '80.2', avg: '80.6' });
+  assert.deepEqual(pointReadout(all.points[all.points.length - 1]), { date: '10.10.2026', kg: '80.2', avg: '80.6', tag: null, note: null });
+  // That day's check-in: week type (not "normal") and note; deleted check-ins ignored.
+  const sick = all.points.find(p => p.date === '2026-08-29');
+  assert.deepEqual([pointReadout(sick, fx().checkins).tag, pointReadout(sick, fx().checkins).note], ['מחלה', 'SAMPLE: invented note']);
+  const d = sick.date;
+  assert.equal(pointReadout(sick, [{ id: 'x', date: d, tag: 'normal', note: '  ' }]).tag, null);
+  assert.equal(pointReadout(sick, [{ id: 'x', date: d, tag: 'normal', note: '  ' }]).note, null);
+  assert.equal(pointReadout(sick, [{ id: 'x', date: d, tag: 'event', note: 'x', deleted: true }]).tag, null);
   assert.equal(pointReadout(all.points[0]).avg, null);
   assert.equal(nearestPoint([], 10), null);
   // A year of weekly weigh-ins: 6 months = the last 183 days (27 weigh-ins), between 3 months and all.
