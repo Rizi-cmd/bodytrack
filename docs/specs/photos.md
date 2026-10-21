@@ -37,7 +37,7 @@ The prototype in `lab/photos` is the starting point; what changes is marked.
 ## 5. Storage
 - New IndexedDB store `photos` via a schema migration (existing data untouched).
 - Record: `{ id, date, pose: 'front'|'side'|'back', ts, aligned: true|false, img: Blob (JPEG 900×1200, quality 0.88), metrics: { ratio, vis, bg: [r,g,b], facing }, deleted }`. About 150–250 KB per photo.
-- Only the edited photo is kept (not the original). Trade-off: if alignment improves later, old photos can't be re-edited.
+- **Trial period (owner, 21.10):** the original is kept too (`orig: Blob`, JPEG, long side max 2000 px, quality 0.85, about 400–600 KB), on the phone and in the photo backup, until the owner has seen the edit on real photos. Then the owner decides: keep originals, or stop keeping them (deleting existing originals only with explicit approval). With originals, any photo can be re-edited if the edit is bad or improves later.
 - `navigator.storage.persist()` after the first save.
 - Delete = soft, with "ביטול" in the toast (as in history).
 
@@ -49,7 +49,7 @@ The prototype in `lab/photos` is the starting point; what changes is marked.
 - "שמירה" hands the file to the share sheet (Save Image → Photos). Nothing is uploaded.
 
 ## 7. Photo backup (separate file)
-- `bodytrack-photos-YYYY-MM-DD.json`: `{ app: 'bodytrack-photos', version: 1, exported, photos: [{...record, img: base64}] }`. About 30–40 MB a year at 3 photos a week.
+- `bodytrack-photos-YYYY-MM-DD.json`: `{ app: 'bodytrack-photos', version: 1, exported, photos: [{...record, img: base64}] }`. About 30–40 MB a year at 3 photos a week with edited photos only; about 3× that while originals are kept (trial period, §5).
 - Includes deleted-flagged records (so undo state round-trips). Validated before writing; restore = merge by `id` (a photo never changes except `deleted`).
 - Reminder on the photo screen when photos exist that are newer than the last photo backup and it is more than 30 days old.
 - The data backup stays as it is (no photos).
