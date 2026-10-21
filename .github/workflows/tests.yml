@@ -17,6 +17,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
+      - run: npm run privacy
       - run: npm test
       - run: npx playwright install --with-deps webkit
       - run: npx playwright test

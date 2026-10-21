@@ -56,6 +56,7 @@ Reference: `docs/design/swiss-verdict.html`, `docs/design/swiss-analytics.html` 
 ## 6. How we work (permanent rules)
 1. Each new phase opens with a **tool scout** (skills/plugins/connectors), with a safety, users and cost check.
 2. Before any proposal is shown to the user, it passes a **review by an independent expert** matching the phase (design → design critic, code → code review), fixes are applied, and only then is it presented.
+   **Proportional review (21.10):** the depth of review matches the size of the change (see 6a, "Review by size"). No extra manager agent: the main agent is the manager.
 3. No paid tools without asking. Prefer free.
 4. Questions as multiple-choice options.
 5. Do everything yourself; don't hand the user technical steps unless there's no other way (passwords, GitHub settings).
@@ -78,7 +79,16 @@ Routing (agents can't call each other; the main agent routes and is the only one
 - Design → ui-designer → hebrew-writer → design-critic → owner.
 - Code → frontend-dev / data-engineer → design-critic → privacy-guardian → commit.
 - Metrics → fitness-analyst (define) → data-engineer (build + tests) → fresh fitness-analyst (verify) → design-critic.
-- Phase 1 first task: QA setup (`tests/`, invented fixture, WebKit smoke test).
+- Phase 1 first task: QA setup (`tests/`, invented fixture, WebKit smoke test). Done.
+
+Review by size (owner decision 21.10, to avoid overkill):
+| Change | Who reviews |
+|---|---|
+| Small: bug fix or tweak, under ~50 lines, no new screen | design-critic (code review) only. Hebrew strings batched and reviewed once at the end of the work block. |
+| New calculation | fitness-analyst defines → data-engineer builds → fresh fitness-analyst verifies → design-critic. |
+| New screen or design | Full chain: ui-designer → hebrew-writer → design-critic → owner. |
+| Privacy | Basic check runs automatically in CI on every push (`npm run privacy`: no outside URLs in the app, no emails except noreply, no backup files outside fixtures, fixture marked invented). privacy-guardian agent only when adding a dependency, a network call, a new tool, or touching how data is stored or exported. |
+Rule of thumb: no agent is launched twice for the same thing in one block; a re-review covers only what changed.
 
 ## 6b. Open items
 - Restore count can overstate when two weigh-ins share a date without ids (pre-existing, low impact).
@@ -98,4 +108,5 @@ Routing (agents can't call each other; the main agent routes and is the only one
 - 21.10 QA setup: `npm test` (node:test), Playwright smoke test (WebKit 440x956, invented fixture, offline reload, blocks outside hosts and console errors). WebKit can't be downloaded in the work environment, so CI runs it: GitHub Actions on every push to main (free for public repos, read-only, no secrets). Reviewed by design-critic and privacy-guardian, fixes applied. First CI run green in WebKit. "Offline" in the smoke test = stopping the local server (Playwright's setOffline breaks reloads in WebKit).
 - 21.10 Bug fixes 0.1.1: `isISODate` rejects impossible days the same way on every engine; `validate()` can't throw on any JSON (fuzzed) and rejects bad lists, odd ids and years outside 1900–2100; restore errors show a message.
 - 21.10 Trend engine spec v1 (`docs/specs/trend-engine.md`). Owner decisions: maintenance "holding" is green (staying put is the goal there); verdict and rate need 5 weigh-ins; the trend never resets after a gap.
+- 21.10 Review by size adopted (owner): not every change goes through every agent; basic privacy check moved into CI. No manager agent.
 - 21.10 Weekly check-in reminder set in iPhone Reminders: every Saturday 11:00, with a link to the app. The in-app reminder idea is no longer needed.

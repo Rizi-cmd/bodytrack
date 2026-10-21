@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "smoke": "playwright test"
+    "smoke": "playwright test",
+    "privacy": "node scripts/check-privacy.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.56.0"
