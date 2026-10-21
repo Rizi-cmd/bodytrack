@@ -25,7 +25,7 @@ All data is stored only on the phone. Hebrew, RTL.
 | Phase | Contents | Status |
 |---|---|---|
 | 0. Foundations | Installed shell, offline, versioned data layer (IndexedDB), backup/restore to a file, import of historical data | **Done** (21.10: installed on iPhone, data restored, first backup saved) |
-| 1. Weekly loop | Design system (Swiss Lab), check-in, trend engine, verdict screen, analytics screen, goals and directions, history with edit/delete/undo | **In progress** (QA setup + 2 bug fixes done 21.10; trend engine built and verified 21.10; verdict screen built 21.10; check-in + quick weigh-in built 21.10; history fix/delete/undo built 21.10; next: analytics screen) |
+| 1. Weekly loop | Design system (Swiss Lab), check-in, trend engine, verdict screen, analytics screen, goals and directions, history with edit/delete/undo | **In progress** (QA setup + 2 bug fixes done 21.10; trend engine built and verified 21.10; verdict screen built 21.10; check-in + quick weigh-in built 21.10; history fix/delete/undo built 21.10; analytics spec approved 21.10; next: build analytics calculations) |
 | 2. Voice | Coaching voice line (if at all, not on the verdict screen) | Deferred |
 | 3. Photos | Camera with ghost overlay, alignment, comparison, backup to gallery | Parked |
 | 4. Later | Training OS connection, timelapse export | TBD |
@@ -89,7 +89,7 @@ Rule of thumb: no agent is launched twice for the same thing in one block; a re-
 ## 6b. Open items
 - Restore count can overstate when two weigh-ins share a date without ids (pre-existing, low impact).
 - Heebo not self-hosted yet (font downloads blocked in the work environment); app uses the system font. Mockups in `docs/design/` still link Google Fonts.
-- Goal direction: PROJECT.md says derived from the phase; `js/model.js` hard-codes it per site. fitness-analyst defines, data-engineer migrates.
+- Goal direction: defined per metric and phase in `docs/specs/analytics.md` §0.1 (approved); `js/model.js` still hard-codes `SITES[].goal` until the analytics build replaces it.
 - `lab/photos` loads outside scripts (jsDelivr, Google) on the same address as the app. Low risk (the home-screen app's storage is separate from Safari), but to be resolved.
 
 ## 7. Decisions log
@@ -118,3 +118,4 @@ Rule of thumb: no agent is launched twice for the same thing in one block; a re-
 - 21.10 Owner: no zoom in the app (no double-tap or pinch zoom; viewport max scale 1, `touch-action: pan-x pan-y`, iOS `gesturestart` blocked). Figure 1: long press (350 ms) then slide shows the nearest weigh-in: dashed guide line, ring on the dot, square on the average, and a box with date, weight and average of 4 (box on the side away from the finger). A quick swipe still scrolls; lifting the finger hides it. Readout from `nearestPoint` / `pointReadout` in `js/report.js` (tested). Version 0.4.2.
 - 21.10 Owner approved three additions (0.5.0): (1) the chart long-press box also shows that day's week type (when not "רגיל") and note; (2) typo guard: a weight more than 2 kg from the weigh-in before it asks "לשמור בכל זאת?" first (check-in, quick weigh-in, history fix); (3) history: tap a weigh-in row to fix its weight or delete it; tap a circumference day to fix values (empty field removes that value) or delete the whole day. Every fix/delete is soft and has undo in the toast. Deleting a weigh-in also removes that day's check-in (tag, note) when no other weigh-in is left on that date. Pure functions in `js/checkin.js` (`bigJump`, `prevWeighin`, `editWeighin`, `deleteWeighin`, `editMeasureDay`, `deleteMeasureDay`), tested.
 - 21.10 Work moved from claude.ai to Claude Code. Repo `CLAUDE.md` added (how to work on BodyTrack: start every session from this file, self-review by default, end each block by updating this file and pushing). Personal rules live outside the repo. `design-critic` agent was not loading (its description line was not valid; quoted now), so it was unavailable this session; available from the next session.
+- 21.10 Analytics spec v1 (`docs/specs/analytics.md`, by fitness-analyst, with sources and test vectors). Owner accepted all recommendations: bulk target 0.25–0.5 %/wk; circumference colour direction by phase (table §0.1); no colour for changes inside tape error ("בתוך טעות המדידה"); goal projection as weeks + range + month, not an exact date; body fat (US Navy, estimate ±4) with height and sex added to settings (phone and backup only). Owner confirmed: מותן = narrowest point, מותניים (טבור) = at the navel, so waist-to-hip uses מותן and cm-per-kg / body fat use טבור.

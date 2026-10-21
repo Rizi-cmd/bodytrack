@@ -2,7 +2,7 @@
 
 Defined by fitness-analyst, 21.10.2026. Follows PROJECT.md §2–3 and builds on `docs/specs/trend-engine.md` (cited as "TE §n"). Wherever possible this spec reuses the outputs of `js/trend.js` and `js/report.js` and does not redefine them. Thresholds are marked either with a source (§14) or **convention**. Owner decisions are in §13. All functions are pure: they never read the clock, the caller passes `today` (ISO), and everything is recomputed from scratch after any edit, delete or undo.
 
-> Status: draft. Owner decisions in §13 are still open; the build starts once they are settled.
+> Status: approved 21.10.2026. Owner decisions in §13 settled: all recommendations accepted (1a, 2a, 3a, 4a, 5a, 6a). מותן = narrowest point, מותניים (טבור) = at the navel.
 
 ## 0. Shared inputs and helpers
 
@@ -107,7 +107,7 @@ Assumed error of one self-measurement: same person, same tape, same landmark, mo
 - **Edge cases:** a skipped site has no value that day, so "previous" can be older than other rows (per-row date shown). Soft-deleted excluded, same-day averaged. A measurement on a tagged date gets a tag mark. After a phase change, baselines follow the new run.
 
 ## 7. Table 4: waist-to-hip ratio and cm of waist per kg
-- **Site mapping:** hip = `hips` (ישבן), reliable. The waist site for the ratio is **not reliably known** (owner decision 4). Until confirmed, use `waist` and label with both site names ("מותן ÷ ישבן"). No WHO risk cut-offs.
+- **Site mapping:** hip = `hips` (ישבן), reliable. Waist for the ratio = `waist` (מותן, narrowest point; owner confirmed, decision 4). Label "מותן ÷ ישבן". No WHO risk cut-offs.
 - **WHR:** latest date where both sites have a value (never pair across dates). `whr = waist / hips`, 2 decimals, ink. Error ≈ ±0.01 (convention). No same-date pair → "אין מדידה של שני ההיקפים באותו יום".
 - **cm of waist per kg:** site `waist_navel` (decision 4). `base = siteAt(waist_navel, ps)`, `cur` = latest. `Δw = cur − base`, `Δkg = trendAt(series, L) − trendAt(series, base.date)` (trend, never a single weigh-in). `ratio = Δw / Δkg`, 1 decimal, unsigned. Error `±(√2 × 0.7)/|Δkg|`, 1 decimal.
   - Shown only when: phase is cut or bulk; both `trendAt` non-null; `sign(Δkg) = direction`; |Δkg| ≥ 2.0 kg (convention). Otherwise "—" with a reason.
@@ -123,7 +123,7 @@ Assumed error of one self-measurement: same person, same tape, same landmark, mo
 - **Inputs:** `targetKg` of the run active on `today`; `S.avg`, `S.rate`, `S.provisional`, `S.verdict`; `dir = weightDirection(phase)`.
 - **Reasons, in order:** (1) no phase or maintenance → `no_projection_phase`; (2) no target → `no_target`; (3) `S.rate` null → `too_early`; (4) `dir × (targetKg − S.avg) ≤ 0` → `reached`; (5) `S.provisional` → `provisional`; (6) verdict stuck → `stuck`; (7) verdict away → `wrong_direction`.
 - **Formula:** `weeks = (targetKg − S.avg) / S.rate`; `days = ceil(weeks × 7)`, `date = D + days` (UTC). Range: `weeksFast = |rem| / (|rate| + 0.09)`, `weeksSlow = |rem| / (|rate| − 0.09)` (0.09 = TE §3 SE, convention). weeks > 52 → `too_far` ("יותר משנה בקצב הנוכחי"), no date.
-- **Display:** per owner decision 5. Always labelled "הערכה בהנחה שהקצב הנוכחי נשמר" (in a cut the rate usually slows, so this tends to be optimistic). `S.extended` → span footnote. Ink.
+- **Display:** weeks rounded to an integer, plus the range (rounded), plus the month and year of `date` (decision 5). Always labelled "הערכה בהנחה שהקצב הנוכחי נשמר" (in a cut the rate usually slows, so this tends to be optimistic). `S.extended` → span footnote. Ink.
 
 ## 10. Records
 - **All history:** lowest trend `min(avg)` and highest trend `max(avg)`, each with its date; tie → earliest; 1 decimal. Single weigh-ins are not records (water noise).
@@ -188,7 +188,7 @@ Raw values within 1e-9 unless noted. Display strings exact. Dates are 2026.
 
 N1/N2 were computed by hand; check against an independent calculation when building.
 
-## 13. Owner decisions needed
+## 13. Owner decisions (settled 21.10.2026: all recommendations accepted)
 1. **Bulk target band (§2).** (a) 0.25–0.5 %/wk; (b) ~0.25 %/wk; (c) no band. Recommendation: (a).
 2. **Circumference colours by phase (§0.1).** (a) The §0.1 table; (b) keep the fixed `SITES[].goal`; (c) all neutral. Recommendation: (a).
 3. **Noise threshold before colouring a circumference change (§0.2).** (a) Per-site thresholds, smaller changes "בתוך טעות המדידה"; (b) colour every change. Recommendation: (a).
