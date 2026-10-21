@@ -104,6 +104,9 @@ test('weight chart: ranges, points inside the plot, month labels', () => {
   assert.deepEqual(all.x.map(t => t.label), ['יולי', 'אוג׳', 'ספט׳', 'אוק׳']);
   assert.equal(all.line.length, 1); // no gaps in the average line
   assert.equal(weightChart([], 'all', 390), null);
+  // A year of weekly weigh-ins: 6 months = the last 183 days (27 weigh-ins), between 3 months and all.
+  const year = trendSummary(weekly('2025-10-04', Array.from({ length: 52 }, (_, k) => 90 - k * 0.2)), 'cut').series;
+  assert.deepEqual(['month', 'quarter', 'half', 'all'].map(r => weightChart(year, r, 390).count), [5, 14, 27, 52]);
   const one = weightChart(trendSummary([{ date: '2026-01-03', kg: 80 }]).series, 'all', 390);
   assert.equal(one.count, 1); assert.equal(one.line.length, 0); assert.equal(one.x.length, 1);
 });

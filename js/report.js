@@ -172,7 +172,7 @@ export function scaleGeometry(rate, width, pad = 14) {
 }
 const fmtSigned1 = v => (v < 0 ? '−' : '+') + Math.abs(v).toFixed(1);
 
-export const RANGES = { month: 31, quarter: 92, all: Infinity };
+export const RANGES = { month: 31, quarter: 92, half: 183, all: Infinity };
 const MONTHS = ['ינו׳', 'פבר׳', 'מרץ', 'אפר׳', 'מאי', 'יוני', 'יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'];
 
 // Nice y ticks: step from 0.5/1/2/5/10 giving at most 5 ticks, covering [min, max].

@@ -1,14 +1,15 @@
-// Phase 1 UI: verdict screen (Swiss Lab), history, phase, backup/restore.
-// Every number shown comes from js/trend.js and js/report.js (pure, tested).
+// Phase 1 UI: verdict screen (Swiss Lab), check-in, quick weigh-in, history, phase, backup/restore.
+// Every number shown comes from js/trend.js and js/report.js (pure, tested); check-in records from js/checkin.js.
 import { SITES, fmtDate, fmtCm, todayISO } from './model.js';
-import { getAll, put, getMeta, requestPersistence } from './db.js';
+import { getAll, put, writeAll, getMeta, requestPersistence } from './db.js';
+import { TAGS, stepKg, checkinDefaults, buildCheckin, buildWeighin } from './checkin.js';
 import { validate, restore, shareBackup } from './backup.js';
 import { trendSummary, fmtRate, fmtWeight, EMPTY } from './trend.js';
 import {
   PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, weightChart, fmtDay, fmtFull
 } from './report.js';
 
-export const VERSION = '0.3.0';
+export const VERSION = '0.4.1';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -20,10 +21,14 @@ const sv = (tag, attrs = {}, text) => {
 };
 
 let toastT;
-function toast(msg, ms = 3500) {
+// undo: optional async function behind a "ביטול" button in the toast.
+function toast(msg, ms = 3500, undo = null) {
   $('#toastMsg').textContent = msg; $('#toast').hidden = false;
+  const a = $('#toastAct'); a.hidden = !undo;
+  a.onclick = undo ? () => { $('#toast').hidden = true; clearTimeout(toastT); undo(); } : null;
   clearTimeout(toastT); toastT = setTimeout(() => { $('#toast').hidden = true; }, ms);
 }
+const num = (text, cls = 'n') => { const s = el('span', cls, text); s.dir = 'ltr'; return s; };
 
 let state = { summary: null, range: 'quarter', phases: [] };
 
@@ -253,6 +258,138 @@ async function doRestore(replace) {
 $('#impMerge').onclick = () => doRestore(false);
 $('#impReplace').onclick = () => doRestore(true);
 $('#impCancel').onclick = () => { pendingObj = null; $('#importSheet').hidden = true; };
+
+// ---- check-in and quick weigh-in ----
+// Raw stores, deleted records included (checkin.js needs them to pick free ids and to undo).
+async function rawData() {
+  const [weighins, measurements, checkins] = await Promise.all(['weighins', 'measurements', 'checkins'].map(getAll));
+  return { weighins, measurements, checkins };
+}
+const ci = { data: null, tag: 'normal', dirty: false };
+function showView(v) {
+  $('#main').hidden = v !== 'main'; $('#checkinView').hidden = v !== 'checkin';
+  scrollTo(0, 0);
+}
+// After a check-in the verdict screen shows "סיום" at the bottom instead of the entry buttons (mockup).
+function afterCheckin(on, measured = false) {
+  $('#actions').hidden = on; $('#doneBar').hidden = !on;
+  $('#circSec').open = on && measured;
+}
+function showErr(input, errEl, msg) {
+  input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  errEl.hidden = !msg; errEl.textContent = msg || '';
+}
+// "Previous weigh-in" line under the weight field.
+function kgInfo(box, d) {
+  box.replaceChildren();
+  if (!d.prev) { box.append(d.kgSource === 'same_day' ? 'כבר שקלת בתאריך הזה.' : 'אין שקילה קודמת.'); return; }
+  box.append(d.kgSource === 'same_day' ? 'כבר שקלת בתאריך הזה. השקילה הקודמת: ' : 'מולא מהשקילה הקודמת: ',
+    num(fmtWeight(d.prev.kg)), ' ק״ג ב־', num(fmtDay(d.prev.date)));
+}
+const markTags = () => document.querySelectorAll('[data-tag]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tag === ci.tag));
+
+function fillCheckin(date) {
+  const d = checkinDefaults(ci.data, date);
+  $('#ciDate').value = date; $('#ciDate').max = todayISO();
+  $('#ciKg').value = d.kg;
+  kgInfo($('#ciKgInfo'), d);
+  showErr($('#ciDate'), $('#ciDateErr'), null); showErr($('#ciKg'), $('#ciKgErr'), null);
+  const tb = $('#ciSites'); tb.replaceChildren();
+  for (const s of d.sites) {
+    const tr = el('tr');
+    const name = el('td'); const lab = el('label', null, s.he); lab.htmlFor = 'ci-' + s.id;
+    name.append(lab, el('span', 'lab bad err', ''));
+    name.lastChild.hidden = true; name.lastChild.id = 'ci-err-' + s.id;
+    const prev = el('td', 'prev lab');
+    if (s.prev) prev.append('קודם ', num(fmtWeight(s.prev.cm)), ' · ', num(fmtDay(s.prev.date)));
+    else prev.append('מדידה ראשונה');
+    const inp = el('input', 'field n'); inp.id = 'ci-' + s.id; inp.inputMode = 'decimal'; inp.dir = 'ltr';
+    inp.autocomplete = 'off'; inp.value = s.value;
+    const cell = el('td', 'in'); cell.append(inp);
+    tr.append(name, prev, cell); tb.append(tr);
+  }
+  ci.tag = d.tag; markTags();
+  $('#ciNote').value = d.note;
+  $('#ciEditing').hidden = !d.editing;
+  ci.dirty = false;
+}
+
+const tagBox = $('#ciTags');
+for (const t of TAGS) {
+  const b = el('button', null, t.he); b.type = 'button'; b.dataset.tag = t.id;
+  b.onclick = () => { ci.tag = t.id; ci.dirty = true; markTags(); };
+  tagBox.append(b);
+}
+$('#checkinBtn').onclick = async () => {
+  ci.data = await rawData();
+  fillCheckin(todayISO());
+  showView('checkin');
+};
+$('#ciDate').onchange = () => { if ($('#ciDate').value) fillCheckin($('#ciDate').value); };
+// Typing in a field clears its error until the next save.
+const clearErr = (input, errEl) => { if (input.getAttribute('aria-invalid') === 'true') showErr(input, errEl, null); };
+$('#checkinView').addEventListener('input', e => {
+  const t = e.target;
+  if (t.id !== 'ciDate') ci.dirty = true;
+  if (t.id === 'ciKg') clearErr(t, $('#ciKgErr'));
+  else if (t.id.startsWith('ci-')) clearErr(t, document.getElementById('ci-err-' + t.id.slice(3)));
+});
+$('#qKg').addEventListener('input', e => clearErr(e.target, $('#qKgErr')));
+$('#ciNote').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }; // Enter closes the keyboard, doesn't save
+const leaveCheckin = () => { if (!ci.dirty || confirm('לצאת בלי לשמור?')) showView('main'); };
+$('#ciCancel').onclick = leaveCheckin; $('#ciCancelTop').onclick = leaveCheckin;
+
+document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
+  const i = document.getElementById(b.dataset.for);
+  i.value = stepKg(i.value, +b.dataset.step);
+  i.dispatchEvent(new Event('input', { bubbles: true }));
+});
+
+$('#checkinView').onsubmit = async e => {
+  e.preventDefault();
+  const form = {
+    date: $('#ciDate').value, kg: $('#ciKg').value, tag: ci.tag, note: $('#ciNote').value,
+    cm: Object.fromEntries(SITES.map(s => [s.id, document.getElementById('ci-' + s.id).value]))
+  };
+  const r = buildCheckin(form, ci.data, todayISO(), Date.now());
+  showErr($('#ciDate'), $('#ciDateErr'), r.errors.date); showErr($('#ciKg'), $('#ciKgErr'), r.errors.kg);
+  for (const s of SITES) showErr(document.getElementById('ci-' + s.id), document.getElementById('ci-err-' + s.id), r.errors.sites[s.id]);
+  if (!r.ok) { const bad = $('#checkinView [aria-invalid=true]'); if (bad) bad.focus(); return; }
+  try { await writeAll(r.apply); } catch { toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
+  await requestPersistence();
+  showView('main');
+  afterCheckin(true, (r.apply.measurements || []).some(m => !m.deleted));
+  await render();
+  toast('הצ׳ק-אין נשמר.', 8000, async () => {
+    try { await writeAll(r.undo); } catch { toast('לא הצלחתי לבטל.'); return; }
+    afterCheckin(false); await render(); toast('הצ׳ק-אין בוטל.');
+  });
+};
+$('#doneBtn').onclick = () => { afterCheckin(false); scrollTo(0, 0); };
+
+$('#quickBtn').onclick = async () => {
+  ci.data = await rawData();
+  const d = checkinDefaults(ci.data, todayISO());
+  $('#qDate').replaceChildren('היום, ', num(fmtFull(todayISO())));
+  $('#qKg').value = d.kg; kgInfo($('#qKgInfo'), d);
+  showErr($('#qKg'), $('#qKgErr'), null);
+  $('#quickSheet').hidden = false;
+};
+$('#qCancel').onclick = () => { $('#quickSheet').hidden = true; };
+$('#quickForm').onsubmit = async e => {
+  e.preventDefault();
+  const r = buildWeighin({ date: todayISO(), kg: $('#qKg').value }, ci.data, todayISO(), Date.now());
+  showErr($('#qKg'), $('#qKgErr'), r.errors.kg || r.errors.date);
+  if (!r.ok) { $('#qKg').focus(); return; }
+  try { await writeAll(r.apply); } catch { toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
+  await requestPersistence();
+  $('#quickSheet').hidden = true;
+  await render();
+  toast('השקילה נשמרה.', 8000, async () => {
+    try { await writeAll(r.undo); } catch { toast('לא הצלחתי לבטל.'); return; }
+    await render(); toast('השקילה בוטלה.');
+  });
+};
 
 $('#ver').textContent = 'גרסה ' + VERSION + '.';
 render();

@@ -55,10 +55,10 @@ h2{margin:0 0 8px;font-size:15px;font-weight:800}
 .cadence{padding:8px 0;border-bottom:1px solid var(--rule)}
 
 /* figure */
-.fig-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.fig-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
 .fig-h b{font-size:15px;font-weight:800}
 .seg{display:flex;border:1px solid var(--rule)}
-.seg button{font-size:12px;padding:0 9px;min-height:44px}
+.seg button{font-size:12px;padding:0 9px;min-height:44px;white-space:nowrap}
 .seg button+button{border-right:1px solid var(--rule)}
 .seg button[aria-pressed=true],.seg button[aria-selected=true]{background:var(--ink);color:var(--bg);font-weight:700}
 .seg.wide button{flex:1;font-size:14px}
@@ -104,3 +104,23 @@ td.dl{text-align:left;width:1%;white-space:nowrap;padding-right:12px}
   padding:18px max(20px,var(--sr)) calc(var(--sb) + 18px) max(20px,var(--sl))}
 .sheetBox p{margin:0}
 .toast{position:fixed;inset-inline:16px;bottom:calc(var(--sb) + 16px);z-index:50;background:var(--ink);color:var(--bg);padding:12px 14px}
+
+/* check-in (inputs ≥16px so iOS doesn't zoom on focus) */
+.actions{display:flex;flex-direction:column;gap:10px;padding:14px 0;border-bottom:1px solid var(--rule)}
+.stepper{display:flex;align-items:stretch;direction:ltr} /* − on the left, + on the right, like the number line */
+.step{width:56px;min-height:56px;border:1px solid var(--rule);font-size:24px;font-weight:700;flex:none}
+.stepper .field{border-inline:0}
+.big-field{min-height:56px;font-size:30px;font-weight:800;text-align:center;letter-spacing:-.02em}
+.field[aria-invalid=true]{border-color:var(--bad)}
+.stepper:has([aria-invalid=true]) .step{border-color:var(--bad)}
+input[type=date].field{-webkit-appearance:none;appearance:none;display:flex;align-items:center;font-size:17px}
+.note-field{font-size:16px;font-weight:500}
+.ciTable td{padding:6px 0;vertical-align:middle}
+.ciTable td:first-child{font-weight:700}
+.ciTable td.prev{text-align:left;padding-inline:8px;white-space:nowrap}
+.ciTable td.in{width:92px}
+.ciTable .field{min-height:44px;font-size:17px;text-align:center;padding:6px}
+.ciTable .err{display:block;font-size:12px}
+.toast{display:flex;align-items:center;gap:12px}
+.toast span{flex:1}
+.toastAct{min-height:44px;padding:0 12px;border:1px solid var(--bg);color:var(--bg);font-weight:800;flex:none}

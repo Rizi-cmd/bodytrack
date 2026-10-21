@@ -53,6 +53,19 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   });
 
   const M = '\u2212';
+  // No horizontal scroll at phone width (440 and 375), and no text smaller than 12px (charts included).
+  const layoutOk = async name => {
+    for (const width of [375, 440]) {
+      await page.setViewportSize({ width, height: width === 440 ? 956 : 812 });
+      await page.waitForTimeout(200);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${name} @${width}: horizontal scroll`).toBe(true);
+    }
+    const small = await page.evaluate(() => [...document.querySelectorAll('body *')]
+      .filter(e => e.childNodes.length && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+      .filter(e => e.getClientRects().length && parseFloat(getComputedStyle(e).fontSize) < 12)
+      .map(e => e.tagName + ':' + e.textContent.trim().slice(0, 20)));
+    expect(small, `${name}: text under 12px`).toEqual([]);
+  };
   const expectData = async () => {
     await expect(page.locator('#lastKg')).toHaveText('80.2');
     await expect(page.locator('#lastLab')).toContainText('10.10');
@@ -108,7 +121,64 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await page.locator('#phaseCancel').click();
   await page.locator('[data-range="all"]').click();
   await expect(page.locator('#chart svg circle')).toHaveCount(16);
+  await page.locator('[data-range="half"]').click();
+  await expect(page.locator('[data-range="half"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('[data-range="quarter"]').click();
+
+  // Check-in: weight starts at the previous weigh-in; save shows on the verdict, "סיום" closes, undo puts it back.
+  await page.locator('#checkinBtn').click();
+  await expect(page.locator('#checkinView')).toBeVisible();
+  await expect(page.locator('#main')).toBeHidden();
+  await expect(page.locator('#ciKg')).toHaveValue('80.2');
+  await expect(page.locator('#ciKgInfo')).toContainText('10.10');
+  await expect(page.locator('#ciSites tr')).toHaveCount(11);
+  await expect(page.locator('#ciSites')).toContainText('קודם');
+  await expect(page.locator('#ciEditing')).toBeHidden();
+  await page.locator('#ciKg').fill('');
+  await page.locator('#ciSave').click();
+  await expect(page.locator('#ciKgErr')).toBeVisible();           // weight is required
+  await expect(page.locator('#checkinView')).toBeVisible();
+  await page.locator('#ciKg').fill('80.0');
+  await page.locator('[data-for="ciKg"][data-step="-0.1"]').click();
+  await expect(page.locator('#ciKg')).toHaveValue('79.9');
+  await page.locator('#ci-waist').fill('7.9.1');
+  await page.locator('#ciSave').click();
+  await expect(page.locator('#ci-err-waist')).toBeVisible();       // bad circumference is named, nothing saved
+  await page.locator('#ci-waist').fill('79');
+  await expect(page.locator('#ci-err-waist')).toBeHidden();        // fixing the value clears the error
+  await page.locator('[data-tag="vacation"]').click();
+  await expect(page.locator('[data-tag="vacation"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#ciNote').fill('SAMPLE note');
+  await layoutOk('check-in');
+  await page.screenshot({ path: testInfo.outputPath('checkin.png'), fullPage: true });
+  await page.locator('#ciSave').click();
+  await expect(page.locator('#main')).toBeVisible();
+  await expect(page.locator('#lastKg')).toHaveText('79.9');
+  await expect(page.locator('#listW .row')).toHaveCount(17);
+  await expect(page.locator('#notes')).toContainText('חופשה');
+  await expect(page.locator('#actions')).toBeHidden();
+  await expect(page.locator('#circSec')).toHaveAttribute('open', '');
+  await expect(page.locator('#doneBar')).toBeVisible();
+  await page.locator('#doneBtn').click();
+  await expect(page.locator('#doneBar')).toBeHidden();
+  await expect(page.locator('#actions')).toBeVisible();
+  await page.locator('#toastAct').click();
+  await expect(page.locator('#toastMsg')).toHaveText('הצ׳ק-אין בוטל.');
+  await expect(page.locator('#lastKg')).toHaveText('80.2');
+  await expect(page.locator('#listW .row')).toHaveCount(16);
+  await expect(page.locator('#notes')).not.toContainText('חופשה');
+
+  // Quick weigh-in: weight only, undo puts it back.
+  await page.locator('#quickBtn').click();
+  await expect(page.locator('#quickSheet')).toBeVisible();
+  await expect(page.locator('#qKg')).toHaveValue('80.2');
+  await page.locator('[data-for="qKg"][data-step="0.1"]').click();
+  await page.locator('#qSave').click();
+  await expect(page.locator('#quickSheet')).toBeHidden();
+  await expect(page.locator('#lastKg')).toHaveText('80.3');
+  await page.locator('#toastAct').click();
+  await expect(page.locator('#lastKg')).toHaveText('80.2');
+  await expect(page.locator('#listW .row')).toHaveCount(16);
 
   // Circumferences tab shows the newest full set (waist 84 - 4.5 = 79.5).
   await expect(page.locator('#histSec')).not.toHaveAttribute('open', '');   // closed by default
@@ -121,13 +191,7 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect(page.locator('#listM .mday').first()).toContainText('79.5');
   await page.locator('[data-list="w"]').click();
 
-  // No horizontal scroll at phone width, and no text smaller than 12px (charts included).
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-  const small = await page.evaluate(() => [...document.querySelectorAll('body *')]
-    .filter(e => e.childNodes.length && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
-    .filter(e => e.getClientRects().length && parseFloat(getComputedStyle(e).fontSize) < 12)
-    .map(e => e.tagName + ':' + e.textContent.trim().slice(0, 20)));
-  expect(small, 'text under 12px').toEqual([]);
+  await layoutOk('verdict');
   await page.screenshot({ path: testInfo.outputPath('verdict.png'), fullPage: true });
   // Smaller iPhone (375pt): still no horizontal scroll, hero number fits.
   await page.setViewportSize({ width: 375, height: 812 });

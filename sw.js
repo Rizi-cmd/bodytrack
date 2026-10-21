@@ -1,6 +1,6 @@
 // Offline support: caches the app files. User data never passes through here (it lives in IndexedDB).
-const VERSION = 'bt-0.3.0';
-const SHELL = ['./', './index.html', './css/app.css', './js/app.js', './js/db.js', './js/model.js', './js/backup.js', './js/trend.js', './js/report.js',
+const VERSION = 'bt-0.4.1';
+const SHELL = ['./', './index.html', './css/app.css', './js/app.js', './js/db.js', './js/model.js', './js/backup.js', './js/trend.js', './js/report.js', './js/checkin.js',
   './manifest.webmanifest', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', e => {

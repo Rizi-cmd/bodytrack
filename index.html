@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<div class="app">
+<div class="app" id="main">
   <header class="top">
     <h1>פסק הדין</h1>
     <span class="meta" id="meta"></span>
@@ -40,6 +40,10 @@
     <div><span class="v"><span class="n" dir="ltr" id="lastKg"></span></span><span class="lab" id="lastLab">שקילה אחרונה</span></div>
   </div>
   <p class="lab cadence" id="cadence"></p>
+  <div class="actions" id="actions">
+    <button class="btn" id="checkinBtn">צ׳ק-אין שבועי</button>
+    <button class="btn ghost" id="quickBtn">שקילה מהירה</button>
+  </div>
 
   <!-- Figure 1: weight -->
   <section class="sec" id="figSec">
@@ -48,6 +52,7 @@
       <div class="seg" role="group" aria-label="טווח הגרף">
         <button data-range="month" aria-pressed="false">חודש</button>
         <button data-range="quarter" aria-pressed="true">3 חודשים</button>
+        <button data-range="half" aria-pressed="false">6 חודשים</button>
         <button data-range="all" aria-pressed="false">הכול</button>
       </div>
     </div>
@@ -62,6 +67,7 @@
     <table id="circTable"></table>
     <p class="empty" id="circEmpty" hidden>אין עדיין מדידות היקף.</p>
   </details>
+  <div class="actions" id="doneBar" hidden><button class="btn" id="doneBtn">סיום</button></div>
 
   <!-- History -->
   <details class="sec fold" id="histSec">
@@ -84,6 +90,67 @@
   </section>
 
   <p class="foot">הנתונים נשמרים רק במכשיר הזה. מחיקת האפליקציה ממסך הבית מוחקת אותם, אז כדאי לגבות. <span id="ver"></span></p>
+</div>
+
+<!-- Check-in -->
+<form class="app" id="checkinView" hidden novalidate>
+  <header class="top">
+    <h1>צ׳ק-אין</h1>
+    <button type="button" class="chip" id="ciCancelTop">ביטול</button>
+  </header>
+  <p class="note" id="ciEditing" hidden>כבר נשמר צ׳ק-אין בתאריך הזה. השמירה תעדכן אותו.</p>
+
+  <section class="sec stack">
+    <label class="lab" for="ciDate">תאריך</label>
+    <input class="field n" type="date" id="ciDate" dir="ltr" required>
+    <p class="lab bad" id="ciDateErr" hidden></p>
+  </section>
+
+  <section class="sec stack">
+    <label for="ciKg"><h2>משקל (ק״ג)</h2></label>
+    <div class="stepper">
+      <button type="button" class="step" data-step="-0.1" data-for="ciKg" aria-label="פחות 0.1 ק״ג">−</button>
+      <input class="field big-field n" id="ciKg" inputmode="decimal" dir="ltr" autocomplete="off" required>
+      <button type="button" class="step" data-step="0.1" data-for="ciKg" aria-label="עוד 0.1 ק״ג">+</button>
+    </div>
+    <p class="lab" id="ciKgInfo"></p>
+    <p class="lab bad" id="ciKgErr" hidden></p>
+  </section>
+
+  <section class="sec">
+    <h2>טבלה 1 · היקפים (ס״מ)</h2>
+    <p class="lab">אפשר לדלג על מה שלא מדדת.</p>
+    <table class="ciTable" id="ciSites"></table>
+  </section>
+
+  <section class="sec stack">
+    <h2>סוג שבוע</h2>
+    <div class="seg wide" role="group" aria-label="סוג שבוע" id="ciTags"></div>
+    <label class="lab" for="ciNote">הערה (לא חובה)</label>
+    <input class="field note-field" id="ciNote" maxlength="120" autocomplete="off" enterkeyhint="done">
+  </section>
+
+  <div class="actions">
+    <button type="submit" class="btn" id="ciSave">שמירה</button>
+    <button type="button" class="btn ghost" id="ciCancel">ביטול</button>
+  </div>
+</form>
+
+<!-- quick weigh-in sheet -->
+<div class="sheet" id="quickSheet" hidden>
+  <form class="sheetBox stack" role="dialog" aria-label="שקילה מהירה" id="quickForm" novalidate>
+    <h2>שקילה מהירה</h2>
+    <p class="lab" id="qDate"></p>
+    <div class="stepper">
+      <button type="button" class="step" data-step="-0.1" data-for="qKg" aria-label="פחות 0.1 ק״ג">−</button>
+      <input class="field big-field n" id="qKg" inputmode="decimal" dir="ltr" autocomplete="off" aria-label="משקל בק״ג">
+      <button type="button" class="step" data-step="0.1" data-for="qKg" aria-label="עוד 0.1 ק״ג">+</button>
+    </div>
+    <p class="lab" id="qKgInfo"></p>
+    <p class="lab bad" id="qKgErr" hidden></p>
+    <button type="submit" class="btn" id="qSave">שמירה</button>
+    <button type="button" class="btn ghost" id="qCancel">ביטול</button>
+  </form>
 </div>
 
 <!-- import confirm sheet -->
@@ -116,7 +183,7 @@
   </div>
 </div>
 
-<div class="toast" id="toast" hidden><span id="toastMsg"></span></div>
+<div class="toast" id="toast" hidden><span id="toastMsg"></span><button class="toastAct" id="toastAct" hidden>ביטול</button></div>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
