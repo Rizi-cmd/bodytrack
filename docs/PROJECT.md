@@ -25,7 +25,7 @@ All data is stored only on the phone. Hebrew, RTL.
 | Phase | Contents | Status |
 |---|---|---|
 | 0. Foundations | Installed shell, offline, versioned data layer (IndexedDB), backup/restore to a file, import of historical data | **Done** (21.10: installed on iPhone, data restored, first backup saved) |
-| 1. Weekly loop | Design system (Swiss Lab), check-in, trend engine, verdict screen, analytics screen, goals and directions, history with edit/delete/undo | **In progress** (QA setup + 2 bug fixes done 21.10; trend engine spec defined; next: build the trend engine) |
+| 1. Weekly loop | Design system (Swiss Lab), check-in, trend engine, verdict screen, analytics screen, goals and directions, history with edit/delete/undo | **In progress** (QA setup + 2 bug fixes done 21.10; trend engine built and verified 21.10; next: verdict screen) |
 | 2. Voice | Coaching voice line (if at all, not on the verdict screen) | Deferred |
 | 3. Photos | Camera with ghost overlay, alignment, comparison, backup to gallery | Parked |
 | 4. Later | Training OS connection, timelapse export | TBD |
@@ -105,5 +105,6 @@ Rule of thumb: no agent is launched twice for the same thing in one block; a re-
 - 21.10 Bug fixes 0.1.1: `isISODate` rejects impossible days the same way on every engine; `validate()` can't throw on any JSON (fuzzed) and rejects bad lists, odd ids and years outside 1900–2100; restore errors show a message.
 - 21.10 Trend engine spec v1 (`docs/specs/trend-engine.md`). Owner decisions: maintenance "holding" is green (staying put is the goal there); verdict and rate need 5 weigh-ins; the trend never resets after a gap.
 - 21.10 Review by size adopted (owner): not every change goes through every agent; basic privacy check moved into CI. No manager agent.
+- 21.10 Trend engine built: `js/trend.js` (pure functions) + `tests/trend.test.js` (all spec vectors V1–V9 and VF, edge cases; 42 tests pass). fitness-analyst verify: pass, V8 confirmed; 2 nits fixed (phase change flag ignores cut→cut; same-date phase records: later wins) and 2 coverage tests added. Open choices settled: `windowDates` = all weigh-ins feeding the rate (after a gap it can reach back more than 28 days, so the UI footnote must not say "last 4 weeks"); phase input = string or list of {from, phase}; `gap_reset` never produced.
 - 21.10 Weekly check-in reminder set in iPhone Reminders: every Saturday 11:00, with a link to the app. The in-app reminder idea is no longer needed.
 - 21.10 Simpler way of working (owner): no automatic tool scout or reviewer agent per phase/proposal; main agent works and self-reviews by default, agents only per "Review by size". Data rule replaced: unclear label → map only if reliable, otherwise keep the source and report (no silent drops).
