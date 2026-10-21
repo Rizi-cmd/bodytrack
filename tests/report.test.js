@@ -196,6 +196,7 @@ test('cadence: days since last weigh-in and average gap over all history', () =>
   const one = trendSummary([{ date: '2026-01-03', kg: 80 }]).series;
   assert.equal(cadenceText(weighinStats(one, '2026-01-05')), 'שקילה אחרונה לפני 2 ימים');
   assert.equal(cadenceText(weighinStats([], '2026-01-05')), '');
+  assert.equal(weighinStats(s, '2026-01-20').daysSince, null); // last weigh-in dated after today
   const irregular = trendSummary([{ date: '2026-01-01', kg: 80 }, { date: '2026-01-04', kg: 80 }, { date: '2026-01-21', kg: 80 }]).series;
   assert.equal(weighinStats(irregular, '2026-01-21').avgEvery, 10);
 });

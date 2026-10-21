@@ -94,7 +94,7 @@ test('two average points in 28 days but older ones exist → reach back to 3', (
   const w = [...weekly('2026-01-03', [82, 81.8, 81.6, 81.4, 81.2, 81.0]), { date: '2026-03-14', kg: 80 }, { date: '2026-03-21', kg: 79.8 }];
   const r = trendSummary(w, 'cut');
   assert.equal(r.extended, true); assert.equal(r.provisional, false);
-  assert.ok(r.rate < 0);
+  assert.equal(fmtRate(r.rate), M + '0.20'); assert.equal(r.verdict, 'toward'); assert.equal(r.spanDays, 63);
 });
 
 test('V9 irregular spacing uses the centroid date', () => {

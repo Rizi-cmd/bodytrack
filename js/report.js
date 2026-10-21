@@ -105,7 +105,7 @@ export function weighinStats(series, today) {
   if (!series.length) return { daysSince: null, avgEvery: null };
   const first = day(series[0].date), last = day(series[series.length - 1].date);
   return {
-    daysSince: today ? Math.max(0, day(today) - last) : null,
+    daysSince: today && day(today) >= last ? day(today) - last : null, // a future-dated weigh-in shows nothing
     avgEvery: series.length > 1 ? (last - first) / (series.length - 1) : null
   };
 }

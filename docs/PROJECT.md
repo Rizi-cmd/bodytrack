@@ -13,7 +13,7 @@ All data is stored only on the phone. Hebrew, RTL.
 **Out of scope (don't bring back):** characters, game worlds, pixel art, animations, the pets, the daily ritual, an AI coach in chat (belongs to Training OS), the motivational/"voice" line on the verdict screen.
 
 ## 2. Product decisions (approved)
-- **Weigh-ins:** about once a week. The trend = average of the last 4 weigh-ins. Rate = slope of the average over the last 4 weeks, in kg/week. Exact definition: `docs/specs/trend-engine.md`.
+- **Weigh-ins:** irregular, whenever the owner weighs in (usually about weekly). The trend = average of the last 4 weigh-ins. Rate = slope of the average over the last 4 weeks, in kg/week. Exact definition: `docs/specs/trend-engine.md`.
 - **Stuck:** a change of less than 0.2 kg/week (shown as a band on the scale).
 - **Colors:** green only for movement toward the goal, red only away from it, always with an arrow and a Hebrew word. Nothing else is green or red.
 - **Numbers:** always LTR with the sign on the left (−0.30, +1.0), real minus sign U+2212.
@@ -110,5 +110,6 @@ Rule of thumb: no agent is launched twice for the same thing in one block; a re-
 - 21.10 Owner: phase choice moved next to the verdict ("לכיוון היעד" + phase button → sheet), phase removed from the header. Optional target weight per phase (`targetKg`, 30–300, for the goal projection on the analytics screen); same phase + new target only updates the current record. Site renamed "יד קדמית מכווצת" (id unchanged, data untouched). Next: check-in screen. Version 0.2.1.
 - 21.10 Service worker fetches with `cache: 'no-cache'`: updates appeared late on the iPhone because GitHub Pages lets the browser cache files for 10 minutes. Version 0.2.2.
 - 21.10 Owner: circumference table and history fold away (closed by default, tap the title to open). Version 0.2.3.
+- 21.10 Owner: weighs in irregularly (no fixed day). Verdict always shows the trend between weigh-ins: if the last 28 days hold fewer than 3 averages, the rate uses the last 3 (or 2) averages whatever their dates, with a footnote giving the span in weeks. fitness-analyst verify: pass; flagged that after a break of months the colour may mislead; owner chose to keep the full verdict (green/red) always. New line under the numbers: days since last weigh-in + average gap between weigh-ins over all history (owner's choice: all history). Nothing is ever auto-filled (no invented weigh-ins). Version 0.3.0.
 - 21.10 Weekly check-in reminder set in iPhone Reminders: every Saturday 11:00, with a link to the app. The in-app reminder idea is no longer needed.
 - 21.10 Simpler way of working (owner): no automatic tool scout or reviewer agent per phase/proposal; main agent works and self-reviews by default, agents only per "Review by size". Data rule replaced: unclear label → map only if reliable, otherwise keep the source and report (no silent drops).
