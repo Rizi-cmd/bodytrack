@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   POSES, nextPose, FRAME, poseMetrics, alignTransform, fitTransform, applyTransform, origSize, referenceOf,
-  checkPhoto, bgMean, lightGain, defaultPair, photoCaption, compareLayout, photoBackupDue, validatePhotoBackup, photosToAdd, CHECK_HE
+  withoutOriginals, checkPhoto, bgMean, lightGain, defaultPair, photoCaption, compareLayout, photoBackupDue, validatePhotoBackup, photosToAdd, CHECK_HE
 } from '../js/photos.js';
 
 const close = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) < eps, `${a} ≈ ${b}`);
@@ -205,4 +205,12 @@ test('validatePhotoBackup: a damaged record is reported, the good ones are kept'
   const v = validatePhotoBackup({ app: 'bodytrack-photos', version: 1, photos: [rec({ id: 'a' }), rec({ id: 'b', img: 'x' }), rec({ id: 'c' })] });
   assert.equal(v.ok, false); assert.equal(v.errors.length, 1);
   assert.deepEqual(v.photos.map(p => p.id), ['a', 'c']);
+});
+
+test('withoutOriginals: only records with an original, rewritten without it, rest untouched', () => {
+  const ps = [rec({ id: 'a', orig: jpeg }), rec({ id: 'b', orig: null }), rec({ id: 'c' })];
+  const out = withoutOriginals(ps);
+  assert.deepEqual(out.map(p => [p.id, p.orig]), [['a', null]]);
+  assert.equal(out[0].img, jpeg);
+  assert.equal(ps[0].orig, jpeg); // input not changed
 });

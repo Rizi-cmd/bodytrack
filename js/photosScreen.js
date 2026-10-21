@@ -4,7 +4,7 @@ import { getAll, put, putMany, getMeta, setMeta, requestPersistence } from './db
 import { todayISO, isISODate } from './model.js';
 import { fmtFull } from './report.js';
 import {
-  POSES, POSE_HE, nextPose, FRAME, poseMetrics, alignTransform, fitTransform, origSize, referenceOf, CHECK_HE, checkPhoto,
+  POSES, POSE_HE, nextPose, FRAME, poseMetrics, alignTransform, fitTransform, origSize, withoutOriginals, referenceOf, CHECK_HE, checkPhoto,
   bgMean, lightGain, defaultPair, photoCaption, compareLayout, photoBackupDue, validatePhotoBackup, photosToAdd, BACKUP_APP, BACKUP_VERSION
 } from './photos.js';
 
@@ -95,7 +95,15 @@ function drawEdited(p, aligned) {
 }
 
 // ---- screen ----
-async function load() { view.photos = (await getAll('photos')).filter(p => p && p.id); }
+// Originals from the trial period are dropped (owner, 22.10): only the edited photo is kept.
+async function load() {
+  view.photos = (await getAll('photos')).filter(p => p && p.id);
+  const strip = withoutOriginals(view.photos);
+  if (strip.length) {
+    try { await putMany('photos', strip); view.photos = view.photos.map(p => (p.orig ? { ...p, orig: null } : p)); }
+    catch { /* tried again next time */ }
+  }
+}
 const live = pose => view.photos.filter(p => !p.deleted && p.pose === pose)
   .sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts); // newest first
 // Photos are stored as JPEG bytes (ArrayBuffer): Blobs in IndexedDB are not reliable on every WebKit build.
@@ -411,11 +419,9 @@ $('#prKeep').onclick = async () => {
   }
   $('#prKeep').disabled = true;
   try {
-    const s = origSize(p.src.width, p.src.height), o = canvas(s.w, s.h);
-    o.getContext('2d').drawImage(p.src, 0, 0, s.w, s.h);
     const ts = Date.now();
     const rec = { id: `ph-${date}-${p.pose}-${ts}`, date, pose: p.pose, ts, aligned: p.aligned,
-      img: await bytes({ canvas: p.out, q: 0.88 }), orig: await bytes({ canvas: o, q: 0.85 }), metrics: p.metrics, deleted: false };
+      img: await bytes({ canvas: p.out, q: 0.88 }), orig: null, metrics: p.metrics, deleted: false };
     await put('photos', rec);
     view.photos.push(rec);
   } catch { $('#prKeep').disabled = false; host.toast('לא הצלחתי לשמור את התמונה.'); return; }
@@ -451,7 +457,7 @@ $('#pExport').onclick = async () => {
     const parts = [`{"app":"${BACKUP_APP}","version":${BACKUP_VERSION},"exported":"${at}","photos":[`];
     for (const [i, p] of all.entries()) {
       const rec = { id: p.id, date: p.date, pose: p.pose, ts: p.ts, aligned: p.aligned, deleted: !!p.deleted, metrics: p.metrics,
-        img: await b64(jpg(p.img)), orig: p.orig ? await b64(jpg(p.orig)) : null };
+        img: await b64(jpg(p.img)) };
       parts.push((i ? ',' : '') + JSON.stringify(rec));
     }
     parts.push(']}');
@@ -481,7 +487,7 @@ $('#pImport').onchange = async e => {
     : `בקובץ ${inFile} תמונות. ${newOnes} מהן חסרות במכשיר. להוסיף אותן?`;
   if (!confirm(ask)) return;
   try {
-    await putMany('photos', add.map(p => ({ ...p, img: fromB64(p.img), orig: p.orig ? fromB64(p.orig) : null })));
+    await putMany('photos', add.map(p => ({ ...p, img: fromB64(p.img), orig: null }))); // originals in old backups are not kept
   } catch { host.toast('השחזור נכשל, שום דבר לא השתנה.'); return; }
   await requestPersistence();
   await renderPhotos();

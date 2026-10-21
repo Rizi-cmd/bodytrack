@@ -159,7 +159,7 @@ test('photos: gallery photo, before/after, delete + undo, photo backup round tri
   const backup = JSON.parse(await readFile(file, 'utf8'));
   expect(backup.app).toBe('bodytrack-photos');
   expect(backup.photos).toHaveLength(3);
-  for (const p of backup.photos) { expect(p.img.startsWith('/9j/')).toBe(true); expect(p.orig.startsWith('/9j/')).toBe(true); }
+  for (const p of backup.photos) { expect(p.img.startsWith('/9j/')).toBe(true); expect(p.orig).toBeUndefined(); } // edited photo only (owner, 22.10)
   await expect(page.locator('#pBackupInfo')).toContainText('גיבוי תמונות אחרון');
   await expect(page.locator('#pNag')).toBeHidden();
 
@@ -184,6 +184,24 @@ test('photos: gallery photo, before/after, delete + undo, photo backup round tri
   // Same file again: nothing new.
   await page.locator('#pImport').setInputFiles(file);
   await expect(page.locator('#toastMsg')).toHaveText('כל התמונות בקובץ כבר נמצאות במכשיר.');
+
+  // A photo still carrying a trial-period original: opening the screen removes the original, keeps the photo.
+  const idb = fn => page.evaluate(fn);
+  await idb(() => new Promise((res, rej) => {
+    const q = indexedDB.open('bodytrack-data');
+    q.onsuccess = () => {
+      const t = q.result.transaction('photos', 'readwrite'), os = t.objectStore('photos');
+      os.getAll().onsuccess = e => { const p = e.target.result[0]; os.put({ ...p, orig: new Uint8Array([1, 2, 3]).buffer }); };
+      t.oncomplete = () => { q.result.close(); res(); }; t.onerror = () => rej(t.error);
+    };
+  }));
+  await page.locator('[data-pose="side"]').click();
+  await expect.poll(() => idb(() => new Promise(res => {
+    const q = indexedDB.open('bodytrack-data');
+    q.onsuccess = () => { q.result.transaction('photos').objectStore('photos').getAll().onsuccess = e => { q.result.close(); res(e.target.result.filter(p => p.orig).length); }; };
+  }))).toBe(0);
+  await page.locator('[data-pose="front"]').click();
+  await expect(page.locator('#pGrid .thumb')).toHaveCount(3);
 
   await page.locator('#phoBack').click();
   await expect(page.locator('#main')).toBeVisible();

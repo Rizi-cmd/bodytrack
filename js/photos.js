@@ -18,7 +18,7 @@ export const VIS_MIN = 0.5;       // landmark visibility below this → "unclear
 export const RATIO_TOL = 0.15;    // shoulder-width ÷ torso-length change vs the reference → "pose changed"
 export const MIN_TORSO = 0.08;    // torso shorter than this share of the photo's long side → too small to align
 export const GAIN_MIN = 0.7, GAIN_MAX = 1.4, GAIN_SKIP = 0.03; // matched lighting (§4)
-export const ORIG_MAX = 2000;     // long side of the kept original (trial period, §5)
+export const ORIG_MAX = 2000;     // long side a gallery photo is scaled to before detection
 export const NEAR_DAYS = 3;       // before/after: nearest weigh-in within this many days (§6)
 
 // Body measurements from MediaPipe landmarks (normalized 0..1) on a W×H photo. null when the 4 torso points are missing.
@@ -56,7 +56,7 @@ export function fitTransform(W, H, F = FRAME) {
 }
 export const applyTransform = (m, p) => ({ x: m[0] * p.x + m[2] * p.y + m[4], y: m[1] * p.x + m[3] * p.y + m[5] });
 
-// Size of the kept original: long side at most ORIG_MAX, never enlarged.
+// Working size of a gallery photo: long side at most ORIG_MAX, never enlarged.
 export function origSize(W, H, max = ORIG_MAX) {
   const s = Math.min(1, max / Math.max(W, H));
   return { w: Math.round(W * s), h: Math.round(H * s) };
@@ -193,6 +193,9 @@ export function validatePhotoBackup(obj) {
   });
   return { ok: errors.length === 0, photos, errors, count: photos.length };
 }
+
+// Records that still carry a trial-period original, rewritten without it (owner, 22.10: edited photo only).
+export const withoutOriginals = photos => photos.filter(p => p && p.orig).map(p => ({ ...p, orig: null }));
 
 // Merge: only photos this phone doesn't have yet (a photo never changes except `deleted`, and the phone's state is newer).
 export function photosToAdd(backupPhotos, localIds) {
