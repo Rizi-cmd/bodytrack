@@ -165,3 +165,9 @@ test('validate bounds years to 1900-2100, rejects array settings, requires check
   assert.equal(v.data.checkins.length, 1);
   assert.equal(v.data.goals.length, 1);
 });
+
+test('validate rejects a broken phase record (it would break the screen)', () => {
+  const base = { app: 'bodytrack', schema: 1, weighins: [], measurements: [] };
+  assert.equal(validate({ ...base, goals: [{ id: 'p1', type: 'phase', from: 20260103, phase: 'cut' }] }).ok, false);
+  assert.equal(validate({ ...base, goals: [{ id: 'p1', type: 'phase', from: '2026-01-03', phase: 'cut' }] }).ok, true);
+});

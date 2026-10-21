@@ -5,7 +5,7 @@ import { getAll, put, getMeta, requestPersistence } from './db.js';
 import { validate, restore, shareBackup } from './backup.js';
 import { trendSummary, fmtRate, fmtWeight, EMPTY } from './trend.js';
 import {
-  PHASE_HE, verdictText, changeView, footnotes, circRows, scaleGeometry, weightChart, fmtDay, fmtFull
+  PHASE_HE, isPhaseRecord, phasePick, circCaption, verdictText, changeView, footnotes, circRows, scaleGeometry, weightChart, fmtDay, fmtFull
 } from './report.js';
 
 export const VERSION = '0.2.0';
@@ -42,6 +42,9 @@ function drawScale(rate) {
   }
   if (g.marker) {
     const x = g.marker.x;
+    if (g.marker.clipped) {
+      svg.append(sv('text', { class: 'val', x: g.zero, y: 74, 'text-anchor': 'middle' }, `${fmtRate(rate)} מחוץ לסרגל`));
+    }
     svg.append(sv('path', { class: 'marker', d: `M${(x - 7).toFixed(1)},4 L${(x + 7).toFixed(1)},4 L${x.toFixed(1)},15 Z` }));
     svg.append(sv('line', { class: 'marker-l', x1: x, x2: x, y1: 14, y2: 38 }));
   }
@@ -84,7 +87,7 @@ function renderVerdict(W, M, C) {
   const n = s.series.length;
   const v = verdictText(s, n);
 
-  $('#meta').textContent = [s.latest ? fmtFull(s.latest.date) : null, s.phase ? PHASE_HE[s.phase] : 'בלי שלב'].filter(Boolean).join(' · ');
+  $('#meta').textContent = `היום ${fmtFull(todayISO())} · ${s.phase ? PHASE_HE[s.phase] : 'בלי שלב'}`;
   const vw = $('#vWord'); vw.className = 'vword ' + v.tone;
   vw.textContent = (v.arrow ? v.arrow + ' ' : '') + v.word;
   $('#vLabel').textContent = v.label;
@@ -100,10 +103,16 @@ function renderVerdict(W, M, C) {
   const mw = $('#mcWord'); mw.className = 'd ' + (mc ? mc.tone : 'ink');
   mw.textContent = mc ? `${mc.arrow} ${mc.word}` : '';
   $('#lastKg').textContent = s.latest ? fmtWeight(s.latest.kg) : EMPTY;
-  $('#lastLab').textContent = s.latest ? `שקילה אחרונה · ${fmtDay(s.latest.date)}` : 'שקילה אחרונה';
+  const ll = $('#lastLab'); ll.replaceChildren('שקילה אחרונה');
+  if (s.latest) { const dd = el('span', 'n', fmtDay(s.latest.date)); dd.dir = 'ltr'; ll.append(' · ', dd); }
   drawChart();
 
-  const rows = circRows(M), tb = $('#circTable');
+  const rows = circRows(M), tb = $('#circTable'), cap = circCaption(rows);
+  const h = $('#circTitle'); h.replaceChildren('טבלה 1 · היקפים');
+  if (!cap.perRow && cap.date) {
+    const d = el('span', 'n', cap.date); d.dir = 'ltr'; h.append(', ', d);
+    if (cap.prev) { const p = el('span', 'n', cap.prev); p.dir = 'ltr'; h.append(' מול ', p); }
+  }
   tb.replaceChildren();
   $('#circEmpty').hidden = rows.length > 0; tb.hidden = !rows.length;
   for (const r of rows) {
@@ -119,6 +128,10 @@ function renderVerdict(W, M, C) {
       else d.append(r.change.arrow + ' ', nn, ' ' + r.change.word);
       dl.append(d);
     } else dl.append(el('span', 'lab', 'מדידה ראשונה'));
+    if (cap.perRow) {
+      const when = el('span', 'lab rowdate', r.prevDate ? `${fmtDay(r.date)} מול ${fmtDay(r.prevDate)}` : fmtDay(r.date));
+      tr.firstChild.append(el('br'), when);
+    }
     tr.append(num, dl); tb.append(tr);
   }
 
@@ -131,7 +144,7 @@ async function render() {
   const W = (await getAll('weighins')).filter(w => !w.deleted).sort((a, b) => a.date.localeCompare(b.date));
   const M = (await getAll('measurements')).filter(m => !m.deleted);
   const C = await getAll('checkins');
-  state.phases = (await getAll('goals')).filter(g => g && g.type === 'phase' && !g.deleted)
+  state.phases = (await getAll('goals')).filter(isPhaseRecord)
     .sort((a, b) => (a.at || 0) - (b.at || 0));
   const has = W.length || M.length;
   renderVerdict(W, M, C);
@@ -172,10 +185,8 @@ document.querySelectorAll('[data-phase]').forEach(b => b.onclick = async () => {
   const phase = b.dataset.phase;
   if (state.summary && state.summary.phase === phase) return;
   const firstW = state.summary && state.summary.series.length ? state.summary.series[0].date : null;
-  const from = state.phases.length || !firstW ? todayISO() : firstW;
-  const at = Date.now();
   try {
-    await put('goals', { id: `phase-${at}`, type: 'phase', from, phase, at });
+    await put('goals', phasePick(state.phases, phase, todayISO(), firstW, Date.now()));
     await render();
   } catch { toast('לא הצלחתי לשמור את השלב.'); }
 });

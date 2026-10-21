@@ -1,6 +1,6 @@
 // Verdict screen: everything shown is computed here (pure, no DOM, no clock) so it can be tested.
 // Numbers come from js/trend.js; this file turns them into words, tones and chart geometry.
-import { SITES } from './model.js';
+import { SITES, isISODate } from './model.js';
 import { day, roundN, fmtWeight, fmtChange, fmtRate, STUCK } from './trend.js';
 
 export const PHASES = [
@@ -9,6 +9,20 @@ export const PHASES = [
   { id: 'maintenance', he: 'תחזוקה' }
 ];
 export const PHASE_HE = Object.fromEntries(PHASES.map(p => [p.id, p.he]));
+// A stored phase record the app can trust (restore and render both use this).
+export const isPhaseRecord = r => !!r && typeof r === 'object' && r.type === 'phase' && !r.deleted &&
+  Object.prototype.hasOwnProperty.call(PHASE_HE, r.phase) && isISODate(r.from);
+
+// Phase pick → the record to write. Rules: the very first pick covers all history (from = first weigh-in);
+// re-picking while only that first record exists replaces it; a later pick starts today, and picking again
+// on the same day replaces that day's record (so a mis-tap leaves no trace).
+export function phasePick(records, phase, today, firstWeighin, at) {
+  const recs = (records || []).filter(isPhaseRecord);
+  if (recs.length === 1 && recs[0].first) return { ...recs[0], phase, at };
+  if (!recs.length) return { id: `phase-${at}`, type: 'phase', from: firstWeighin && firstWeighin < today ? firstWeighin : today, phase, at, first: true };
+  const same = recs.find(r => r.from === today && !r.first);
+  return same ? { ...same, phase, at } : { id: `phase-${at}`, type: 'phase', from: today, phase, at };
+}
 export const TAG_HE = { sick: 'מחלה', vacation: 'חופשה', event: 'אירוע' };
 export const MIN_WEIGHINS = 5; // spec §3: 2 average points = 3 + 2 weigh-ins
 
@@ -86,6 +100,18 @@ export function circRows(measurements) {
     });
   }
   return rows;
+}
+
+// Table caption: one date pair when every row shares it; otherwise each row shows its own (perRow true).
+export function circCaption(rows) {
+  const withPrev = rows.filter(r => r.prevDate);
+  const dates = new Set(rows.map(r => r.date)), prevs = new Set(withPrev.map(r => r.prevDate));
+  if (!rows.length) return { text: 'היקפים', perRow: false };
+  if (dates.size === 1 && prevs.size <= 1) {
+    const d = [...dates][0], p = [...prevs][0];
+    return { date: fmtDay(d), prev: p ? fmtDay(p) : null, perRow: false };
+  }
+  return { perRow: true };
 }
 
 // Centre-zero scale −1..+1 kg/week. Returns x of the marker (clamped) and the stuck band, for a given width.

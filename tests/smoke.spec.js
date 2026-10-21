@@ -113,6 +113,13 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
     .map(e => e.tagName + ':' + e.textContent.trim().slice(0, 20)));
   expect(small, 'text under 12px').toEqual([]);
   await page.screenshot({ path: testInfo.outputPath('verdict.png'), fullPage: true });
+  // Smaller iPhone (375pt): still no horizontal scroll, hero number fits.
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(await page.evaluate(() => { const h = document.querySelector('.hero'); return h.scrollWidth <= h.clientWidth + 1; })).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath('verdict-375.png') });
+  await page.setViewportSize({ width: 440, height: 956 });
 
   // 3. Wait until the service worker controls the page and has cached the shell.
   await page.evaluate(() => navigator.serviceWorker.ready);

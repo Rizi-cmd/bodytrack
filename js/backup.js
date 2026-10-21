@@ -1,6 +1,7 @@
 // Backup and restore as a JSON file the user keeps (e.g. in iCloud Drive).
 import { SCHEMA, SITE, isISODate } from './model.js';
 import { readAll, writeAll, setMeta, STORES } from './db.js';
+import { isPhaseRecord } from './report.js';
 
 export async function buildBackup() {
   const data = await readAll();
@@ -37,7 +38,8 @@ export function validate(obj) {
   });
   for (const [s, label] of [['checkins', 'צ׳ק-אין'], ['goals', 'יעדים']]) {
     listOf(s, label).forEach((r, i) => {
-      if (r && typeof r === 'object' && okId(r.id)) clean[s].push(r);
+      const badPhase = s === 'goals' && r && r.type === 'phase' && !r.deleted && !isPhaseRecord(r);
+      if (r && typeof r === 'object' && okId(r.id) && !badPhase) clean[s].push(r);
       else errors.push(`${{ checkins: 'צ׳ק-אין', goals: 'יעד' }[s]} מספר ${i + 1} לא תקין.`);
     });
   }

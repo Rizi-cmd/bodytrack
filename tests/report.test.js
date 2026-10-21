@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { trendSummary, day } from '../js/trend.js';
 import {
-  verdictText, tooEarlyReason, changeView, footnotes, circRows, scaleGeometry, yTicks, weightChart, fmtDay
+  verdictText, tooEarlyReason, phasePick, isPhaseRecord, circCaption, changeView, footnotes, circRows, scaleGeometry, yTicks, weightChart, fmtDay
 } from '../js/report.js';
 
 const M = '−';
@@ -120,4 +120,56 @@ test('phase records: picked today applies at once; first pick is not a change', 
   const later = trendSummary(w, [{ from: '2026-01-03', phase: 'cut' }, { from: '2026-02-02', phase: 'bulk' }], '2026-02-02');
   assert.equal(later.phase, 'bulk'); assert.equal(later.verdict, 'away'); assert.equal(later.phaseChangedInWindow, true);
   assert.equal(fmtDay('2026-02-02'), '2.2');
+});
+
+test('phasePick: first pick covers history; re-pick replaces; same-day picks replace', () => {
+  const a = phasePick([], 'cut', '2026-02-02', '2026-01-03', 1);
+  assert.equal(a.from, '2026-01-03'); assert.equal(a.first, true);
+  const b = phasePick([a], 'bulk', '2026-02-02', '2026-01-03', 2);   // fix a wrong first pick
+  assert.equal(b.id, a.id); assert.equal(b.phase, 'bulk'); assert.equal(b.from, '2026-01-03');
+  const recs = [a, { id: 'phase-9', type: 'phase', from: '2026-01-20', phase: 'bulk' }];
+  const c = phasePick(recs, 'bulk', '2026-02-02', '2026-01-03', 3);
+  assert.equal(c.from, '2026-02-02'); assert.notEqual(c.id, a.id);
+  const d = phasePick([...recs, c], 'cut', '2026-02-02', '2026-01-03', 4); // second tap the same day
+  assert.equal(d.id, c.id); assert.equal(d.phase, 'cut');
+  assert.equal(phasePick([], 'cut', '2026-02-02', null, 5).from, '2026-02-02');
+});
+
+test('cut → bulk → cut on one day leaves no phase change', () => {
+  const w = weekly('2026-01-03', [82.0, 81.5, 81.0, 80.5, 80.0]);
+  let recs = [];
+  for (const [ph, at] of [['cut', 1]]) recs = [phasePick(recs, ph, '2026-01-03', '2026-01-03', at)];
+  // a later day: two taps
+  const t = '2026-02-02';
+  const x = phasePick(recs, 'bulk', t, '2026-01-03', 2); recs = [...recs.filter(r => r.id !== x.id), x];
+  recs = recs.map(r => r); // keep first record
+  const first = recs.find(r => r.first);
+  // first record replaced only when it is the only one; here two exist
+  assert.ok(first);
+  const y = phasePick(recs, 'cut', t, '2026-01-03', 3); recs = [...recs.filter(r => r.id !== y.id), y];
+  const s = trendSummary(w, recs, t);
+  assert.equal(s.phase, 'cut'); assert.equal(s.phaseChangedInWindow, false);
+});
+
+test('isPhaseRecord rejects broken records', () => {
+  assert.equal(isPhaseRecord({ id: 'p', type: 'phase', from: '2026-01-03', phase: 'cut' }), true);
+  for (const r of [null, {}, { type: 'phase', from: 20260103, phase: 'cut' }, { type: 'phase', from: '2026-01-03', phase: 'x' },
+    { type: 'phase', from: '2026-01-03', phase: 'cut', deleted: true }, { type: 'goal', from: '2026-01-03', phase: 'cut' }])
+    assert.equal(isPhaseRecord(r), false, JSON.stringify(r));
+});
+
+test('circCaption: one date pair, or per-row dates when sites differ', () => {
+  const rows = circRows(fx().measurements);
+  const c = circCaption(rows);
+  assert.ok(c.perRow || c.date);
+  const mixed = circCaption(circRows([
+    { date: '2026-01-01', site: 'waist', cm: 80 }, { date: '2026-01-08', site: 'waist', cm: 79 },
+    { date: '2026-01-01', site: 'neck', cm: 40 }, { date: '2026-01-15', site: 'neck', cm: 40 }
+  ]));
+  assert.equal(mixed.perRow, true);
+  const same = circCaption(circRows([
+    { date: '2026-01-01', site: 'waist', cm: 80 }, { date: '2026-01-08', site: 'waist', cm: 79 },
+    { date: '2026-01-01', site: 'neck', cm: 40 }, { date: '2026-01-08', site: 'neck', cm: 40 }
+  ]));
+  assert.deepEqual(same, { date: '8.1', prev: '1.1', perRow: false });
 });
