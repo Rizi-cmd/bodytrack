@@ -33,8 +33,8 @@ export function verdictText(s, weighinCount) {
 
 export function tooEarlyReason(reason, n) {
   if (reason === 'no_data') return 'אין עדיין שקילות';
-  if (reason === 'span_too_short') return 'השקילות צפופות מדי. צריך לפחות שבועיים';
-  if (n < MIN_WEIGHINS) return `יש ${n} שקילות, צריך לפחות ${MIN_WEIGHINS}`;
+  if (reason === 'span_too_short') return 'צריך שקילות על פני שבועיים לפחות';
+  if (n < MIN_WEIGHINS) return `${n === 1 ? 'יש שקילה אחת' : `יש ${n} שקילות`}, צריך לפחות ${MIN_WEIGHINS}`;
   return 'אין מספיק שקילות בחודש האחרון';
 }
 
@@ -42,7 +42,7 @@ export function tooEarlyReason(reason, n) {
 export function changeView(delta, direction, decimals = 1) {
   if (delta === null || delta === undefined || !Number.isFinite(delta)) return null;
   const r = roundN(delta, decimals);
-  if (r === 0) return { text: fmtChange(0), arrow: ARROW.flat, word: 'ללא שינוי', tone: 'ink', zero: true };
+  if (r === 0) return { text: fmtChange(0), arrow: ARROW.flat, word: 'בלי שינוי', tone: 'ink', zero: true };
   const up = r > 0;
   const tone = direction === 1 || direction === -1 ? (Math.sign(r) === direction ? 'good' : 'bad') : 'ink';
   return { text: decimals === 1 ? fmtChange(delta) : fmtRate(delta), arrow: up ? ARROW.up : ARROW.down, word: up ? 'עלה' : 'ירד', tone };
@@ -58,7 +58,7 @@ export function footnotes(s, checkins) {
     .filter(c => c && !c.deleted && TAG_HE[c.tag] && inWin.has(c.date))
     .sort((a, b) => (a.date < b.date ? -1 : 1));
   if (s.rate !== null && tagged.length)
-    out.push('בחישוב יש שקילה מסומנת: ' + tagged.map(c => `${TAG_HE[c.tag]} (${fmtDay(c.date)})`).join(', ') + '.');
+    out.push((tagged.length > 1 ? 'בחישוב יש שקילות מסומנות: ' : 'בחישוב יש שקילה מסומנת: ') + tagged.map(c => `${TAG_HE[c.tag]} (${fmtDay(c.date)})`).join(', ') + '.');
   return out;
 }
 

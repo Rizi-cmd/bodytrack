@@ -34,7 +34,7 @@ test('changeView: tone only toward/away from goal, zero is neutral', () => {
   assert.equal(changeView(-1.3, 1).tone, 'bad');
   assert.equal(changeView(0.6, 0).tone, 'ink');
   assert.equal(changeView(0.6, null).tone, 'ink');
-  assert.deepEqual(changeView(0.04, -1), { text: '0.0', arrow: '→', word: 'ללא שינוי', tone: 'ink', zero: true });
+  assert.deepEqual(changeView(0.04, -1), { text: '0.0', arrow: '→', word: 'בלי שינוי', tone: 'ink', zero: true });
   assert.equal(changeView(null, -1), null);
 });
 

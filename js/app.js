@@ -32,7 +32,7 @@ function drawScale(rate) {
   const w = Math.max(240, Math.round(box.clientWidth || 350));
   const g = scaleGeometry(rate, w);
   const svg = sv('svg', { width: w, height: 80, viewBox: `0 0 ${w} 80`, role: 'img',
-    'aria-label': rate === null ? 'סרגל קצב: אין עדיין קצב' : `סרגל קצב: ${fmtRate(rate)} ק״ג לשבוע` });
+    'aria-label': rate === null ? 'סרגל קצב: אין עדיין קצב' : `סרגל קצב: ${fmtRate(rate)} ק״ג בשבוע` });
   svg.append(sv('rect', { class: 'band', x: g.bandFrom, y: 14, width: g.bandTo - g.bandFrom, height: 24 }));
   svg.append(sv('text', { class: 'band-t', x: g.zero, y: 10, 'text-anchor': 'middle' }, 'תקוע'));
   svg.append(sv('line', { class: 'axis', x1: g.x0, x2: g.x1, y1: 26, y2: 26 }));
@@ -59,7 +59,7 @@ function drawChart() {
   const w = Math.max(260, Math.round(box.clientWidth || 350));
   const c = weightChart(s.series, state.range, w);
   const svg = sv('svg', { width: w, height: c.height, viewBox: `0 0 ${w} ${c.height}`, role: 'img',
-    'aria-label': `גרף משקל: ${c.count} שקילות וממוצע 4 שקילות` });
+    'aria-label': `גרף משקל: ${c.count === 1 ? 'שקילה אחת' : c.count + ' שקילות'} וממוצע 4 שקילות` });
   for (const t of c.y) {
     svg.append(sv('line', { class: 'grid', x1: c.padL, x2: w - c.padR, y1: t.y, y2: t.y }));
     svg.append(sv('text', { class: 'ax', x: c.padL - 6, y: t.y + 4, 'text-anchor': 'end' }, t.label));
@@ -75,7 +75,7 @@ function drawChart() {
   const below = c.last.y < c.plotBottom - 24;
   svg.append(sv('text', { class: 'val', x: c.last.x - 8, y: below ? c.last.y + 18 : c.last.y - 10, 'text-anchor': 'end' }, c.last.label));
   box.append(svg);
-  $('#chartCount').textContent = `${c.count} שקילות`;
+  $('#chartCount').textContent = c.count === 1 ? 'שקילה אחת' : `${c.count} שקילות`;
   document.querySelectorAll('[data-range]').forEach(b => b.setAttribute('aria-pressed', b.dataset.range === state.range));
 }
 
@@ -124,7 +124,7 @@ function renderVerdict(W, M, C) {
 
   document.querySelectorAll('[data-phase]').forEach(b => b.setAttribute('aria-pressed', b.dataset.phase === s.phase));
   const cur = state.phases.filter(p => p.phase === s.phase).map(p => p.from).sort().pop();
-  $('#phaseInfo').textContent = s.phase ? `מאז ${fmtFull(cur)}` : 'בלי שלב אין צבע ואין יעד. בוחרים שלב כדי לקבל פסק דין.';
+  $('#phaseInfo').textContent = s.phase ? `מאז ${fmtFull(cur)}` : 'בלי שלב אין יעד להשוואה. בחר שלב.';
 }
 
 async function render() {
@@ -191,7 +191,7 @@ document.querySelectorAll('[data-list]').forEach(b => b.onclick = () => {
 $('#exportBtn').onclick = async () => {
   try {
     const r = await shareBackup();
-    if (r.saved) toast('הגיבוי מוכן. ודא שבחרת "שמירה בקבצים".');
+    if (r.saved) toast('הגיבוי מוכן. צריך לבחור "שמירה בקבצים".');
     render();
   } catch { toast('לא הצלחתי ליצור את קובץ הגיבוי.'); }
 };
@@ -202,7 +202,7 @@ $('#importFile').onchange = async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
   let obj; try { obj = JSON.parse(await f.text()); } catch { obj = null; }
-  let v; try { v = validate(obj); } catch { v = { ok: false, errors: ['הקובץ לא בפורמט JSON תקין.'] }; }
+  let v; try { v = validate(obj); } catch { v = { ok: false, errors: ['זה לא קובץ גיבוי תקין.'] }; }
   const errs = $('#importErrors'); errs.replaceChildren();
   if (!v.ok) {
     pendingObj = null;
@@ -211,7 +211,7 @@ $('#importFile').onchange = async e => {
     $('#impMerge').hidden = $('#impReplace').hidden = true;
   } else {
     pendingObj = obj;
-    $('#importSummary').textContent = `בקובץ: ${v.counts.weighins} שקילות ו-${v.counts.measurements} מדידות היקף.`;
+    $('#importSummary').textContent = `בקובץ: ${v.counts.weighins} שקילות ו־${v.counts.measurements} מדידות היקף.`;
     $('#impMerge').hidden = $('#impReplace').hidden = false;
   }
   $('#importSheet').hidden = false;
@@ -222,7 +222,7 @@ async function doRestore(replace) {
   try { v = await restore(pendingObj, { replace }); } catch { v = { ok: false }; }
   pendingObj = null; $('#importSheet').hidden = true;
   await requestPersistence();
-  toast(v.ok ? `שוחזרו ${v.counts.weighins} שקילות ו-${v.counts.measurements} מדידות.` : 'השחזור נכשל, שום דבר לא השתנה.');
+  toast(v.ok ? `שוחזרו ${v.counts.weighins} שקילות ו־${v.counts.measurements} מדידות.` : 'השחזור נכשל, שום דבר לא השתנה.');
   render();
 }
 $('#impMerge').onclick = () => doRestore(false);
