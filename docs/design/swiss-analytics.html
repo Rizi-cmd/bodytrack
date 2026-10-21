@@ -1,0 +1,102 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Swiss · אנליטיקה</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap">
+<style>*{box-sizing:border-box}html,body{margin:0}html{overflow-x:clip}body{width:390px;margin:0 auto}.n{font-variant-numeric:tabular-nums;unicode-bidi:isolate}
+:root{--bg:#F7F7F5;--ink:#111;--mute:#5E5E5A;--rule:#111;--hair:#D2D2CC;--good:#13703F;--bad:#B3261E}
+body{background:var(--bg);color:var(--ink);font-family:Heebo,Arial,sans-serif;font-size:14px;line-height:1.35}
+.wrap{padding:52px 20px 28px;display:flex;flex-direction:column}
+.top{display:flex;justify-content:space-between;align-items:baseline;border-bottom:3px solid var(--rule);padding-bottom:8px}
+.top h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
+.meta{font-size:12px;color:var(--mute);letter-spacing:.04em}
+.lab{font-size:12px;color:var(--mute);letter-spacing:.06em;font-weight:500}
+.sec{border-bottom:1px solid var(--rule);padding:14px 0}
+.verdict{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.vword{font-size:30px;font-weight:900;color:var(--good);display:flex;align-items:center;gap:6px}
+.hero{display:flex;align-items:flex-end;gap:10px;direction:rtl}
+.hero .big{font-size:118px;font-weight:800;line-height:.8;letter-spacing:-.045em}
+.hero .unit{font-size:16px;font-weight:700;padding-bottom:6px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--rule)}
+.grid3>div{padding:12px 0 12px 10px;display:flex;flex-direction:column;gap:2px}
+.grid3>div+div{border-right:1px solid var(--hair);padding-right:10px}
+.grid3 .v{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.good{color:var(--good)}.bad{color:var(--bad)}.flat{color:var(--mute)}
+.d{font-size:13px;font-weight:700;white-space:nowrap}
+.fig-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.fig-h b{font-size:15px;font-weight:800}
+.seg{display:flex;border:1px solid var(--rule)}.seg span{font-size:12px;padding:4px 9px}.seg .on{background:var(--ink);color:var(--bg);font-weight:700}
+.cap{font-size:12px;color:var(--mute);margin-top:6px;display:flex;gap:14px;align-items:center}
+.key-l{display:inline-block;width:16px;height:2px;background:var(--ink);vertical-align:middle;margin-left:4px}
+.key-d{display:inline-block;width:7px;height:7px;border-radius:50%;background:#8a8a85;vertical-align:middle;margin-left:4px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:9px 0;border-bottom:1px solid var(--hair);text-align:right;font-weight:400}
+th{font-size:12px;color:var(--mute);font-weight:500;letter-spacing:.04em;border-bottom:1px solid var(--rule);padding:6px 0}
+td.num{font-weight:700;font-size:16px;text-align:left}
+td.dl{text-align:left}
+.btn{margin-top:18px;background:var(--ink);color:var(--bg);text-align:center;font-weight:800;font-size:17px;padding:15px;letter-spacing:.02em}
+svg .grid{stroke:var(--hair);stroke-width:1}svg .axis{stroke:var(--ink);stroke-width:1}
+svg .ax{fill:var(--mute);font:500 12px Heebo,Arial,sans-serif}svg .ax-s{fill:var(--ink);font:700 12px Heebo,Arial,sans-serif}
+svg .trend{fill:none;stroke:var(--ink);stroke-width:2.2}
+svg .dot{fill:#8a8a85}svg .dot-last{fill:var(--bg);stroke:var(--ink);stroke-width:2.2}
+svg .val{fill:var(--ink);font:700 12px Heebo,Arial,sans-serif}svg .trend-t{fill:var(--ink)}
+svg .band{fill:#E4E4DF}svg .band-t,svg .end-t{fill:var(--mute);font:500 12px Heebo,Arial,sans-serif}
+svg .tick{stroke:var(--ink);stroke-width:1}svg .marker{fill:var(--ink)}svg .marker-l{stroke:var(--ink);stroke-width:2}
+svg .bar{fill:#3A3A37}svg .phase-a{fill:transparent}svg .phase-b{fill:#ECECE7}svg .phase-t{fill:var(--mute);font:700 12px Heebo,Arial,sans-serif}
+.foot{font-size:12px;color:var(--mute);line-height:1.5;padding-top:10px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.kv>div{padding:10px 0;border-bottom:1px solid var(--hair);display:flex;flex-direction:column;gap:2px}
+.kv>div:nth-child(odd){padding-left:10px}.kv>div:nth-child(even){border-right:1px solid var(--hair);padding-right:10px}
+.kv .v{font-size:22px;font-weight:800}
+.empty{border:1px dashed var(--hair);padding:10px;color:var(--mute);font-size:13px;text-align:center}
+h2{margin:0 0 8px;font-size:15px;font-weight:800}
+</style></head>
+<body><div class="wrap">
+<div class="top"><h1>אנליטיקה</h1><span class="meta"><span class="n" dir="ltr">17.4–16.10.2026</span> · 27 שקילות</span></div>
+<div class="sec">
+ <div class="fig-h"><b>איור 1 · מגמה מול שקילות, 6 חודשים</b></div>
+ <svg viewBox="0 0 350 220" width="350" style="direction:ltr;display:block;max-width:100%" role="img" aria-label="גרף משקל: שקילות וממוצע 4 שקילות"><rect class="phase-a" x="36.0" y="10" width="114.6" height="184"/><text class="phase-t" x="146.6" y="24" text-anchor="end">מסה</text><rect class="phase-b" x="150.6" y="10" width="183.4" height="184"/><text class="phase-t" x="330.0" y="24" text-anchor="end">חיטוב · מ-26.6</text><line class="grid" x1="30" x2="340" y1="194.0" y2="194.0"/><text class="ax" x="24" y="198.0" text-anchor="end">82</text><line class="grid" x1="30" x2="340" y1="148.0" y2="148.0"/><text class="ax" x="24" y="152.0" text-anchor="end">84</text><line class="grid" x1="30" x2="340" y1="102.0" y2="102.0"/><text class="ax" x="24" y="106.0" text-anchor="end">86</text><line class="grid" x1="30" x2="340" y1="56.0" y2="56.0"/><text class="ax" x="24" y="60.0" text-anchor="end">88</text><line class="grid" x1="30" x2="340" y1="10.0" y2="10.0"/><text class="ax" x="24" y="14.0" text-anchor="end">90</text><line class="axis" x1="30" x2="340" y1="194" y2="194"/><line class="axis" x1="58.9" x2="58.9" y1="194" y2="198"/><text class="ax" x="58.9" y="212" text-anchor="middle">מאי</text><line class="axis" x1="109.7" x2="109.7" y1="194" y2="198"/><text class="ax" x="109.7" y="212" text-anchor="middle">יוני</text><line class="axis" x1="158.8" x2="158.8" y1="194" y2="198"/><text class="ax" x="158.8" y="212" text-anchor="middle">יולי</text><line class="axis" x1="209.6" x2="209.6" y1="194" y2="198"/><text class="ax" x="209.6" y="212" text-anchor="middle">אוג׳</text><line class="axis" x1="260.3" x2="260.3" y1="194" y2="198"/><text class="ax" x="260.3" y="212" text-anchor="middle">ספט׳</text><line class="axis" x1="309.4" x2="309.4" y1="194" y2="198"/><text class="ax" x="309.4" y="212" text-anchor="middle">אוק׳</text><polyline class="trend" points="36.0,150.3 47.5,144.5 58.9,139.6 70.4,134.2 81.8,124.4 93.3,114.1 104.8,104.3 116.2,94.0 127.7,82.5 139.2,72.1 150.6,61.2 162.1,58.3 173.5,62.3 185.0,71.0 196.5,79.0 207.9,84.8 219.4,82.5 230.8,82.5 242.3,83.0 253.8,89.9 265.2,96.2 276.7,102.6 288.2,108.9 299.6,112.4 311.1,118.1 322.5,123.9 334.0,133.6"/><circle class="dot" cx="36.0" cy="150.3" r="2.6"/><circle class="dot" cx="47.5" cy="138.8" r="2.6"/><circle class="dot" cx="58.9" cy="129.6" r="2.6"/><circle class="dot" cx="70.4" cy="118.1" r="2.6"/><circle class="dot" cx="81.8" cy="111.2" r="2.6"/><circle class="dot" cx="93.3" cy="97.4" r="2.6"/><circle class="dot" cx="104.8" cy="90.5" r="2.6"/><circle class="dot" cx="116.2" cy="76.7" r="2.6"/><circle class="dot" cx="127.7" cy="65.2" r="2.6"/><circle class="dot" cx="139.2" cy="56.0" r="2.6"/><circle class="dot" cx="150.6" cy="46.8" r="2.6"/><circle class="dot" cx="162.1" cy="65.2" r="2.6"/><circle class="dot" cx="173.5" cy="81.3" r="2.6"/><circle class="dot" cx="185.0" cy="90.5" r="2.6"/><circle class="dot" cx="196.5" cy="79.0" r="2.6"/><circle class="dot" cx="207.9" cy="88.2" r="2.6"/><circle class="dot" cx="219.4" cy="72.1" r="2.6"/><circle class="dot" cx="230.8" cy="90.5" r="2.6"/><circle class="dot" cx="242.3" cy="81.3" r="2.6"/><circle class="dot" cx="253.8" cy="115.8" r="2.6"/><circle class="dot" cx="265.2" cy="97.4" r="2.6"/><circle class="dot" cx="276.7" cy="115.8" r="2.6"/><circle class="dot" cx="288.2" cy="106.6" r="2.6"/><circle class="dot" cx="299.6" cy="129.6" r="2.6"/><circle class="dot" cx="311.1" cy="120.4" r="2.6"/><circle class="dot" cx="322.5" cy="138.8" r="2.6"/><circle class="dot-last" cx="334.0" cy="145.7" r="4.1"/><text class="val" x="326.0" y="161.7" text-anchor="end">84.1</text></svg>
+ <div class="cap"><span><i class="key-l"></i>ממוצע 4 שקילות</span><span><i class="key-d"></i>שקילה</span></div>
+</div>
+<div class="sec">
+ <h2>טבלה 1 · קצב</h2>
+ <div class="kv">
+  <div><span class="v"><span class="n" dir="ltr">−0.30</span> <small class="lab">ק״ג/שבוע</small></span><span class="lab">מגמת 4 שקילות</span></div>
+  <div><span class="v"><span class="n" dir="ltr">−0.35%</span></span><span class="lab">ממשקל הגוף בשבוע</span></div>
+ </div>
+ <div style="margin-top:12px"><svg viewBox="0 0 350 70" width="350" style="direction:ltr;display:block;max-width:100%" role="img" aria-label="קצב ירידה 0.35% ממשקל הגוף בשבוע, מתחת לטווח היעד 0.5 עד 1 אחוז"><rect class="band" x="147.5" y="22" width="137.5" height="20"/><text class="band-t" x="216.2" y="18" text-anchor="middle">טווח יעד לחיטוב</text><line class="axis" x1="10" x2="340" y1="32" y2="32" /><line class="tick" x1="10.0" x2="10.0" y1="27" y2="37"/><text class="ax" x="10.0" y="56" text-anchor="middle">0%</text><line class="tick" x1="78.8" x2="78.8" y1="27" y2="37"/><text class="ax" x="78.8" y="56" text-anchor="middle">0.25%</text><line class="tick" x1="147.5" x2="147.5" y1="27" y2="37"/><text class="ax" x="147.5" y="56" text-anchor="middle">0.5%</text><line class="tick" x1="216.2" x2="216.2" y1="27" y2="37"/><text class="ax" x="216.2" y="56" text-anchor="middle">0.75%</text><line class="tick" x1="285.0" x2="285.0" y1="27" y2="37"/><text class="ax" x="285.0" y="56" text-anchor="middle">1%</text><line class="marker-l" x1="107.5" x2="107.5" y1="18" y2="46"/><circle class="marker" cx="107.5" cy="32" r="5"/></svg></div>
+ <div class="lab" style="margin-top:2px">מתחת לטווח היעד לחיטוב (<span class="n" dir="ltr">0.5–1%</span>)</div>
+</div>
+<div class="sec">
+ <div class="fig-h"><b>איור 2 · שינוי שבועי במגמה (ק״ג)</b></div>
+ <svg viewBox="0 0 350 150" width="350" style="direction:ltr;display:block;max-width:100%" role="img" aria-label="שינוי שבועי במגמה, 8 שבועות"><line class="grid" x1="34" x2="344" y1="18.0" y2="18.0"/><text class="ax" x="28" y="22.0" text-anchor="end">+0.2</text><line class="axis" x1="34" x2="344" y1="45.0" y2="45.0"/><text class="ax" x="28" y="49.0" text-anchor="end">0</text><line class="grid" x1="34" x2="344" y1="72.0" y2="72.0"/><text class="ax" x="28" y="76.0" text-anchor="end">−0.2</text><line class="grid" x1="34" x2="344" y1="99.0" y2="99.0"/><text class="ax" x="28" y="103.0" text-anchor="end">−0.4</text><line class="grid" x1="34" x2="344" y1="126.0" y2="126.0"/><text class="ax" x="28" y="130.0" text-anchor="end">−0.6</text><rect class="bar" x="42.5" y="45.0" width="21.7" height="40.5"/><text class="ax-s" x="53.4" y="98.5" text-anchor="middle">−0.30</text><text class="ax" x="53.4" y="144" text-anchor="middle">28.8</text><rect class="bar" x="81.3" y="45.0" width="21.7" height="37.1"/><text class="ax-s" x="92.1" y="95.1" text-anchor="middle">−0.28</text><text class="ax" x="92.1" y="144" text-anchor="middle">4.9</text><rect class="bar" x="120.0" y="45.0" width="21.7" height="37.1"/><text class="ax-s" x="130.9" y="95.1" text-anchor="middle">−0.27</text><text class="ax" x="130.9" y="144" text-anchor="middle">11.9</text><rect class="bar" x="158.8" y="45.0" width="21.7" height="37.1"/><text class="ax-s" x="169.6" y="95.1" text-anchor="middle">−0.28</text><text class="ax" x="169.6" y="144" text-anchor="middle">18.9</text><rect class="bar" x="197.5" y="45.0" width="21.7" height="20.3"/><text class="ax-s" x="208.4" y="78.3" text-anchor="middle">−0.15</text><text class="ax" x="208.4" y="144" text-anchor="middle">25.9</text><rect class="bar" x="236.3" y="45.0" width="21.7" height="33.7"/><text class="ax-s" x="247.1" y="91.8" text-anchor="middle">−0.25</text><text class="ax" x="247.1" y="144" text-anchor="middle">2.10</text><rect class="bar" x="275.0" y="45.0" width="21.7" height="33.7"/><text class="ax-s" x="285.9" y="91.8" text-anchor="middle">−0.25</text><text class="ax" x="285.9" y="144" text-anchor="middle">9.10</text><rect class="bar" x="313.8" y="45.0" width="21.7" height="57.4"/><text class="ax-s" x="324.6" y="115.4" text-anchor="middle">−0.42</text><text class="ax" x="324.6" y="144" text-anchor="middle">16.10</text></svg>
+</div>
+<div class="sec">
+ <h2>טבלה 2 · יציבות הנתונים</h2>
+ <div class="kv">
+  <div><span class="v"><span class="n" dir="ltr">±0.5</span> <small class="lab">ק״ג</small></span><span class="lab">תנודתיות סביב המגמה</span></div>
+  <div><span class="v"><span class="n" dir="ltr">1.0</span></span><span class="lab">שקילות בשבוע</span></div>
+  <div><span class="v"><span class="n" dir="ltr">7</span> <small class="lab">ימים</small></span><span class="lab">הפער הארוך ביותר</span></div>
+ </div>
+</div>
+<div class="sec">
+ <h2>טבלה 3 · היקפים (ס״מ)</h2>
+ <table><tr><th>אזור</th><th style="text-align:left">ס״מ</th><th style="text-align:left">מ-<span class="n" dir="ltr">26.6</span></th><th style="text-align:left">מ-<span class="n" dir="ltr">20.9</span></th></tr><tr><td>מותניים (טבור)</td><td class="num"><span class="n" dir="ltr">95.0</span></td><td class="dl"><span class="d good">↓ <span class="n" dir="ltr">−2.5</span> ירד</span></td><td class="dl"><span class="d bad">↑ <span class="n" dir="ltr">+1.0</span> עלה</span></td></tr><tr><td>מותן</td><td class="num"><span class="n" dir="ltr">88.0</span></td><td class="dl"><span class="d good">↓ <span class="n" dir="ltr">−3.0</span> ירד</span></td><td class="dl"><span class="d good">↓ <span class="n" dir="ltr">−1.2</span> ירד</span></td></tr><tr><td>ישבן</td><td class="num"><span class="n" dir="ltr">101.5</span></td><td class="dl"><span class="d good">↓ <span class="n" dir="ltr">−1.5</span> ירד</span></td><td class="dl"><span class="d good">↓ <span class="n" dir="ltr">−0.5</span> ירד</span></td></tr><tr><td>חזה</td><td class="num"><span class="n" dir="ltr">106.0</span></td><td class="dl"><span class="d good">↓ <span class="n" dir="ltr">−1.0</span> ירד</span></td><td class="dl"><span class="d flat"><span class="n" dir="ltr">0.0</span> ללא שינוי</span></td></tr><tr><td>כתפיים</td><td class="num"><span class="n" dir="ltr">121.0</span></td><td class="dl"><span class="d good">↑ <span class="n" dir="ltr">+0.5</span> עלה</span></td><td class="dl"><span class="d flat"><span class="n" dir="ltr">0.0</span> ללא שינוי</span></td></tr><tr><td>יד קדמית</td><td class="num"><span class="n" dir="ltr">33.5</span></td><td class="dl"><span class="d good">↑ <span class="n" dir="ltr">+0.8</span> עלה</span></td><td class="dl"><span class="d good">↑ <span class="n" dir="ltr">+0.3</span> עלה</span></td></tr><tr><td>ירך</td><td class="num"><span class="n" dir="ltr">60.0</span></td><td class="dl"><span class="d good">↓ <span class="n" dir="ltr">−1.2</span> ירד</span></td><td class="dl"><span class="d good">↓ <span class="n" dir="ltr">−0.4</span> ירד</span></td></tr></table>
+</div>
+<div class="sec">
+ <h2>טבלה 4 · יחסים</h2>
+ <div class="kv">
+  <div><span class="v"><span class="n" dir="ltr">0.87</span></span><span class="lab">יחס מותן-ישבן</span></div>
+  <div><span class="v"><span class="n" dir="ltr">1.0</span> <small class="lab">ס״מ</small></span><span class="lab">מותן לכל ק״ג שירד</span></div>
+ </div>
+ <div style="padding:10px 0;display:flex;justify-content:space-between;align-items:center"><b>רה-קומפוזיציה</b><span><span class="d good">↓ מותן ירד</span> · <span class="d good">↑ יד קדמית עלתה</span></span></div>
+</div>
+<div class="sec" style="border-bottom:0">
+ <h2>טבלה 5 · צפי ושיאים</h2>
+ <div class="kv">
+  <div><span class="v"><span class="n" dir="ltr">31.1.2027</span></span><span class="lab">יעד <span class="n" dir="ltr">80.0</span> ק״ג בקצב הנוכחי</span></div>
+  <div><span class="v"><span class="n" dir="ltr">−1.0</span> <small class="lab">ק״ג</small></span><span class="lab">החודש הטוב ביותר · יולי</span></div>
+  <div><span class="v"><span class="n" dir="ltr">83.9</span></span><span class="lab">הנמוך ביותר · <span class="n" dir="ltr">17.4</span></span></div>
+  <div><span class="v"><span class="n" dir="ltr">88.4</span></span><span class="lab">הגבוה ביותר · <span class="n" dir="ltr">26.6</span></span></div>
+ </div>
+ <div class="foot">שיטה: הממוצע הוא ממוצע 4 השקילות האחרונות. הקצב הוא שיפוע הממוצע ב-4 השבועות האחרונים. ירוק = לכיוון היעד, אדום = התרחקות מהיעד.</div>
+</div>
+</div></body></html>
