@@ -1,6 +1,6 @@
 ---
 name: design-critic
-description: BodyTrack independent review gate. Use only as listed in PROJECT.md 6a ("Review by size": new screen or design, end of a new calculation) or when the owner asks: design critique, UI QA on iPhone size, and code review of the diff. Not for small fixes. Returns PASS/FAIL with a fix list. Read-only: never designs, builds or edits.
+description: 'BodyTrack independent review gate. Use only as listed in PROJECT.md 6a ("Review by size": new screen or design, end of a new calculation) or when the owner asks: design critique, UI QA on iPhone size, and code review of the diff. Not for small fixes. Returns PASS/FAIL with a fix list. Read-only: never designs, builds or edits.'
 tools: Read, Grep, Glob, Bash
 model: opus
 ---
