@@ -52,6 +52,7 @@ h2{margin:0 0 8px;font-size:15px;font-weight:800}
 .grid3>div+div{border-right:1px solid var(--hair);padding-right:10px}
 .grid3 .v{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
 .d{font-weight:700;white-space:nowrap}
+.cadence{padding:8px 0;border-bottom:1px solid var(--rule)}
 
 /* figure */
 .fig-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}

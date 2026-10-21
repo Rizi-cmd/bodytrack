@@ -21,7 +21,8 @@ Owner decisions still open are listed at the end (§11).
 ## 3. Weekly rate: `weeklyRate(series)`
 - `D` = date of the last point. Window = avg points in the current segment with `date ∈ [D−28, D]`.
 - OLS of `avg` on `t`; rate = slope × 7 (kg/week), full precision.
-- Rate = null unless all hold: ≥2 avg points in window (≥5 weigh-ins in segment); ≥14 days from the earliest weigh-in feeding the window to D; current segment only.
+- **Sparse weigh-ins (owner, 21.10):** if the 28-day window holds fewer than 3 avg points, the window reaches back to the last 3 avg points (or 2 if only 2 exist), whatever their dates. Returns `extended: true` and `spanDays` (D − earliest weigh-in feeding the window); the UI footnotes the span in weeks. Dense data is unchanged.
+- Rate = null unless all hold: ≥2 avg points (≥5 weigh-ins); ≥14 days from the earliest weigh-in feeding the window to D.
 - `provisional: true` when the window has <3 avg points (SE ≈ ±0.18 kg/wk vs ≈ ±0.09 with a full window, assuming single weigh-in noise σ ≈ 0.4–0.6 kg).
 - **Deviation:** "too early" = fewer than 5 weigh-ins (not 4): one average point has no slope.
 
@@ -74,7 +75,7 @@ Pure; never reads the clock; recomputes from scratch after any edit/delete/undo.
 1. Empty or only deleted → `no_data`.
 2. Same date twice → mean; deleted duplicate ignored.
 3. Irregular spacing → centroid t handles it.
-4. Any gap is bridged (no reset). If a long gap leaves fewer than 2 average points in the 28-day window, rate is null (`need_more_weighins`).
+4. Any gap is bridged (no reset). If the 28-day window has fewer than 3 average points, the window reaches back to the last 3 (§3, `extended`).
 5. Five weigh-ins within <14 days → `span_too_short`.
 6. Rate rounding to ±0.20 = movement; ±0.19 = stuck/holding.
 7. Rate rounding to zero → no sign.
@@ -93,7 +94,7 @@ Pure; never reads the clock; recomputes from scratch after any edit/delete/undo.
 | V6 | 70.00 + 0.25k, k=0..7 (05-02…06-20) | bulk / cut | avgs 70.375…71.375; rate +0.25 → "+0.25"; `toward` / `away`; avg "71.4"; monthChange +1.0 → "+1.0" (ref 05-23) |
 | V7a | 80.0 ×4, then 79.2 (01-03…01-31) | cut | avgs 80.0, 79.8; rate −0.20 → "−0.20"; `toward` |
 | V7b | 80.0 ×4, then 79.3 | cut | rate −0.175 → "−0.18"; `stuck` |
-| V8 | 80.0 on 01-03, 01-10, 01-17, 01-24; 78.0 on 03-07 | cut | no reset; latest 78.0; avg 79.5 → "79.5"; only 1 avg point in window → rate null, `too_early` (to be re-verified by fitness-analyst) |
+| V8 | 80.0 on 01-03, 01-10, 01-17, 01-24; 78.0 on 03-07 | cut | no reset; latest 78.0; avg 79.5 → "79.5"; window extended to both avg points (t 10.5 and 26.25 days after 01-03) → rate −0.2222 → "−0.22", `toward`, extended, spanDays 63, provisional (rule changed by owner 21.10) |
 | V9 | 81.0, 80.8, 80.6, 80.4 (01-03…01-24), 79.6 on 02-14 | cut | avgs 80.7 (t = 01-03+10.5), 80.35 (t = 01-03+21); rate −0.2333 → "−0.23", `toward` (last-point dating would give −0.12, stuck: wrong) |
 | VF | tests/fixtures/sample-backup.json | cut | 16 points; window avgs 81.875, 81.625, 81.2, 80.925, 80.575; rate −0.33 → "−0.33", `toward`, provisional false; avg "80.6"; monthChange −1.3 → "−1.3" (ref 2026-09-12); latest "80.2" |
 

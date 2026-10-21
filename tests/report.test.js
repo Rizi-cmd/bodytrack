@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { trendSummary, day } from '../js/trend.js';
 import {
-  verdictText, tooEarlyReason, phasePick, isPhaseRecord, circCaption, parseTarget, activePhase, changeView, footnotes, circRows, scaleGeometry, yTicks, weightChart, fmtDay
+  verdictText, tooEarlyReason, phasePick, isPhaseRecord, circCaption, parseTarget, activePhase, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, yTicks, weightChart, fmtDay
 } from '../js/report.js';
 
 const M = '−';
@@ -185,4 +185,23 @@ test('target weight: parse, validate, and same-phase save only changes the targe
   assert.equal(isPhaseRecord({ ...a, targetKg: 'x' }), false);
   assert.equal(activePhase([a], '2026-01-01'), null);
   assert.equal(activePhase([a], '2026-02-02').id, a.id);
+});
+
+test('cadence: days since last weigh-in and average gap over all history', () => {
+  const s = trendSummary(weekly('2026-01-03', [80, 80, 80, 80, 80])).series; // 4 gaps of 7 days
+  assert.deepEqual(weighinStats(s, '2026-02-11'), { daysSince: 11, avgEvery: 7 });
+  assert.equal(cadenceText(weighinStats(s, '2026-02-11')), 'שקילה אחרונה לפני 11 ימים · בממוצע שקילה כל 7 ימים');
+  assert.equal(cadenceText(weighinStats(s, '2026-01-31')), 'שקילה אחרונה היום · בממוצע שקילה כל 7 ימים');
+  assert.equal(cadenceText(weighinStats(s, '2026-02-01')).startsWith('שקילה אחרונה אתמול'), true);
+  const one = trendSummary([{ date: '2026-01-03', kg: 80 }]).series;
+  assert.equal(cadenceText(weighinStats(one, '2026-01-05')), 'שקילה אחרונה לפני 2 ימים');
+  assert.equal(cadenceText(weighinStats([], '2026-01-05')), '');
+  const irregular = trendSummary([{ date: '2026-01-01', kg: 80 }, { date: '2026-01-04', kg: 80 }, { date: '2026-01-21', kg: 80 }]).series;
+  assert.equal(weighinStats(irregular, '2026-01-21').avgEvery, 10);
+});
+
+test('footnote for a trend reaching back past 28 days', () => {
+  const w = [...weekly('2026-01-03', [80, 80, 80, 80]), { date: '2026-03-07', kg: 78.0 }];
+  const s = trendSummary(w, 'cut');
+  assert.ok(footnotes(s, []).some(n => n === 'הקצב חושב על פני 9 שבועות, כי היו מעט שקילות בחודש האחרון.'));
 });

@@ -5,10 +5,10 @@ import { getAll, put, getMeta, requestPersistence } from './db.js';
 import { validate, restore, shareBackup } from './backup.js';
 import { trendSummary, fmtRate, fmtWeight, EMPTY } from './trend.js';
 import {
-  PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, changeView, footnotes, circRows, scaleGeometry, weightChart, fmtDay, fmtFull
+  PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, weightChart, fmtDay, fmtFull
 } from './report.js';
 
-export const VERSION = '0.2.3';
+export const VERSION = '0.3.0';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -106,6 +106,8 @@ function renderVerdict(W, M, C) {
   $('#lastKg').textContent = s.latest ? fmtWeight(s.latest.kg) : EMPTY;
   const ll = $('#lastLab'); ll.replaceChildren('שקילה אחרונה');
   if (s.latest) { const dd = el('span', 'n', fmtDay(s.latest.date)); dd.dir = 'ltr'; ll.append(' · ', dd); }
+  const cad = cadenceText(weighinStats(s.series, todayISO()));
+  $('#cadence').textContent = cad; $('#cadence').hidden = !cad;
   drawChart();
 
   const rows = circRows(M), tb = $('#circTable'), cap = circCaption(rows);

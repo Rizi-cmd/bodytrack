@@ -76,11 +76,25 @@ test('V7b −0.175 rounds to −0.18, stuck', () => {
   near(r.rate, -0.175); assert.equal(fmtRate(r.rate), M + '0.18'); assert.equal(r.verdict, 'stuck');
 });
 
-test('V8 long gap: no reset, one average point in window → too early', () => {
+test('V8 long gap: trend shown across the gap (owner 21.10), marked as extended', () => {
   const w = [...weekly('2026-01-03', [80, 80, 80, 80]), { id: 'x', date: '2026-03-07', kg: 78.0 }];
   const r = trendSummary(w, 'cut');
   assert.equal(r.latest.kg, 78.0); near(r.avg, 79.5); assert.equal(fmtWeight(r.avg), '79.5');
-  assert.equal(r.rate, null); assert.equal(r.verdict, 'too_early'); assert.equal(r.reason, 'need_more_weighins');
+  near(r.rate, -0.5 / 15.75 * 7); assert.equal(fmtRate(r.rate), M + '0.22'); assert.equal(r.verdict, 'toward');
+  assert.equal(r.extended, true); assert.equal(r.spanDays, 63); assert.equal(r.provisional, true);
+});
+
+test('dense weigh-ins keep the 28-day window (not extended)', () => {
+  const r = trendSummary(weekly('2026-03-07', [80.0, 80.4, 79.8, 80.2, 80.0, 80.4, 79.8, 80.2]), 'cut');
+  assert.equal(r.extended, false); assert.equal(r.spanDays, 49);
+});
+
+test('two average points in 28 days but older ones exist → reach back to 3', () => {
+  // weekly, then a 5-week gap, then two more weigh-ins
+  const w = [...weekly('2026-01-03', [82, 81.8, 81.6, 81.4, 81.2, 81.0]), { date: '2026-03-14', kg: 80 }, { date: '2026-03-21', kg: 79.8 }];
+  const r = trendSummary(w, 'cut');
+  assert.equal(r.extended, true); assert.equal(r.provisional, false);
+  assert.ok(r.rate < 0);
 });
 
 test('V9 irregular spacing uses the centroid date', () => {
@@ -164,7 +178,7 @@ test('never reset: V8 plus one more weigh-in gives a rate across the gap', () =>
     { date: '2026-03-07', kg: 78.0 }, { date: '2026-03-14', kg: 78.0 }];
   const r = trendSummary(w, 'cut');
   assert.equal(fmtRate(r.rate), M + '0.22'); assert.equal(r.verdict, 'toward');
-  assert.equal(r.windowDates[0], '2026-01-10');
+  assert.equal(r.windowDates[0], '2026-01-03'); assert.equal(r.extended, true);
 });
 
 test('span of exactly 14 days is enough', () => {

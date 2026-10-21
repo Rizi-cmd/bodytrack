@@ -5,6 +5,7 @@ import { isISODate } from './model.js';
 export const STUCK = 0.20;      // kg/week, |rounded rate| below this = stuck / holding (§4)
 export const WINDOW_DAYS = 28;  // rate window (§3)
 export const MIN_SPAN_DAYS = 14; // earliest weigh-in feeding the window → last weigh-in (§3)
+export const MIN_POINTS = 3;     // fewer average points than this in 28 days → reach back to the last 3 (§3, owner 21.10)
 const MINUS = '−';
 
 // Whole days since 1970-01-01 in UTC: no local time, so DST can't shift anything (§1).
@@ -42,21 +43,26 @@ export function trendSeries(points) {
 
 // §3: OLS slope of avg on t over the last 28 days, × 7 → kg/week.
 export function weeklyRate(series) {
-  const empty = { rate: null, provisional: false, windowDates: [], windowStart: null };
+  const empty = { rate: null, provisional: false, extended: false, windowDates: [], windowStart: null, spanDays: null };
   if (!series.length) return { ...empty, reason: 'no_data' };
   const D = day(series[series.length - 1].date);
-  const idx = [];
-  series.forEach((s, i) => { if (s.avg !== null && day(s.date) >= D - WINDOW_DAYS) idx.push(i); });
+  const all = [], recent = [];
+  series.forEach((s, i) => { if (s.avg !== null) { all.push(i); if (day(s.date) >= D - WINDOW_DAYS) recent.push(i); } });
+  // Sparse weigh-ins: when the last 28 days hold fewer than 3 average points, use the last 3 (or 2) whatever
+  // their dates, so the trend between weigh-ins always shows. The span is reported so the UI can say it.
+  const idx = recent.length >= MIN_POINTS ? recent : all.slice(-Math.max(recent.length, Math.min(MIN_POINTS, all.length)));
   if (idx.length < 2) return { ...empty, reason: 'need_more_weighins' };
+  const extended = idx.length > recent.length;
   const feedFrom = idx[0] - 3; // earliest weigh-in that feeds the window
   const windowDates = series.slice(feedFrom).map(s => s.date);
   const windowStart = series[feedFrom].date;
-  if (D - day(windowStart) < MIN_SPAN_DAYS) return { ...empty, windowDates, windowStart, reason: 'span_too_short' };
+  const spanDays = D - day(windowStart);
+  if (spanDays < MIN_SPAN_DAYS) return { ...empty, windowDates, windowStart, spanDays, reason: 'span_too_short' };
   const xs = idx.map(i => series[i].t), ys = idx.map(i => series[i].avg);
   const mx = xs.reduce((s, v) => s + v, 0) / xs.length, my = ys.reduce((s, v) => s + v, 0) / ys.length;
   let sxy = 0, sxx = 0;
   xs.forEach((x, k) => { sxy += (x - mx) * (ys[k] - my); sxx += (x - mx) ** 2; });
-  return { rate: (sxy / sxx) * 7, provisional: idx.length < 3, windowDates, windowStart, reason: null };
+  return { rate: (sxy / sxx) * 7, provisional: idx.length < 3, extended, windowDates, windowStart, spanDays, reason: null };
 }
 
 // §6 rounding: halves away from zero, tiny nudge for binary float error, never −0.
@@ -138,6 +144,7 @@ export function trendSummary(weighins, phase, asOf) {
     rate: wr.rate,
     rateRounded: wr.rate === null ? null : roundN(wr.rate, 2),
     provisional: wr.provisional,
+    extended: wr.extended, spanDays: wr.spanDays,
     windowDates: wr.windowDates,
     monthChange: mc.monthChange,
     monthRefDate: mc.monthRefDate,

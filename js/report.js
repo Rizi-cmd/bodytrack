@@ -87,6 +87,8 @@ export function changeView(delta, direction, decimals = 1) {
 // Footnotes under the verdict (only facts, no advice).
 export function footnotes(s, checkins) {
   const out = [];
+  if (s.rate !== null && s.extended)
+    out.push(`הקצב חושב על פני ${Math.round(s.spanDays / 7)} שבועות, כי היו מעט שקילות בחודש האחרון.`);
   if (s.rate !== null && s.provisional) out.push('קצב ראשוני: יש רק מעט שקילות בחישוב.');
   if (s.phaseChangedInWindow) out.push('השלב השתנה בתוך תקופת החישוב.');
   const inWin = new Set(s.windowDates);
@@ -96,6 +98,26 @@ export function footnotes(s, checkins) {
   if (s.rate !== null && tagged.length)
     out.push((tagged.length > 1 ? 'בחישוב יש שקילות מסומנות: ' : 'בחישוב יש שקילה מסומנת: ') + tagged.map(c => `${TAG_HE[c.tag]} (${fmtDay(c.date)})`).join(', ') + '.');
   return out;
+}
+
+// How often he weighs in: days since the last weigh-in (vs today) and the average gap over all history.
+export function weighinStats(series, today) {
+  if (!series.length) return { daysSince: null, avgEvery: null };
+  const first = day(series[0].date), last = day(series[series.length - 1].date);
+  return {
+    daysSince: today ? Math.max(0, day(today) - last) : null,
+    avgEvery: series.length > 1 ? (last - first) / (series.length - 1) : null
+  };
+}
+export function cadenceText(st) {
+  const parts = [];
+  if (st.daysSince !== null)
+    parts.push('שקילה אחרונה ' + (st.daysSince === 0 ? 'היום' : st.daysSince === 1 ? 'אתמול' : `לפני ${st.daysSince} ימים`));
+  if (st.avgEvery !== null) {
+    const v = Math.max(1, Math.round(st.avgEvery));
+    parts.push(v === 1 ? 'בממוצע שקילה כל יום' : `בממוצע שקילה כל ${v} ימים`);
+  }
+  return parts.join(' · ');
 }
 
 // Circumferences: latest value per site vs that site's previous measurement (spec §10: neutral ink for now).
