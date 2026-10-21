@@ -170,7 +170,7 @@ Raw values within 1e-9 unless noted. Display strings exact. Dates are 2026.
 | K2 | waistPerKg | as K1 but avg 07-15 = 83.5 (Δkg −1.5) | null, too_small |
 | RC1 | recomp | K1 data + arm_relaxed 06-03 35.0, 07-15 35.6 | `recomp` |
 | RC2 | recomp | arm_relaxed 07-15 35.4 | `none` |
-| RC3 | recomp | phase from 07-01 | `insufficient` (<28 days) |
+| RC3 | recomp | cut from 06-01; waist_navel 06-03 94.0, 06-26 92.5; arm_relaxed 06-03 35.0, 06-26 35.6 (25 days). Same with both current dates on 06-29 (28 days) | `insufficient` / `recomp` (boundary). Amended 21.10 at build verify: the old vector (phase from 07-01) failed on the missing base, not on the 28-day rule. |
 | P1 | projection | TE V6, bulk, target 75.0 | weeks 14.5 → "15"; date 2026-09-30; range 11–23 |
 | P2 | projection | TE V6, cut, target 68.0 | `wrong_direction` |
 | P3 | projection | TE V6, bulk, target 71.0 | `reached` |
