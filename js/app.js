@@ -6,10 +6,10 @@ import { TAGS, stepKg, checkinDefaults, buildCheckin, buildWeighin } from './che
 import { validate, restore, shareBackup } from './backup.js';
 import { trendSummary, fmtRate, fmtWeight, EMPTY } from './trend.js';
 import {
-  PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, weightChart, fmtDay, fmtFull
+  PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, weightChart, nearestPoint, pointReadout, fmtDay, fmtFull
 } from './report.js';
 
-export const VERSION = '0.4.1';
+export const VERSION = '0.4.2';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -83,9 +83,53 @@ function drawChart() {
   const below = c.last.y < c.plotBottom - 24;
   svg.append(sv('text', { class: 'val', x: c.last.x - 8, y: below ? c.last.y + 18 : c.last.y - 10, 'text-anchor': 'end' }, c.last.label));
   box.append(svg);
+  state.chart = c; $('#chartRead').hidden = true;
   $('#chartCount').textContent = c.count === 1 ? 'שקילה אחת' : `${c.count} שקילות`;
   document.querySelectorAll('[data-range]').forEach(b => b.setAttribute('aria-pressed', b.dataset.range === state.range));
 }
+
+// Long press on figure 1, then slide: a guide line on the nearest weigh-in and its date, weight and average.
+// A quick swipe stays a normal scroll; once the press is held, the page stops scrolling until the finger lifts.
+function showPoint(clientX) {
+  const c = state.chart, svg = $('#chart svg');
+  if (!c || !svg) return;
+  const p = nearestPoint(c.points, clientX - svg.getBoundingClientRect().left);
+  if (!p) return;
+  svg.querySelectorAll('.hl').forEach(e => e.remove());
+  svg.append(sv('line', { class: 'hl hl-line', x1: p.x, x2: p.x, y1: c.padT, y2: c.plotBottom }));
+  if (p.yAvg !== null) svg.append(sv('rect', { class: 'hl hl-avg', x: p.x - 3.5, y: p.yAvg - 3.5, width: 7, height: 7 }));
+  svg.append(sv('circle', { class: 'hl hl-dot', cx: p.x, cy: p.y, r: 5.5 }));
+  const t = pointReadout(p), box = $('#chartRead');
+  box.replaceChildren(num(t.date, 'n'), el('br'), 'שקילה: ', num(t.kg, 'n'));
+  box.firstChild.style.fontWeight = '800';
+  if (t.avg !== null) box.append(el('br'), 'ממוצע 4 שקילות: ', num(t.avg, 'n'));
+  box.className = 'readout ' + (p.x > c.width / 2 ? 'at-l' : 'at-r'); // keep it away from the finger
+  box.hidden = false;
+}
+{
+  const box = $('#chart');
+  let timer = null, start = null, scrub = false;
+  const stop = () => {
+    clearTimeout(timer); start = null;
+    if (!scrub) return;
+    scrub = false; $('#chartRead').hidden = true;
+    document.querySelectorAll('#chart .hl').forEach(e => e.remove());
+  };
+  box.addEventListener('pointerdown', e => {
+    start = { x: e.clientX, y: e.clientY }; clearTimeout(timer);
+    timer = setTimeout(() => { scrub = true; showPoint(start.x); }, 350);
+  });
+  box.addEventListener('pointermove', e => {
+    if (scrub) showPoint(e.clientX);
+    else if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10) { clearTimeout(timer); start = null; }
+  });
+  box.addEventListener('pointerup', stop);
+  box.addEventListener('pointercancel', stop);
+  box.addEventListener('touchmove', e => { if (scrub) e.preventDefault(); }, { passive: false });
+  box.addEventListener('contextmenu', e => e.preventDefault());
+}
+// iPhone ignores "no zoom" in the page settings for pinching; this stops the pinch itself.
+document.addEventListener('gesturestart', e => e.preventDefault());
 
 function renderVerdict(W, M, C) {
   const s = state.summary = trendSummary(W, state.phases, todayISO());

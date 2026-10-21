@@ -124,3 +124,16 @@ input[type=date].field{-webkit-appearance:none;appearance:none;display:flex;alig
 .toast{display:flex;align-items:center;gap:12px}
 .toast span{flex:1}
 .toastAct{min-height:44px;padding:0 12px;border:1px solid var(--bg);color:var(--bg);font-weight:800;flex:none}
+
+/* no zoom: no double-tap or pinch zoom anywhere (owner 21.10); scrolling still works */
+html{touch-action:pan-x pan-y}
+/* long press on figure 1: readout of the weigh-in under the finger */
+.chartWrap{position:relative}
+#chart{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.readout{position:absolute;top:0;margin:0;padding:6px 10px;background:var(--bg);border:1px solid var(--rule);
+  font-size:13px;line-height:1.45;pointer-events:none;z-index:2;white-space:nowrap}
+.readout.at-l{left:0}.readout.at-r{right:0}
+.readout b{font-weight:800}
+svg .hl-line{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
+svg .hl-dot{fill:var(--bg);stroke:var(--ink);stroke-width:2.2}
+svg .hl-avg{fill:var(--ink)}

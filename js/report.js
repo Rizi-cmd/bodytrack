@@ -237,7 +237,17 @@ export function weightChart(series, range, width, height = 210) {
     x: spaced,
     dots: pts.slice(0, -1).map(p => ({ x: X(p.date), y: Y(p.kg) })),
     last: { x: X(last.date), y: Y(last.kg), label: fmtWeight(last.kg) },
-    line, count: pts.length
+    line, count: pts.length,
+    // every weigh-in in view, for the long-press readout
+    points: pts.map(p => ({ x: X(p.date), y: Y(p.kg), yAvg: p.avg === null ? null : Y(p.avg), date: p.date, kg: p.kg, avg: p.avg }))
   };
 }
 const iso = d => d.toISOString().slice(0, 10);
+
+// Long press on the chart: the weigh-in nearest to the finger (by x), and what to show for it.
+export function nearestPoint(points, x) {
+  let best = null;
+  for (const p of points || []) if (!best || Math.abs(p.x - x) < Math.abs(best.x - x)) best = p;
+  return best;
+}
+export const pointReadout = p => ({ date: fmtFull(p.date), kg: fmtWeight(p.kg), avg: p.avg === null ? null : fmtWeight(p.avg) });

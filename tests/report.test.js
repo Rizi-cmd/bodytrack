@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { trendSummary, day } from '../js/trend.js';
 import {
-  verdictText, tooEarlyReason, phasePick, isPhaseRecord, circCaption, parseTarget, activePhase, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, yTicks, weightChart, fmtDay
+  verdictText, tooEarlyReason, phasePick, isPhaseRecord, circCaption, parseTarget, activePhase, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, yTicks, weightChart, nearestPoint, pointReadout, fmtDay
 } from '../js/report.js';
 
 const M = '−';
@@ -104,6 +104,15 @@ test('weight chart: ranges, points inside the plot, month labels', () => {
   assert.deepEqual(all.x.map(t => t.label), ['יולי', 'אוג׳', 'ספט׳', 'אוק׳']);
   assert.equal(all.line.length, 1); // no gaps in the average line
   assert.equal(weightChart([], 'all', 390), null);
+  // Long-press readout: one point per weigh-in in view, nearest by x, average only once it exists.
+  assert.equal(all.points.length, all.count);
+  assert.equal(nearestPoint(all.points, -50), all.points[0]);
+  assert.equal(nearestPoint(all.points, 9999), all.points[all.points.length - 1]);
+  const mid = all.points[5];
+  assert.equal(nearestPoint(all.points, mid.x + 1), mid);
+  assert.deepEqual(pointReadout(all.points[all.points.length - 1]), { date: '10.10.2026', kg: '80.2', avg: '80.6' });
+  assert.equal(pointReadout(all.points[0]).avg, null);
+  assert.equal(nearestPoint([], 10), null);
   // A year of weekly weigh-ins: 6 months = the last 183 days (27 weigh-ins), between 3 months and all.
   const year = trendSummary(weekly('2025-10-04', Array.from({ length: 52 }, (_, k) => 90 - k * 0.2)), 'cut').series;
   assert.deepEqual(['month', 'quarter', 'half', 'all'].map(r => weightChart(year, r, 390).count), [5, 14, 27, 52]);

@@ -121,6 +121,22 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await page.locator('#phaseCancel').click();
   await page.locator('[data-range="all"]').click();
   await expect(page.locator('#chart svg circle')).toHaveCount(16);
+  // Long press on the chart, slide to the right end: readout of the last weigh-in; lifting hides it.
+  const cb = await page.locator('#chart svg').boundingBox();
+  await page.mouse.move(cb.x + cb.width / 2, cb.y + cb.height / 2);
+  await page.mouse.down();
+  await expect(page.locator('#chartRead')).toBeVisible();
+  await page.mouse.move(cb.x + cb.width - 2, cb.y + cb.height / 2, { steps: 5 });
+  await expect(page.locator('#chartRead')).toContainText('10.10.2026');
+  await expect(page.locator('#chartRead')).toContainText('80.2');
+  await expect(page.locator('#chartRead')).toContainText('80.6');
+  await page.mouse.up();
+  await expect(page.locator('#chartRead')).toBeHidden();
+  await expect(page.locator('#chart svg circle')).toHaveCount(16);
+  // A quick tap shows nothing.
+  await page.mouse.click(cb.x + cb.width / 2, cb.y + cb.height / 2);
+  await page.waitForTimeout(500);
+  await expect(page.locator('#chartRead')).toBeHidden();
   await page.locator('[data-range="half"]').click();
   await expect(page.locator('[data-range="half"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('[data-range="quarter"]').click();

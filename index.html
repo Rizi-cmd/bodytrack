@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>BodyTrack</title>
 <meta name="theme-color" content="#F7F7F5">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -56,7 +56,7 @@
         <button data-range="all" aria-pressed="false">הכול</button>
       </div>
     </div>
-    <div id="chart"></div>
+    <div class="chartWrap"><div id="chart"></div><p class="readout" id="chartRead" hidden></p></div>
     <p class="empty" id="chartEmpty" hidden>אין עדיין שקילות.</p>
     <div class="cap" id="chartCap"><span><i class="key-l"></i>ממוצע 4 שקילות</span><span><i class="key-d"></i>שקילה</span><span class="push" id="chartCount"></span></div>
   </section>
