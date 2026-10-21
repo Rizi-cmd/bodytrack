@@ -46,7 +46,7 @@ Assumed error of one self-measurement: same person, same tape, same landmark, mo
 ### 0.3 Colour rule (whole screen)
 - Green or red appears only where §0.1 gives a direction of ±1 (or 0 for weight), always with an arrow and a Hebrew word.
 - Items that can be coloured: the rate number (§2, verdict colour), circumference changes (§6), and the parts of the recomposition line (§8).
-- Everything else is ink: bars, volatility, cadence, ratios, projection, records, body fat.
+- Everything else is ink: bars, volatility, cadence, ratios, projection, records.
 
 ## 1. Figure 1: trend vs. weigh-ins with phase bands
 - **Plotted:** one dot per `points` entry (`kg`); the line through non-null `avg`, x = `date` (same geometry and `RANGES` as `weightChart`). Tagged weigh-ins are drawn as an open ring; they stay in all maths.
@@ -130,16 +130,8 @@ Assumed error of one self-measurement: same person, same tape, same landmark, mo
 - **Best 28 days toward the goal, current run only (cut or bulk):** for each avg point p with `date ≥ ps`, reference = avg point closest to p−28 within [p−35, p−21], also `≥ ps`, ties to the older (TE §5). `Δ = p.avg − ref.avg`; best = max of `dir × Δ` with `dir × Δ > 0`. Display Δ signed, 1 decimal, with "d.m–d.m". Otherwise "—".
 - **Minimum data:** ≥1 avg point for low/high. Ink.
 
-## 11. Estimated body fat (US Navy), estimate only
-- **Shown only if** `setting:heightCm` (120–230, 1 decimal) **and** `setting:sex` ('male' | 'female') exist in `meta` (already carried by the backup). Owner decision 6.
-- **Formula** (Hodgdon & Beckett as printed in [S3]), inches (cm / 2.54), log10:
-  - Male: `86.010·log10(abdomen − neck) − 70.041·log10(height) + 36.76`; abdomen at the navel [S3] → `waist_navel`.
-  - Female: `163.205·log10(waist + hip − neck) − 97.684·log10(height) − 78.387` (standard form; [S3] prints "abdomen − neck", likely a typo; convention). Uses `waist` and `hips`.
-  - Not the metric "495/(…) − 450" variant.
-- **Inputs:** latest date with the abdomen site (or both waist and hips for women). Neck = latest neck on or before that date, within 90 days (convention); the result says which neck date was used.
-- **Guards:** log10 argument ≤ 0 → null; result outside 2–60 → null.
-- **Display:** integer "%" with "±4" and "הערכה" (SEE 3–4 %BF [S4]; men bias vs DXA −2.5 ± 3.7 [S3]). Tape under-detects change [S4], so current value only, no change. Ink.
-- **Empty states:** no height or sex → hint to enter them in settings (placeholder). Missing site → "אין מדידה של צוואר/בטן".
+## 11. Body fat: removed (owner, 21.10.2026)
+Owner decision after the build: no body-fat estimate in the app. A tape formula is ±4 points at best and cannot be made accurate for one person; progress is judged by weight, circumferences and cm of waist per kg. The formula and vectors N1–N5 are in git history (commit 93fbca7) if this is ever reopened.
 
 ## 12. Test vectors
 Raw values within 1e-9 unless noted. Display strings exact. Dates are 2026.
@@ -180,13 +172,7 @@ Raw values within 1e-9 unless noted. Display strings exact. Dates are 2026.
 | P7 | projection | TE V6, maintenance / bulk with no target | `no_projection_phase` / `no_target` |
 | RE1 | records | TE V6, bulk from 05-02 | low 70.375 (05-23) → "70.4"; high 71.375 (06-20) → "71.4"; best28 +1.0 (05-23–06-20) → "+1.0" |
 | RE2 | records | TE V6, cut from 05-02 | low and high as RE1; best28 null "—" |
-| N1 | navyBodyFat | male, 180 cm, waist_navel 90, neck 40 | 18.46 (±0.01) → "18" |
-| N2 | navyBodyFat | female, 165 cm, waist 70, hips 95, neck 32 | 25.10 (±0.05) → "25" |
-| N3 | navyBodyFat | male, neck 40 ≥ abdomen 40 | null |
-| N4 | navyBodyFat | no heightCm | null, reason `no_height` |
-| N5 | navyBodyFat | male; neck measured 100 days before abdomen | null, reason `no_neck` |
 
-N1/N2 were computed by hand; check against an independent calculation when building.
 
 ## 13. Owner decisions (settled 21.10.2026: all recommendations accepted)
 1. **Bulk target band (§2).** (a) 0.25–0.5 %/wk; (b) ~0.25 %/wk; (c) no band. Recommendation: (a).
@@ -194,7 +180,7 @@ N1/N2 were computed by hand; check against an independent calculation when build
 3. **Noise threshold before colouring a circumference change (§0.2).** (a) Per-site thresholds, smaller changes "בתוך טעות המדידה"; (b) colour every change. Recommendation: (a).
 4. **Which waist is which.** (a) מותן = narrowest point, טבור = navel; (b) both at the navel → no WHR; (c) unsure → WHR hidden. Recommendation: (a) if confirmed.
 5. **Projection display (§9).** (a) Weeks + range + month; (b) exact date; (c) weeks only. Recommendation: (a).
-6. **Body fat (§11).** (a) Add height and sex to settings (phone and backup only); (b) leave out for now. Recommendation: (a) only if wanted; ±4 points at best.
+6. **Body fat (§11).** Accepted (a) on 21.10, then reversed the same day: removed. The owner wants only numbers that are accurate for them, and a tape estimate is not.
 
 ## 14. Sources (opened 21.10.2026)
 - [S1] Helms, Aragon, Fitschen 2014, contest-prep nutrition recommendations: https://pmc.ncbi.nlm.nih.gov/articles/PMC4033492/

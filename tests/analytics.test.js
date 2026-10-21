@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { trendSummary, cleanWeighins, trendSeries, day } from '../js/trend.js';
 import {
   cleanMeasurements, phaseRuns, phaseStart, trendAt, siteAt, metricDirection, siteChange, phaseBands,
-  rateView, weeklyBars, volatility, cadence, circTable, waistHip, waistPerKg, recomp, projection, records, navyBodyFat,
+  rateView, weeklyBars, volatility, cadence, circTable, waistHip, waistPerKg, recomp, projection, records,
   NOISE_NOTE
 } from '../js/analytics.js';
 
@@ -317,26 +317,6 @@ test('records: tie goes to the earliest', () => {
   assert.equal(r.low.date, '2026-03-28'); assert.equal(r.high.date, '2026-03-28');
 });
 
-// §11
-test('N1–N5 navyBodyFat', () => {
-  const male = [...ms('waist_navel', [['2026-07-15', 90]]), ...ms('neck', [['2026-07-15', 40]])];
-  const n1 = navyBodyFat(male, { heightCm: 180, sex: 'male' });
-  near(n1.bf, 18.46, 0.01); assert.equal(n1.text, '18%'); assert.equal(n1.neckDate, '2026-07-15');
-  // independent check of N1 by the same formula written out
-  const ind = 86.010 * Math.log10((90 - 40) / 2.54) - 70.041 * Math.log10(180 / 2.54) + 36.76;
-  near(n1.bf, ind, 1e-9);
-  const fem = [...ms('waist', [['2026-07-15', 70]]), ...ms('hips', [['2026-07-15', 95]]), ...ms('neck', [['2026-07-10', 32]])];
-  const n2 = navyBodyFat(fem, { heightCm: 165, sex: 'female' });
-  near(n2.bf, 25.10, 0.05); assert.equal(n2.text, '25%');
-  const n3 = navyBodyFat([...ms('waist_navel', [['2026-07-15', 40]]), ...ms('neck', [['2026-07-15', 40]])], { heightCm: 180, sex: 'male' });
-  assert.equal(n3.bf, null);
-  assert.equal(navyBodyFat(male, { sex: 'male' }).reason, 'no_height');
-  assert.equal(navyBodyFat(male, { heightCm: 180 }).reason, 'no_sex');
-  const late = [...ms('waist_navel', [['2026-07-15', 90]]), ...ms('neck', [[addDays('2026-07-15', -100), 40]])];
-  assert.equal(navyBodyFat(late, { heightCm: 180, sex: 'male' }).reason, 'no_neck');
-  assert.equal(navyBodyFat(ms('neck', [['2026-07-15', 40]]), { heightCm: 180, sex: 'male' }).reason, 'no_site');
-});
-
 // Whole fixture: every function runs and returns sane values.
 test('fixture: all analytics run', () => {
   const d = fx(), today = '2026-10-21';
@@ -349,6 +329,5 @@ test('fixture: all analytics run', () => {
   assert.ok(cadence(pts, today).gap.open);
   assert.ok(circTable(d.measurements, recs, today, d.checkins).rows.length > 0);
   assert.ok(records(S.series, recs, today).low);
-  assert.equal(navyBodyFat(d.measurements, d.settings).reason, 'no_height');
   projection(S, recs, today); waistHip(d.measurements); waistPerKg(d.measurements, S.series, recs, today); recomp(d.measurements, recs, today);
 });

@@ -334,33 +334,3 @@ export function records(series, phaseRecords, today) {
     best28: best28 && { ...best28, text: fmtChange(best28.delta) }
   };
 }
-
-// §11: US Navy body-fat estimate (Hodgdon & Beckett), inches and log10. An estimate, ±4 points at best.
-export function navyBodyFat(measurements, settings) {
-  const h = settings && settings.heightCm, sex = settings && settings.sex;
-  const out = reason => ({ bf: null, text: EMPTY, reason });
-  if (typeof h !== 'number' || !Number.isFinite(h) || h < 120 || h > 230) return out('no_height');
-  if (sex !== 'male' && sex !== 'female') return out('no_sex');
-  const c = cleanMeasurements(measurements);
-  let date, parts;
-  if (sex === 'male') {
-    const ab = (c.get('waist_navel') || []).at(-1);
-    if (!ab) return out('no_site');
-    date = ab.date; parts = { abdomen: ab.cm };
-  } else {
-    const hips = new Map((c.get('hips') || []).map(v => [v.date, v.cm]));
-    const w = (c.get('waist') || []).filter(v => hips.has(v.date)).pop();
-    if (!w) return out('no_site');
-    date = w.date; parts = { waist: w.cm, hips: hips.get(w.date) };
-  }
-  const neck = (c.get('neck') || []).filter(v => v.date <= date).pop();
-  if (!neck || day(date) - day(neck.date) > 90) return out('no_neck');
-  const inch = v => v / 2.54;
-  const arg = sex === 'male' ? inch(parts.abdomen) - inch(neck.cm) : inch(parts.waist) + inch(parts.hips) - inch(neck.cm);
-  if (arg <= 0) return out('bad_input');
-  const bf = sex === 'male'
-    ? 86.010 * Math.log10(arg) - 70.041 * Math.log10(inch(h)) + 36.76
-    : 163.205 * Math.log10(arg) - 97.684 * Math.log10(inch(h)) - 78.387;
-  if (!(bf >= 2 && bf <= 60)) return out('out_of_range');
-  return { bf, text: String(roundN(bf, 0)) + '%', err: '±4', date, neckDate: neck.date, reason: null };
-}
