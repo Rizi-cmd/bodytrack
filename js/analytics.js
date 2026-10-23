@@ -2,7 +2,8 @@
 // Exact definitions: docs/specs/analytics.md (v1). Section numbers below refer to that file.
 import { SITES, isISODate } from './model.js';
 import { day, roundN, weightDirection, fmtWeight, fmtChange, fmtRate, EMPTY } from './trend.js';
-import { isPhaseRecord, activePhase, changeView, footnotes, TAG_HE } from './report.js';
+import { isPhaseRecord, activePhase, changeView, footnotes, TAG_HE, BANDS, rateZone } from './report.js';
+export { BANDS };
 
 const addDays = (iso, n) => new Date((day(iso) + n) * 86400000).toISOString().slice(0, 10);
 const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
@@ -114,22 +115,13 @@ export function phaseBands(records, D, firstVisible) {
 }
 
 // §2: rate in kg/week and % of body weight vs the target band of the phase.
-export const BANDS = { cut: [0.5, 1.0], bulk: [0.25, 0.5] };
 export const PCT_AXIS = 1.25;
 export function rateView(S, checkins) {
   const band = BANDS[S.phase] || null;
   const notes = footnotes(S, checkins);
   if (S.rate === null) return { kgText: EMPTY, pct: null, pctText: EMPTY, tone: 'ink', arrow: S.arrow, band, zone: null, scale: null, notes };
   const pct = 100 * S.rate / S.avg, p = roundN(pct, 2);
-  let zone = null;
-  if (band) {
-    if (S.verdict === 'stuck') zone = 'stuck';
-    else if (S.verdict === 'away') zone = 'wrong_direction';
-    else {
-      const m = S.phase === 'cut' ? -p : p;
-      zone = m < band[0] ? 'below' : m > band[1] ? 'above' : 'in';
-    }
-  }
+  const zone = rateZone(S);
   let scale = null;
   if (band) {
     const m = S.phase === 'cut' ? -p : p;

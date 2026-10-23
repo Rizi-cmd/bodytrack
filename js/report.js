@@ -54,11 +54,28 @@ const MOVE_WORD = { down: 'יורד', up: 'עולה', flat: 'יציב' };
 export const fmtDay = iso => `${+iso.slice(8, 10)}.${+iso.slice(5, 7)}`;
 export const fmtFull = iso => `${+iso.slice(8, 10)}.${+iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 
+// Target rate band per phase, % of body weight per week (analytics spec §6).
+export const BANDS = { cut: [0.5, 1.0], bulk: [0.25, 0.5] };
+
+// Where the rate sits against the phase's target band: stuck / wrong_direction / below / in / above; null without a band or rate.
+export function rateZone(S) {
+  const band = BANDS[S.phase];
+  if (!band || S.rate === null || S.rate === undefined || !S.avg) return null;
+  if (S.verdict === 'stuck') return 'stuck';
+  if (S.verdict === 'away') return 'wrong_direction';
+  const p = roundN(100 * S.rate / S.avg, 2), m = S.phase === 'cut' ? -p : p;
+  return m < band[0] ? 'below' : m > band[1] ? 'above' : 'in';
+}
+
 // The verdict line: word + arrow + tone + the short label beside it.
+// slow (owner 23.10): toward the goal but under the target band → still good, shown muted with the word "איטי".
 export function verdictText(s, weighinCount) {
   const arrow = s.arrow ? ARROW[s.arrow] : '';
   switch (s.verdict) {
-    case 'toward': return { arrow, word: MOVE_WORD[s.arrow], tone: 'good', label: 'לכיוון היעד' };
+    case 'toward': {
+      const slow = rateZone(s) === 'below';
+      return { arrow, word: MOVE_WORD[s.arrow], tone: 'good', label: 'לכיוון היעד', slow, slowWord: slow ? 'איטי' : '' };
+    }
     case 'away': return { arrow, word: MOVE_WORD[s.arrow], tone: 'bad', label: 'בכיוון ההפוך מהיעד' };
     case 'stuck': return { arrow, word: 'תקוע', tone: 'ink', label: `פחות מ־${STUCK.toFixed(1)} ק״ג בשבוע` };
     case 'holding': return { arrow, word: 'יציב', tone: 'good', label: 'בתחזוקה זה היעד' };
@@ -258,4 +275,30 @@ export function pointReadout(p, checkins) {
     date: fmtFull(p.date), kg: fmtWeight(p.kg), avg: p.avg === null ? null : fmtWeight(p.avg),
     tag: c && TAG_HE[c.tag] ? TAG_HE[c.tag] : null, note
   };
+}
+
+// Dark home (redesign stage 1 §2): the lens magnifies the last 4 weigh-ins, the points the current average is made of.
+// x/y are 0..1 inside the lens (x: oldest → newest by date, y: 0 = top = heaviest); avgY is the average of the 4.
+export const LENS_N = 4;
+export function lensPoints(series) {
+  const pts = series.slice(-LENS_N);
+  if (!pts.length) return { points: [], avgY: null };
+  const d0 = day(pts[0].date), span = day(pts[pts.length - 1].date) - d0;
+  const kgs = pts.map(p => p.kg), mid = (Math.max(...kgs) + Math.min(...kgs)) / 2;
+  const half = Math.max((Math.max(...kgs) - Math.min(...kgs)) / 2, 0.5); // at least ±0.5 kg so a flat week stays flat
+  const y = kg => 0.5 - 0.3 * (kg - mid) / half;
+  const avg = pts.length === LENS_N ? kgs.reduce((s, v) => s + v, 0) / LENS_N : null;
+  return {
+    points: pts.map(p => ({ date: p.date, kg: p.kg, x: span ? 0.2 + 0.6 * (day(p.date) - d0) / span : 0.5, y: y(p.kg) })),
+    avgY: avg === null ? null : y(avg)
+  };
+}
+
+// Top line of the dark home: date of the last weigh-in; loud when older than STALE_DAYS (owner 23.10).
+export const STALE_DAYS = 10;
+export function lastWeighinLine(series, today) {
+  if (!series.length) return null;
+  const last = series[series.length - 1].date, st = weighinStats(series, today);
+  const stale = st.daysSince !== null && st.daysSince > STALE_DAYS;
+  return { date: fmtFull(last), stale, ago: stale ? `לפני ${st.daysSince} ימים` : '' };
 }

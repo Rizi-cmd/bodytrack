@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { trendSummary, day } from '../js/trend.js';
 import {
-  verdictText, tooEarlyReason, phasePick, isPhaseRecord, circCaption, parseTarget, activePhase, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, yTicks, weightChart, nearestPoint, pointReadout, fmtDay
+  verdictText, tooEarlyReason, phasePick, isPhaseRecord, circCaption, parseTarget, activePhase, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, yTicks, weightChart, nearestPoint, pointReadout, fmtDay, rateZone, lensPoints, lastWeighinLine
 } from '../js/report.js';
 
 const M = '−';
@@ -14,7 +14,7 @@ const weekly = (start, kgs) => kgs.map((kg, k) => ({ date: addDays(start, 7 * k)
 
 test('verdict words and tones', () => {
   const v = s => verdictText(s, 10);
-  assert.deepEqual(v({ verdict: 'toward', arrow: 'down' }), { arrow: '↓', word: 'יורד', tone: 'good', label: 'לכיוון היעד' });
+  assert.deepEqual(v({ verdict: 'toward', arrow: 'down' }), { arrow: '↓', word: 'יורד', tone: 'good', label: 'לכיוון היעד', slow: false, slowWord: '' });
   assert.equal(v({ verdict: 'away', arrow: 'up' }).tone, 'bad');
   assert.equal(v({ verdict: 'stuck', arrow: 'flat' }).label, 'פחות מ־0.2 ק״ג בשבוע');
   assert.equal(v({ verdict: 'holding', arrow: 'flat' }).tone, 'good');
@@ -224,4 +224,54 @@ test('footnote for a trend reaching back past 28 days', () => {
   const w = [...weekly('2026-01-03', [80, 80, 80, 80]), { date: '2026-03-07', kg: 78.0 }];
   const s = trendSummary(w, 'cut');
   assert.ok(footnotes(s, []).some(n => n === 'הקצב חושב על פני 9 שבועות, כי היו מעט שקילות בחודש האחרון.'));
+});
+
+test('slow verdict: toward the goal but under the target band', () => {
+  const S = (phase, rate, verdict = 'toward') => ({ verdict, arrow: rate < 0 ? 'down' : 'up', phase, rate, avg: 80 });
+  // cut band 0.5–1 %/wk of 80 kg = 0.4–0.8 kg/wk
+  assert.equal(verdictText(S('cut', -0.30), 10).slow, true);
+  assert.equal(verdictText(S('cut', -0.30), 10).slowWord, 'איטי');
+  assert.equal(verdictText(S('cut', -0.30), 10).tone, 'good');
+  assert.equal(verdictText(S('cut', -0.40), 10).slow, false); // exactly 0.5 % = in range
+  assert.equal(verdictText(S('cut', -0.90), 10).slow, false); // above range is not slow
+  // bulk band 0.25–0.5 % = 0.2–0.4 kg/wk
+  assert.equal(verdictText(S('bulk', 0.19, 'stuck'), 10).slow, undefined);
+  assert.equal(verdictText(S('bulk', 0.30), 10).slow, false);
+  assert.equal(verdictText(S('maintenance', -0.3), 10).slow, false); // no band in maintenance
+  assert.equal(verdictText(S('cut', 0.5, 'away'), 10).tone, 'bad');
+});
+
+test('rateZone', () => {
+  const z = (phase, rate, verdict = 'toward') => rateZone({ phase, rate, verdict, avg: 100 });
+  assert.equal(z('cut', -0.4), 'below');
+  assert.equal(z('cut', -0.5), 'in');
+  assert.equal(z('cut', -1.0), 'in');
+  assert.equal(z('cut', -1.1), 'above');
+  assert.equal(z('cut', 0.3, 'away'), 'wrong_direction');
+  assert.equal(z('cut', -0.1, 'stuck'), 'stuck');
+  assert.equal(z('maintenance', -0.4), null);
+  assert.equal(z('cut', null), null);
+});
+
+test('lens points: the last 4 weigh-ins', () => {
+  assert.deepEqual(lensPoints([]), { points: [], avgY: null });
+  const s = weekly('2026-01-03', [81, 80, 79, 78, 77]);
+  const L = lensPoints(s);
+  assert.deepEqual(L.points.map(p => p.kg), [80, 79, 78, 77]);
+  assert.deepEqual(L.points.map(p => +p.x.toFixed(3)), [0.2, 0.4, 0.6, 0.8]);
+  assert.ok(L.points[0].y < L.points[3].y); // heavier = higher on screen
+  assert.equal(+L.avgY.toFixed(3), 0.5);     // average 78.5 = middle
+  const flat = lensPoints(weekly('2026-01-03', [80, 80, 80, 80]));
+  assert.ok(flat.points.every(p => p.y === 0.5));
+  const two = lensPoints(weekly('2026-01-03', [80, 79]));
+  assert.equal(two.points.length, 2);
+  assert.equal(two.avgY, null); // no average of 4 yet
+  assert.equal(lensPoints([{ date: '2026-01-03', kg: 80 }]).points[0].x, 0.5);
+});
+
+test('last weigh-in line on the dark home', () => {
+  const s = weekly('2026-01-03', [80, 79]); // last 2026-01-10
+  assert.equal(lastWeighinLine([], '2026-01-10'), null);
+  assert.deepEqual(lastWeighinLine(s, '2026-01-20'), { date: '10.1.2026', stale: false, ago: '' });
+  assert.deepEqual(lastWeighinLine(s, '2026-01-21'), { date: '10.1.2026', stale: true, ago: 'לפני 11 ימים' });
 });

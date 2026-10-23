@@ -1,7 +1,7 @@
 # BodyTrack: project state
 
 The single source of truth for the project. Every new session starts here, and every decision is updated here.
-Last updated: 21.10.2026. Replaces the old spec doc in Claude Docs and everything said in earlier chats.
+Last updated: 23.10.2026. Replaces the old spec doc in Claude Docs and everything said in earlier chats.
 
 > No personal data in this file or in the repo (public). Real numbers live only on the phone and in the private backup file.
 
@@ -29,6 +29,7 @@ All data is stored only on the phone. Hebrew, RTL.
 | 2. Voice | Coaching voice line (if at all, not on the verdict screen) | Deferred |
 | 3. Photos | Take photo → automatic edit (align + crop, matched lighting) → ready before/after image | **Done** (closed 21.10: owner saved a before/after image and a photo backup on the iPhone. Scope approved 21.10; spec v1 21.10; photos screen 0.7.0 built 21.10; owner approved the edit on real photos 22.10; originals dropped in 0.7.1) |
 | 4. Later | Training OS connection, timelapse export | TBD |
+| 5. Dark redesign | Stage 1 home + weigh-in, stage 2 analytics, stage 3 photos/history/backup (spec `docs/specs/redesign-stage1.md`) | **In progress** (stage 1: spec v1 + step 1 pure parts done 23.10; next: step 2 dark home, still) |
 
 ### Phase 3: scope (owner, 21.10)
 - No ghost overlay. Owner takes the photo normally; the app edits it on the phone, with no outside network call.
@@ -146,3 +147,5 @@ Rule of thumb: no agent is launched twice for the same thing in one block; a re-
 - 23.10 Workshop (owner): rollout = replace the light design fully, in stages: (1) home + weigh-in, (2) analytics, (3) photos/history/backup. Each stage checked by the owner on the iPhone before the next; meanwhile some screens stay light. Owner wants the body figure to look truly professional/anatomical.
 - 23.10 Owner chose the body figure: anatomical engraving style (silver-white cross-hatching on near-black), generated in the owner's ChatGPT from a generic prompt (no personal data); saved as docs/design/body-figure-engraving.png. Prototype v2 saved as docs/design/v2/bodytrack-v2.html (sample data; fonts/three.js from CDN = design file only, not the app).
 - 23.10 Owner: stop burning tokens, no overkill. Working rules from now: main agent does the work directly; no parallel agent rounds or multi-variant mockups unless the owner asks; one file iterated at a time; small screenshots; short messages; new chat at the end of each block (long chats cost the most).
+- 23.10 Owner: on the dark home, a wide "ניתוח" button at the bottom and a small "עוד" button at the top that opens a sheet (תמונות, היסטוריה, גיבוי, שלב). Stage 1 spec v1 written (`docs/specs/redesign-stage1.md`): look tokens, home layout, slow verdict, one weigh-in screen with folded rows, motion rules, build steps. Prototype check: the galaxy is plain WebGL2 (no three.js), so no new library is needed.
+- 23.10 Stage 1 step 1 (pure, tested, 159 tests): `rateZone` (moved the target bands into `js/report.js`; analytics uses the same function, so verdict and analytics can't disagree); `verdictText` adds `slow` + "איטי" when toward the goal but under the band; `lensPoints` (last 4 weigh-ins placed inside the lens, average line only when there are 4); `lastWeighinLine` (date of the last weigh-in, "לפני N ימים" when older than 10 days). Nothing on screen changed yet.
