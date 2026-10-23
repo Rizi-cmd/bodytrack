@@ -27,6 +27,7 @@ Stage 1 replaces only the home (verdict) screen and the check-in / quick weigh-i
 
 ## 4. Weigh-in screen (replaces check-in + quick weigh-in)
 - One dark screen. Weight first, prefilled from the previous weigh-in, −/+0.1 buttons, date (default today, no future; small, under the weight).
+- Weight is the main action (owner, 23.10): it fills the screen (big number, −/+ and "שמירה" right under it, reachable with one thumb). Circumferences are an occasional extra, not equal to the weight: one small secondary line "+ הוספת היקפים" under the save button, never a big section on first view.
 - Folded rows, closed by default: "היקפים" (11 sites, previous value + date beside each), "סוג שבוע" (רגיל/מחלה/חופשה/אירוע), "הערה" (max 120).
 - One "שמירה" button. Saving with only the weight = quick weigh-in. Same rules as today (`buildCheckin` / `buildWeighin`: one weigh-in per date, typo guard over 2 kg, undo toast).
 - "‹ חזרה" closes without saving.
