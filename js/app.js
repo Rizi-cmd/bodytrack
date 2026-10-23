@@ -15,7 +15,7 @@ import { initPhotos, openPhotos } from './photosScreen.js';
 import { startGalaxy } from './galaxy.js';
 import { heroTracks, heroAt, countAt, HERO_MS } from './motion.js';
 
-export const VERSION = '0.9.2';
+export const VERSION = '0.9.3';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
