@@ -17,10 +17,14 @@ async function seed(page) {
   await expect(page.locator('#homeView')).toBeVisible();
   await expect(page.locator('#hRate')).toHaveText(M + '0.33');
 }
+// lens → weight page → "+ שקילה" → save → back on the weight page → home (where the hero plays)
 async function save(page, kg) {
   await page.locator('#lensBtn').click();
+  await page.locator('#wtAdd').click();
   await page.locator('#ciKg').fill(kg);
   await page.locator('#ciSave').click();
+  await expect(page.locator('#wtView')).toBeVisible();
+  await page.locator('#wtBack').click();
 }
 const gl = page => page.evaluate(() => document.documentElement.classList.contains('gl'));
 const galaxy = page => page.evaluate(() => document.documentElement.dataset.galaxy);
@@ -41,12 +45,15 @@ test('galaxy: runs on the home and the weight screen only, stops when hidden; he
     await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false }); document.dispatchEvent(new Event('visibilitychange')); });
     await expect.poll(() => galaxy(page)).toBe('running');
     await page.locator('#lensBtn').click();
+    await expect.poll(() => galaxy(page)).toBe('running');             // weight page: around the big number
+    await page.locator('#wtAdd').click();
     await expect.poll(() => galaxy(page)).toBe('running');             // weight screen: around the weight
     await page.locator('#ciCircBtn').click();
     await expect.poll(() => galaxy(page)).toBe('off');                 // not behind the circumference list
     await page.locator('#ciCircBack').click();
     await expect.poll(() => galaxy(page)).toBe('running');
     await page.locator('#ciCancelTop').click();
+    await page.locator('#wtBack').click();
   } else {
     test.info().annotations.push({ type: 'note', description: 'no WebGL2 in this browser: static fallback checked' });
     expect(await page.locator('#gal').isVisible()).toBe(false);        // fallback = CSS gradient on .home

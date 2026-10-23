@@ -329,14 +329,21 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
     expect(fits, `home @${width}x${height}: ניתוח button below the fold`).toBe(true);
     await page.screenshot({ path: testInfo.outputPath(`home-${width}x${height}.png`) });
   }
-  // "עוד" → phase opens the phase sheet; the lens opens the weigh-in form; back returns home.
+  // "עוד" has no phase any more; the lens opens the weight page, its phase row the phase sheet,
+  // "+ שקילה" the weigh-in form; back returns to the weight page, then home.
   await page.locator('#hMore').click();
-  await page.locator('[data-more="phase"]').click();
+  await expect(page.locator('[data-more="phase"]')).toHaveCount(0);
+  await page.locator('#moreCancel').click();
+  await page.locator('#lensBtn').click();
+  await expect(page.locator('#wtView')).toBeVisible();
+  await page.locator('#wtPhase').click();
   await expect(page.locator('#phaseSheet')).toBeVisible();
   await page.locator('#phaseCancel').click();
-  await page.locator('#lensBtn').click();
+  await page.locator('#wtAdd').click();
   await expect(page.locator('#checkinView')).toBeVisible();
   await page.locator('#ciCancelTop').click();
+  await expect(page.locator('#wtView')).toBeVisible();
+  await page.locator('#wtBack').click();
   await expect(page.locator('#homeView')).toBeVisible();
   await page.locator('#hAna').click();
   await expect(page.locator('#anaView')).toBeVisible();

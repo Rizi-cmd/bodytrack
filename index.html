@@ -31,7 +31,7 @@
       <span class="hUnit">ק״ג לשבוע</span>
       <span class="hSub" id="hSub">שיפוע ממוצע 4 שקילות</span>
     </div>
-    <button type="button" class="lensBtn" id="lensBtn" aria-label="הוספת שקילה"></button>
+    <button type="button" class="lensBtn" id="lensBtn" aria-label="עמוד המשקל"></button>
   </div>
   <div class="hScale" id="hScale"></div>
   <button type="button" class="hAna" id="hAna">ניתוח ‹</button>
@@ -42,10 +42,34 @@
     <button class="btn ghost" data-more="photos">תמונות</button>
     <button class="btn ghost" data-more="history">היסטוריה</button>
     <button class="btn ghost" data-more="backup">גיבוי</button>
-    <button class="btn ghost" data-more="phase">שלב</button>
     <button class="btn ghost" id="moreCancel">סגירה</button>
   </div>
 </div>
+
+<!-- Weight page "המסע" (docs/specs/weight-page.md, mockup docs/design/weight-page.html) -->
+<main class="wp dark" id="wtView" hidden aria-labelledby="wtTitle">
+  <div class="wpTop">
+    <button type="button" class="wBack" id="wtBack">‹ חזרה</button>
+    <p class="wpToday"><b id="wtDate"></b><span class="n" dir="ltr" id="wtTime"></span></p>
+  </div>
+  <h1 class="sr" id="wtTitle">משקל</h1>
+  <div id="wtBody">
+    <div class="wpHero"><span class="k" id="wtHeroK"></span><span class="v" id="wtHeroV"><span class="n" dir="ltr" id="wtKg"></span><small>ק״ג</small></span></div>
+    <div id="wtFig">
+      <div class="wpFigT"><b>איור 1 · המסע</b><span id="wtFigCap"></span></div>
+      <canvas class="wpChart" id="wtChart" role="img"></canvas>
+      <p class="wpKey" id="wtKey"></p>
+    </div>
+    <div class="wpGrid" id="wtGrid"></div>
+    <p class="wpNote" id="wtNote" hidden></p>
+    <div class="wpRows" id="wtRows"></div>
+    <p class="wpCap" id="wtCap" hidden></p>
+  </div>
+  <div class="wpEmpty" id="wtEmpty" hidden><p>עוד אין שקילות</p><span>אפשר להוסיף את הראשונה.</span></div>
+  <div class="wpEmpty" id="wtErr" hidden><p>לא הצלחתי לקרוא את הנתונים</p><button type="button" class="wpRetry" id="wtRetry">ניסיון נוסף</button></div>
+  <button type="button" class="wpPhase" id="wtPhase" aria-haspopup="dialog"><span id="wtPhaseText"></span><span class="ch" aria-hidden="true">‹</span></button>
+  <div class="wpAdd" id="wtAddBox"><button type="button" class="wSave" id="wtAdd">+ שקילה</button></div>
+</main>
 
 <div class="app" id="main" hidden>
   <header class="top">

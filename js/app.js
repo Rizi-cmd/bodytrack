@@ -14,8 +14,10 @@ import { renderAnalytics, redraw as redrawAnalytics } from './analyticsScreen.js
 import { initPhotos, openPhotos } from './photosScreen.js';
 import { startGalaxy } from './galaxy.js';
 import { heroTracks, heroAt, countAt, HERO_MS } from './motion.js';
+import { weightPage } from './weightView.js';
+import { initWeight, renderWeight, showWeight, relayoutWeight } from './weightScreen.js';
 
-export const VERSION = '0.11.0';
+export const VERSION = '0.12.0';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -152,7 +154,9 @@ function renderHome(s, v) {
   $('#hLabel').textContent = v.label;
   $('#hSlow').hidden = !v.slow; $('#hSlow').textContent = v.slowWord || '';
   $('#hSub').hidden = s.rate === null;
-  const L = lensPoints(s.series), hero = state.hero; state.hero = null;
+  // the hero waits until the home is on screen (a save from the weight page plays it on the way back)
+  const L = lensPoints(s.series), hero = state.view === 'home' ? state.hero : null;
+  if (hero) state.hero = null;
   const frameOf = L => ({ points: L.points.map((p, i) => ({ ...p, o: 1, last: i === L.points.length - 1 })), avg: L.avgY === null ? null : { y: L.avgY, o: 1 } });
   const still = () => { drawLens(frameOf(L)); $('#hRate').textContent = s.rate === null ? EMPTY : fmtRate(s.rate); };
   drawScale(s.rate, '#hScale');
@@ -181,8 +185,10 @@ const keepLens = () => { if (state.summary) state.hero = { L: lensPoints(state.s
 function renderVerdict(W, M, C) {
   const s = state.summary = trendSummary(W, state.phases, todayISO());
   const n = s.series.length;
-  const v = verdictText(s, n);
+  const v = state.verdict = verdictText(s, n);
   renderHome(s, v);
+  // a weight-page fault must not stop the home, history and backup from rendering
+  try { renderWeight(state.weight = weightPage(s, state.phases, todayISO())); } catch { renderWeight(null); }
 
   $('#meta').textContent = `היום ${fmtFull(todayISO())}`;
   $('#phaseBtn').textContent = s.phase ? `${PHASE_HE[s.phase]} ▾` : 'בחירת שלב ▾';
@@ -248,6 +254,7 @@ async function render() {
   state.data = { W, M, C };
   renderVerdict(W, M, C);
   if (!$('#anaView').hidden) renderAnalytics({ ...state.data, phases: state.phases, today: todayISO() });
+  if (state.view === 'weight') galaxyFor();   // the weight page's galaxy depends on what it now shows
 
   const lw = $('#listW'); lw.replaceChildren();
   if (!W.length) lw.append(el('p', 'empty', 'אין שקילות.'));
@@ -318,6 +325,7 @@ new ResizeObserver(([e]) => {
 addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => {
   if (state.summary) { drawScale(state.summary.rate); drawScale(state.summary.rate, '#hScale'); drawChart(); }
   if (!$('#anaView').hidden) redrawAnalytics();
+  relayoutWeight();
 }, 150); });
 
 // Analytics screen: opened from the header, recomputed from the stored records every time.
@@ -336,14 +344,13 @@ $('#phoBtn').onclick = goPhotos;
 $('#phoBack').onclick = () => showView(state.back);
 $('#mainBack').onclick = () => showView('home');
 
-// "עוד" on the dark home: photos, history, backup (light screens until stage 3), phase.
+// "עוד" on the dark home: photos, history, backup (light screens until stage 3). The phase lives on the weight page.
 $('#hMore').onclick = () => { $('#moreSheet').hidden = false; };
 $('#moreCancel').onclick = () => { $('#moreSheet').hidden = true; };
 document.querySelectorAll('[data-more]').forEach(b => b.onclick = () => {
   $('#moreSheet').hidden = true;
   const m = b.dataset.more;
   if (m === 'photos') goPhotos();
-  else if (m === 'phase') openPhase();
   else {
     showView('main');
     const sec = $(m === 'history' ? '#histSec' : '#backupSec');
@@ -406,28 +413,30 @@ async function rawData() {
 }
 const ci = { data: null, tag: 'normal', dirty: false };
 // One view at a time. Sub-screens return to the screen they were opened from (home or the light report).
-const VIEWS = { home: '#homeView', main: '#main', checkin: '#checkinView', analytics: '#anaView', photos: '#phoView' };
+const VIEWS = { home: '#homeView', main: '#main', weight: '#wtView', checkin: '#checkinView', analytics: '#anaView', photos: '#phoView' };
 state.view = 'home'; state.back = 'home';
 // A drag on the home bends the galaxy but never moves the page (nothing to scroll there).
 $('#homeView').addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 const galaxy = startGalaxy($('#gal'), $('#lens'));
 function showView(v) {
-  if (v === 'home' || v === 'main') state.back = v;
+  if (v === 'home' || v === 'main' || v === 'weight') state.back = v;
   state.view = v;
   for (const [k, sel] of Object.entries(VIEWS)) $(sel).hidden = k !== v;
-  document.documentElement.classList.toggle('dk', v === 'home' || v === 'checkin');
+  document.documentElement.classList.toggle('dk', v === 'home' || v === 'checkin' || v === 'weight');
   document.documentElement.classList.toggle('lock', v === 'home');
   scrollTo(0, 0);
   // the scale is drawn at the box's width, which is 0 while the home is hidden
-  if (v === 'home' && state.summary) drawScale(state.summary.rate, '#hScale');
+  if (v === 'home' && state.summary) { drawScale(state.summary.rate, '#hScale'); if (state.hero) renderHome(state.summary, state.verdict); }
+  showWeight(v === 'weight');
   galaxyFor();
 }
-// The galaxy runs on the home (around the lens) and on the weight screen (around the weight); not over the circumference list.
+// The galaxy runs on the home (around the lens), the weight page (around the big number) and the weigh-in screen
+// (around the weight); not over the circumference list.
 function galaxyFor() {
-  const w = state.view === 'checkin' && $('#checkinView').dataset.pane === 'w';
-  document.documentElement.dataset.page = state.view === 'checkin' ? ($('#checkinView').dataset.pane === 'c' ? 'circ' : 'weigh') : 'home';
-  galaxy?.setLens(w ? $('#ciW .wLens') : $('#lens'), w ? 'weigh' : 'home');
-  galaxy?.show(state.view === 'home' || w);
+  const w = state.view === 'checkin' && $('#checkinView').dataset.pane === 'w', wp = state.view === 'weight';
+  document.documentElement.dataset.page = state.view === 'checkin' ? ($('#checkinView').dataset.pane === 'c' ? 'circ' : 'weigh') : wp ? 'weight' : 'home';
+  galaxy?.setLens(w ? $('#ciW .wLens') : wp ? $('#wtHeroV') : $('#lens'), w ? 'weigh' : wp ? 'weight' : 'home');
+  galaxy?.show(state.view === 'home' || w || (wp && !$('#wtBody').hidden));
 }
 showView('home');
 function showErr(input, errEl, msg) {
@@ -566,7 +575,14 @@ async function openCheckin() {
   fillCheckin(todayISO());
   showView('checkin');
 }
-$('#checkinBtn').onclick = openCheckin; $('#lensBtn').onclick = openCheckin;
+$('#checkinBtn').onclick = openCheckin;
+// Weight page: the home lens opens it; "+ שקילה" opens the weigh-in, which comes back here after saving.
+async function openWeight() {
+  showView('weight');
+  try { await render(); } catch { renderWeight(null); galaxyFor(); }
+}
+$('#lensBtn').onclick = openWeight;
+initWeight({ back: () => showView('home'), add: openCheckin, phase: openPhase, retry: openWeight });
 $('#ciDate').onchange = () => {
   const v = $('#ciDate').value;
   if (!v) return;
@@ -605,11 +621,12 @@ $('#checkinView').onsubmit = async e => {
   keepLens();
   try { await writeAll(r.apply); } catch { state.hero = null; toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
   await requestPersistence();
-  showView('home');
+  showView(state.back === 'weight' ? 'weight' : 'home');
   await render();
   const withSites = Object.values(form.cm).some(v => v.trim());
   toast(withSites ? 'השקילה וההיקפים נשמרו.' : 'השקילה נשמרה.', 8000, async () => {
     try { await writeAll(r.undo); } catch { toast('לא הצלחתי לבטל.'); return; }
+    state.hero = null;   // no "new weigh-in" moment for a weigh-in that was taken back
     await render(); toast('השמירה בוטלה.');
   });
 };
@@ -636,6 +653,7 @@ $('#quickForm').onsubmit = async e => {
   await render();
   toast('השקילה נשמרה.', 8000, async () => {
     try { await writeAll(r.undo); } catch { toast('לא הצלחתי לבטל.'); return; }
+    state.hero = null;
     await render(); toast('השקילה בוטלה.');
   });
 };

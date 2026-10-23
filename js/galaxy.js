@@ -45,7 +45,8 @@ void main(){float d=length(gl_PointCoord-.5)*2.;float a=1.-smoothstep(0.,1.,d);a
 // Same family, a different galaxy per page (owner 23.10). shape = [squash, tilt, scale × lens radius, ring].
 const THEMES = {
   home: { shape: [.55, -.2, 2.5, 0], core: [.88, .88, 1], arm1: [.52, .60, 1], arm2: [.62, .48, .96] },   // violet two-arm spiral
-  weigh: { shape: [.34, .22, 2.3, 1], core: [.85, .97, 1], arm1: [.50, .78, 1], arm2: [.42, .90, .95] }  // ice-cyan ring, tilted the other way
+  weigh: { shape: [.34, .22, 2.3, 1], core: [.85, .97, 1], arm1: [.50, .78, 1], arm2: [.42, .90, .95] },  // ice-cyan ring, tilted the other way
+  weight: { shape: [.13, .04, 2.3, 1], core: [.84, .92, 1], arm1: [.48, .70, 1], arm2: [.40, .82, .95] }   // weight page: a flat blue ring in the hero row only, clear of the chart
 };
 const N_DISC = 5600, N_STARS = 420, INTRO_MS = 900;
 
@@ -146,7 +147,7 @@ export function startGalaxy(canvas, lensEl) {
     // shown: the home is on screen. intro: play the ≤1 s condense (app open only).
     show(shown, intro = false) {
       s.on = shown;
-      if (!shown) { cancelAnimationFrame(s.raf); s.raf = 0; gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); document.documentElement.dataset.galaxy = 'off'; return; }
+      if (!shown) { cancelAnimationFrame(s.raf); s.raf = 0; canvas.width = canvas.width; document.documentElement.dataset.galaxy = 'off'; return; }   // resetting the size empties the buffer for sure (a clear alone could leave the last frame on screen)
       if (intro && !rm.matches) s.intro0 = performance.now();
       kick();
     },
