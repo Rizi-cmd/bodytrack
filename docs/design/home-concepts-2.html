@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Home concepts 2</title>
+<!-- Design file only (sample data). Three complete home screens, 23.10.2026. -->
+<style>
+@font-face{font-family:Heebo;font-weight:400;src:url(../../fonts/heebo-hebrew-400-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:700;src:url(../../fonts/heebo-hebrew-700-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:800;src:url(../../fonts/heebo-hebrew-800-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-800-normal.woff2) format("woff2")}
+:root{--ink:#EEF1FF;--mute:#B0B7DA;--faint:#8F97C6;--good:#7DE3C1;--slow:#4F9A86;--bad:#FF8F87;--ice:#A9C4FF;--rule:rgba(190,200,255,.28)}
+*{box-sizing:border-box}
+body{margin:0;background:#03040c;color:var(--ink);font-family:Heebo,system-ui,sans-serif;padding:16px}
+h1{font-size:20px;margin:4px 0 2px}.intro{color:var(--mute);font-size:13px;margin:0 0 16px;max-width:1200px}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.col{width:375px}
+.name{font-size:15px;font-weight:800;margin:0 0 4px}.name b{color:var(--good)}
+.why{font-size:13px;color:var(--mute);margin:0 0 10px;min-height:54px}
+.phone{width:375px;height:780px;border-radius:36px;overflow:hidden;position:relative;border:1px solid rgba(190,200,255,.14);
+  background:radial-gradient(120% 60% at 50% 34%,#1b1a55 0%,transparent 62%),radial-gradient(90% 55% at 10% 88%,#211a5c 0%,transparent 58%),#060818;
+  display:flex;flex-direction:column;align-items:center;padding:18px 16px 18px;text-align:center}
+.top{width:100%;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mute)}
+.chip{border:1px solid var(--rule);border-radius:18px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--ink)}
+.word{font-size:46px;font-weight:800;color:var(--good);line-height:1.05;margin-top:14px}
+.lab{font-size:14px;font-weight:700;margin-top:2px}
+.n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;margin-top:14px}
+.tile{background:rgba(14,18,60,.6);border:1px solid rgba(190,200,255,.14);border-radius:16px;padding:10px 6px}
+.tile b{display:block;font-size:20px;font-weight:800}.tile span{font-size:12px;color:var(--mute)}
+.ana{margin-top:auto;width:240px;min-height:46px;border-radius:23px;border:1px solid var(--rule);background:rgba(160,175,255,.10);font-weight:800;display:flex;align-items:center;justify-content:center}
+svg{display:block;overflow:visible}svg text{font-family:Heebo,system-ui,sans-serif}
+.stars{position:absolute;inset:0;pointer-events:none}
+.phone>*:not(.stars){position:relative}
+</style>
+</head>
+<body>
+<h1>מסך הבית: 3 קונספטים שלמים</h1>
+<p class="intro">נתונים לדוגמה: חיטוב שהתחיל ב־86.0 ק״ג, יעד 78.0, היום ממוצע 81.0, קצב <span class="n">−0.62</span> ק״ג לשבוע (טווח היעד <span class="n">0.41–0.82</span>). כל מספר באפליקציה יחושב מהנתונים, כאן הם לדוגמה.</p>
+<div class="row" id="row"></div>
+<script>
+const NS = 'http://www.w3.org/2000/svg', M = '−';
+const S = (t, a = {}, p, x) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (x != null) e.textContent = x; if (p) p.appendChild(e); return e; };
+const C = { good: '#7DE3C1', slow: '#4F9A86', bad: '#FF8F87', ice: '#A9C4FF', ink: '#EEF1FF', mute: '#B0B7DA', faint: '#8F97C6', track: 'rgba(190,200,255,.15)', stuck: 'rgba(176,183,218,.45)' };
+function rnd(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function phone(name, why, build) {
+  const col = document.createElement('div'); col.className = 'col';
+  col.innerHTML = `<p class="name">${name}</p><p class="why">${why}</p>`;
+  const ph = document.createElement('div'); ph.className = 'phone';
+  const st = S('svg', { class: 'stars', width: 375, height: 780 }); const r = rnd(name.length * 7);
+  for (let i = 0; i < 140; i++) S('circle', { cx: r() * 375, cy: r() * 780, r: .5 + r() * 1.1, fill: '#B8C4FF', opacity: .15 + r() * .4 }, st);
+  ph.append(st);
+  ph.insertAdjacentHTML('beforeend', `<div class="top"><span>שקילה אחרונה <span class="n">21.10.2026</span></span><span class="chip">עוד</span></div>`);
+  build(ph); ph.insertAdjacentHTML('beforeend', `<div class="ana">ניתוח ‹</div>`);
+  col.append(ph); document.getElementById('row').append(col);
+}
+const glassDefs = (s, id) => { const g = S('radialGradient', { id, cx: '50%', cy: '20%', r: '80%' }, S('defs', {}, s)); S('stop', { offset: '0', 'stop-color': 'rgba(190,205,255,.30)' }, g); S('stop', { offset: '.5', 'stop-color': 'rgba(60,70,170,.30)' }, g); S('stop', { offset: '1', 'stop-color': 'rgba(14,18,60,.7)' }, g); };
+// last 8 weeks: zone of each week's rate (sample)
+const WEEKS = ['slow', 'goal', 'goal', 'stuck', 'goal', 'goal', 'goal', 'goal'];
+const ZC = { goal: C.good, slow: C.slow, stuck: C.stuck, gain: C.bad, fast: C.ice };
+
+// ---------- H1: watch face ----------
+phone('H1. שעון היעד · <b>מומלץ</b>', 'מכשיר אחד שעונה על הכל: הטבעת = כמה מהדרך ליעד עברת, הקשת הפנימית = האם הקצב בטווח, ובמרכז הקצב. מתחת 3 מספרים: נשאר, צפי הגעה, רצף שבועות ביעד.', ph => {
+  ph.insertAdjacentHTML('beforeend', `<div class="word">↓ יורד</div><div class="lab">בטווח היעד</div>`);
+  const W = 340, R = 138, cx = W / 2, cy = R + 30, s = S('svg', { width: W, height: 2 * R + 44 }); ph.append(s);
+  glassDefs(s, 'g1'); S('circle', { cx, cy, r: R - 26, fill: 'url(#g1)', stroke: 'rgba(220,228,255,.28)' }, s);
+  // outer progress ring
+  const ro = R - 6, done = (86 - 81) / (86 - 78), a0 = -Math.PI / 2, a1 = a0 + done * 2 * Math.PI;
+  S('circle', { cx, cy, r: ro, fill: 'none', stroke: C.track, 'stroke-width': 10 }, s);
+  S('path', { d: `M${cx},${cy - ro} A${ro},${ro} 0 ${done > .5 ? 1 : 0} 1 ${cx + ro * Math.cos(a1)},${cy + ro * Math.sin(a1)}`, fill: 'none', stroke: C.good, 'stroke-width': 10, 'stroke-linecap': 'round' }, s);
+  S('circle', { cx: cx + ro * Math.cos(a1), cy: cy + ro * Math.sin(a1), r: 8, fill: C.ink }, s);
+  S('text', { x: cx, y: cy - ro - 14, 'text-anchor': 'middle', 'font-size': 12, fill: C.mute }, s, 'יעד 78.0');
+  // inner speed arc (top), marker in the target band
+  const ri = R - 40, sw = Math.PI * .9, b0 = -Math.PI / 2 - sw / 2;
+  const zones = [['gain', 0, .16], ['stuck', .16, .31], ['slow', .31, .40], ['goal', .40, .64], ['fast', .64, 1]];
+  for (const [z, a, b] of zones) { const x = t => b0 + t * sw; S('path', { d: `M${cx + ri * Math.cos(x(a + .01))},${cy + ri * Math.sin(x(a + .01))} A${ri},${ri} 0 0 1 ${cx + ri * Math.cos(x(b - .01))},${cy + ri * Math.sin(x(b - .01))}`, fill: 'none', stroke: ZC[z], opacity: z === 'goal' ? .9 : .5, 'stroke-width': 5 }, s); }
+  const mp = b0 + .505 * sw; S('circle', { cx: cx + ri * Math.cos(mp), cy: cy + ri * Math.sin(mp), r: 5, fill: C.ink }, s);
+  S('text', { x: cx, y: cy + 12, 'text-anchor': 'middle', 'font-size': 58, 'font-weight': 800, fill: C.ink, direction: 'ltr' }, s, `${M}0.62`);
+  S('text', { x: cx, y: cy + 36, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 700, fill: C.ink }, s, 'ק״ג לשבוע');
+  S('text', { x: cx, y: cy + 56, 'text-anchor': 'middle', 'font-size': 12, fill: C.mute }, s, '63% מהדרך');
+  ph.insertAdjacentHTML('beforeend', `<div class="tiles"><div class="tile"><b class="n">3.0</b><span>ק״ג נשארו</span></div><div class="tile"><b>דצמבר</b><span>צפי הגעה</span></div><div class="tile"><b class="n">4</b><span>שבועות ביעד ברצף</span></div></div>`);
+});
+
+// ---------- H2: journey ----------
+phone('H2. המסע', 'הדרך מנקודת ההתחלה ליעד כקו אחד בגלקסיה: איפה התחלת, איפה אתה (נקודה זוהרת עם השובל של השבועות), והקו המקווקו מראה מתי תגיע לפי הקצב.', ph => {
+  ph.insertAdjacentHTML('beforeend', `<div class="word">↓ יורד</div><div class="lab">בטווח היעד</div>`);
+  const W = 343, H = 300, s = S('svg', { width: W, height: H }); ph.append(s);
+  const f = S('filter', { id: 'gl' }, S('defs', {}, s)); S('feGaussianBlur', { stdDeviation: 4 }, f);
+  // time left → right like the app's charts: start at the left, target at the right
+  const X = t => 20 + t * (W - 40), Y = kg => 40 + (86 - kg) / 8 * (H - 90);
+  const pts = [86, 85.6, 85.1, 84.9, 84.2, 83.6, 83.3, 82.8, 82.3, 81.9, 81.4, 81.0];
+  S('line', { x1: X(0), y1: Y(78), x2: X(1), y2: Y(78), stroke: C.good, 'stroke-dasharray': '2 6', opacity: .6 }, s);
+  S('text', { x: X(1) - 30, y: Y(78) - 10, 'font-size': 13, 'font-weight': 700, fill: C.good, 'text-anchor': 'middle' }, s, 'יעד 78.0');
+  const tx = i => X(i / 16);
+  const d = pts.map((v, i) => `${i ? 'L' : 'M'}${tx(i)},${Y(v)}`).join(' ');
+  S('path', { d, fill: 'none', stroke: C.ice, 'stroke-width': 8, opacity: .45, filter: 'url(#gl)' }, s);
+  S('path', { d, fill: 'none', stroke: C.ink, 'stroke-width': 2.5, 'stroke-linejoin': 'round' }, s);
+  pts.forEach((v, i) => i % 2 || S('circle', { cx: tx(i), cy: Y(v), r: 2.5, fill: C.ink, opacity: .6 }, s));
+  S('path', { d: `M${tx(11)},${Y(81)} L${X(1)},${Y(78)}`, stroke: C.ink, 'stroke-dasharray': '5 6', opacity: .6, fill: 'none' }, s);
+  S('circle', { cx: tx(11), cy: Y(81), r: 16, fill: C.good, opacity: .25 }, s); S('circle', { cx: tx(11), cy: Y(81), r: 8, fill: C.ink }, s);
+  S('text', { x: tx(11), y: Y(81) + 32, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 700, fill: C.ink }, s, 'היום 81.0');
+  S('text', { x: X(0) + 34, y: Y(86) - 12, 'text-anchor': 'middle', 'font-size': 12, fill: C.mute }, s, 'התחלה 86.0');
+  S('text', { x: X(1) - 30, y: Y(78) + 22, 'text-anchor': 'middle', 'font-size': 12, fill: C.mute }, s, 'צפי: דצמבר');
+  ph.insertAdjacentHTML('beforeend', `<div style="margin-top:4px"><span class="n" style="font-size:52px;font-weight:800">${M}0.62</span><div class="lab">ק״ג לשבוע · <span style="color:var(--good)">בטווח <span class="n">0.41–0.82</span></span></div></div>`);
+});
+
+// ---------- H3: lens + 8-week strip ----------
+phone('H3. העדשה + רצועת שבועות', 'העדשה נשארת (עם הקצב), ומתחתיה רצועה של 8 השבועות האחרונים: כל שבוע עיגול בצבע האזור שלו. במבט אחד רואים עקביות. מעליה: כמה ירד בחודש האחרון.', ph => {
+  ph.insertAdjacentHTML('beforeend', `<div class="word">↓ יורד</div><div class="lab">בטווח היעד</div>`);
+  const W = 300, R = 128, s = S('svg', { width: W, height: 2 * R + 20 }); ph.append(s);
+  glassDefs(s, 'g3'); S('circle', { cx: W / 2, cy: R + 10, r: R, fill: 'url(#g3)', stroke: 'rgba(220,228,255,.3)' }, s);
+  S('text', { x: W / 2, y: R - 20, 'text-anchor': 'middle', 'font-size': 13, fill: C.mute }, s, 'בחודש האחרון');
+  S('text', { x: W / 2, y: R + 30, 'text-anchor': 'middle', 'font-size': 60, 'font-weight': 800, fill: C.ink, direction: 'ltr' }, s, `${M}2.5`);
+  S('text', { x: W / 2, y: R + 54, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 700, fill: C.ink }, s, 'ק״ג');
+  S('text', { x: W / 2, y: R + 80, 'text-anchor': 'middle', 'font-size': 13, fill: C.mute, direction: 'rtl' }, s, `קצב ${M}0.62 לשבוע`);
+  const st = S('svg', { width: 330, height: 74 }); ph.append(st);
+  WEEKS.forEach((z, i) => { const x = 24 + i * 40; S('circle', { cx: x, cy: 22, r: 13, fill: ZC[z], opacity: z === 'stuck' ? 1 : .9 }, st); });
+  S('text', { x: 24, y: 56, 'text-anchor': 'middle', 'font-size': 12, fill: C.mute }, st, 'לפני 8 ש׳');
+  S('text', { x: 24 + 7 * 40, y: 56, 'text-anchor': 'middle', 'font-size': 12, fill: C.ink, 'font-weight': 700 }, st, 'השבוע');
+  ph.insertAdjacentHTML('beforeend', `<div style="font-size:13px;color:var(--mute)">6 מתוך 8 שבועות בטווח היעד</div>`);
+});
+</script>
+</body>
+</html>

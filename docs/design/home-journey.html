@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Home journey</title>
+<!-- Design file only (sample data). Home concept H2 "המסע" with the live electric line (owner 23.10.2026). -->
+<style>
+@font-face{font-family:Heebo;font-weight:400;src:url(../../fonts/heebo-hebrew-400-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:700;src:url(../../fonts/heebo-hebrew-700-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:800;src:url(../../fonts/heebo-hebrew-800-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-800-normal.woff2) format("woff2")}
+:root{--ink:#EEF1FF;--mute:#B0B7DA;--faint:#8F97C6;--good:#7DE3C1;--ice:#A9C4FF;--rule:rgba(190,200,255,.28)}
+*{box-sizing:border-box}
+body{margin:0;background:#03040c;color:var(--ink);font-family:Heebo,system-ui,sans-serif;display:flex;justify-content:center;padding:16px}
+.phone{width:375px;height:780px;border-radius:36px;overflow:hidden;position:relative;border:1px solid rgba(190,200,255,.14);
+  background:radial-gradient(120% 60% at 50% 40%,#1b1a55 0%,transparent 62%),radial-gradient(90% 55% at 10% 88%,#211a5c 0%,transparent 58%),#060818;
+  display:flex;flex-direction:column;align-items:center;padding:18px 16px;text-align:center}
+.phone>*{position:relative}
+.top{width:100%;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mute)}
+.chip{border:1px solid var(--rule);border-radius:18px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--ink)}
+.word{font-size:46px;font-weight:800;color:var(--good);line-height:1.05;margin-top:12px}
+.lab{font-size:14px;font-weight:700;margin-top:2px}
+.n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+.title{align-self:stretch;display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;font-size:13px;color:var(--mute)}
+.title b{color:var(--ink);font-size:14px}
+.rate{margin-top:2px}.rate .big{font-size:48px;font-weight:800;line-height:1}
+.legend{display:flex;gap:14px;justify-content:center;font-size:12px;color:var(--mute);margin-top:2px}
+.legend i{display:inline-block;width:18px;height:8px;border-radius:4px;vertical-align:middle;margin-inline-start:4px}
+.ana{margin-top:auto;width:240px;min-height:46px;border-radius:23px;border:1px solid var(--rule);background:rgba(160,175,255,.10);font-weight:800;display:flex;align-items:center;justify-content:center}
+svg{display:block;overflow:visible}svg text{font-family:Heebo,system-ui,sans-serif}
+</style>
+</head>
+<body>
+<div class="phone" id="ph">
+  <svg id="stars" width="375" height="780" style="position:absolute;inset:0"></svg>
+  <div class="top"><span>שקילה אחרונה <span class="n">21.10.2026</span></span><span class="chip">עוד</span></div>
+  <div class="word">↓ יורד</div>
+  <div class="lab">בטווח היעד</div>
+  <div class="title"><b>המסע ליעד</b><span>חיטוב · 8 שבועות</span></div>
+  <svg id="j" width="343" height="360"></svg>
+  <div class="legend"><span><i style="background:rgba(125,227,193,.25)"></i> קצב היעד</span><span><i style="background:#EEF1FF;height:3px"></i> הממוצע שלך</span><span><i style="border-top:2px dashed #8F97C6;height:0;border-radius:0"></i> צפי</span></div>
+  <div class="rate"><span class="big n">−0.62</span><div class="lab">ק״ג לשבוע · <span style="color:var(--good)">בטווח <span class="n">0.41–0.82</span></span></div></div>
+  <div class="ana">ניתוח ‹</div>
+</div>
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const S = (t, a = {}, p, x) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (x != null) e.textContent = x; if (p) p.appendChild(e); return e; };
+const C = { good: '#7DE3C1', ice: '#A9C4FF', ink: '#EEF1FF', mute: '#B0B7DA', faint: '#8F97C6' };
+function rnd(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+{ const st = document.getElementById('stars'), r = rnd(3); for (let i = 0; i < 140; i++) S('circle', { cx: r() * 375, cy: r() * 780, r: .5 + r() * 1.1, fill: '#B8C4FF', opacity: .15 + r() * .4 }, st); }
+
+// sample: weekly 4-weigh-in averages since the phase start; target 78.0; target pace 0.5–1 % of body weight a week
+const START = 86, TARGET = 78, AVG = [86, 85.5, 84.8, 84.3, 83.6, 83.1, 82.3, 81.6, 81.0], NOW = AVG.length - 1;
+const RATE = 0.62, ETA = NOW + (AVG[NOW] - TARGET) / RATE;            // ≈ 12.8 weeks
+const W = 343, H = 360, L = 14, R = W - 14, T = 30, B = H - 44, TMAX = Math.ceil(ETA) + 0.5;
+const X = t => L + t / TMAX * (R - L), Y = kg => T + (START + .4 - kg) / (START + .4 - (TARGET - .6)) * (B - T);
+const s = document.getElementById('j'), defs = S('defs', {}, s);
+const f = S('filter', { id: 'glow', x: '-20%', y: '-20%', width: '140%', height: '140%' }, defs); S('feGaussianBlur', { stdDeviation: 5 }, f);
+const f2 = S('filter', { id: 'soft' }, defs); S('feGaussianBlur', { stdDeviation: 1.2 }, f2);
+
+// target corridor: from the start, losing 0.5–1 % a week (compounded), clipped at the target line
+const corr = (pct) => { const pts = []; for (let t = 0; t <= TMAX; t += .25) pts.push([X(t), Y(Math.max(TARGET - .6, START * (1 - pct) ** t))]); return pts; };
+const slow = corr(.005), fast = corr(.01);
+S('path', { d: 'M' + slow.map(p => p.join(',')).join(' L') + ' L' + fast.reverse().map(p => p.join(',')).join(' L') + ' Z', fill: 'rgba(125,227,193,.13)' }, s);
+// target line + labels
+S('line', { x1: L, x2: R, y1: Y(TARGET), y2: Y(TARGET), stroke: C.good, 'stroke-dasharray': '2 5', opacity: .7 }, s);
+S('text', { x: R, y: Y(TARGET) + 18, 'text-anchor': 'start', 'font-size': 13, 'font-weight': 700, fill: C.good }, s, 'יעד 78.0');
+S('text', { x: L, y: Y(START) - 14, 'text-anchor': 'end', 'font-size': 12, fill: C.mute }, s, 'התחלה 86.0');
+// time axis: start month, today, expected arrival
+S('line', { x1: L, x2: R, y1: B + 10, y2: B + 10, stroke: 'rgba(190,200,255,.18)' }, s);
+for (const [t, txt, strong] of [[0, 'אוגוסט', 0], [NOW, 'היום', 1], [ETA, 'צפי: דצמבר', 0]]) {
+  S('line', { x1: X(t), x2: X(t), y1: B + 6, y2: B + 14, stroke: C.faint }, s);
+  S('text', { x: X(t), y: B + 32, 'text-anchor': 'middle', 'font-size': 12, fill: strong ? C.ink : C.mute, 'font-weight': strong ? 700 : 400 }, s, txt);
+}
+// projection
+S('path', { d: `M${X(NOW)},${Y(AVG[NOW])} L${X(ETA)},${Y(TARGET)}`, stroke: C.faint, 'stroke-dasharray': '5 6', fill: 'none' }, s);
+S('circle', { cx: X(ETA), cy: Y(TARGET), r: 5, fill: 'none', stroke: C.good, 'stroke-width': 2 }, s);
+
+// the electric line: glow + jittering bolt + steady core + a pulse of light running start → today
+const base = AVG.map((v, i) => [X(i), Y(v)]);
+const pathOf = pts => 'M' + pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L');
+const glow = S('path', { d: pathOf(base), fill: 'none', stroke: C.ice, 'stroke-width': 9, opacity: .45, filter: 'url(#glow)', 'stroke-linejoin': 'round' }, s);
+const bolt = S('path', { fill: 'none', stroke: '#CFE0FF', 'stroke-width': 1.2, opacity: .8, filter: 'url(#soft)' }, s);
+const core = S('path', { d: pathOf(base), fill: 'none', stroke: C.ink, 'stroke-width': 2.4, 'stroke-linejoin': 'round' }, s);
+const pulse = S('path', { d: pathOf(base), fill: 'none', stroke: '#fff', 'stroke-width': 4, 'stroke-linecap': 'round', filter: 'url(#soft)' }, s);
+const len = core.getTotalLength(); pulse.setAttribute('stroke-dasharray', `26 ${len + 40}`);
+const halo = S('circle', { cx: X(NOW), cy: Y(AVG[NOW]), r: 18, fill: C.good, opacity: .22 }, s);
+S('circle', { cx: X(NOW), cy: Y(AVG[NOW]), r: 7.5, fill: C.ink }, s);
+S('text', { x: X(NOW), y: Y(AVG[NOW]) - 18, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 800, fill: C.ink }, s, 'היום 81.0');
+const sparks = Array.from({ length: 6 }, () => S('line', { stroke: '#DDE8FF', 'stroke-width': 1.2, opacity: 0, 'stroke-linecap': 'round' }, s));
+
+// bolt = the line split into small segments with random sideways kicks (a new bolt ~12 times a second)
+const r = rnd(9);
+function boltPath() {
+  const out = [];
+  for (let i = 0; i < base.length - 1; i++) {
+    const [x1, y1] = base[i], [x2, y2] = base[i + 1], n = 5, nx = -(y2 - y1), ny = x2 - x1, nl = Math.hypot(nx, ny) || 1;
+    for (let k = 0; k < n; k++) { const t = k / n, j = (r() - .5) * 7; out.push([x1 + (x2 - x1) * t + nx / nl * j, y1 + (y2 - y1) * t + ny / nl * j]); }
+  }
+  out.push(base[base.length - 1]); return pathOf(out);
+}
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let last = 0;
+function frame(now) {
+  if (now - last > 80) {   // ~12 fps for the flicker, cheap
+    last = now;
+    bolt.setAttribute('d', boltPath());
+    glow.setAttribute('opacity', (.35 + r() * .2).toFixed(2));
+    const [hx, hy] = base[NOW];
+    sparks.forEach(sp => { const a = r() * Math.PI * 2, l1 = 10 + r() * 4, l2 = l1 + 4 + r() * 8, on = r() < .5;
+      sp.setAttribute('x1', hx + Math.cos(a) * l1); sp.setAttribute('y1', hy + Math.sin(a) * l1);
+      sp.setAttribute('x2', hx + Math.cos(a) * l2); sp.setAttribute('y2', hy + Math.sin(a) * l2); sp.setAttribute('opacity', on ? .8 : 0); });
+  }
+  const p = (now / 2400) % 1;                      // a pulse runs start → today every 2.4 s
+  pulse.setAttribute('stroke-dashoffset', (-(p * (len + 26)) + 26).toFixed(1));
+  pulse.setAttribute('opacity', (Math.sin(p * Math.PI) * .9).toFixed(2));
+  halo.setAttribute('r', (18 + 3 * Math.sin(now / 500)).toFixed(1));
+  requestAnimationFrame(frame);
+}
+if (still) { bolt.setAttribute('d', boltPath()); pulse.remove(); } else requestAnimationFrame(frame);
+</script>
+</body>
+</html>

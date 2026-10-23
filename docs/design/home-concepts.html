@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Home concepts</title>
+<!-- Design file only (sample data). Concepts for the home gauge and the lens, 23.10.2026. -->
+<style>
+@font-face{font-family:Heebo;font-weight:400;src:url(../../fonts/heebo-hebrew-400-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:700;src:url(../../fonts/heebo-hebrew-700-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:800;src:url(../../fonts/heebo-hebrew-800-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-800-normal.woff2) format("woff2")}
+:root{--bg:#060818;--ink:#EEF1FF;--mute:#B0B7DA;--faint:#8F97C6;--good:#7DE3C1;--slow:#4F9A86;--bad:#FF8F87;--ice:#A9C4FF;--rule:rgba(190,200,255,.28)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Heebo,system-ui,sans-serif;padding:16px}
+h1{font-size:20px;margin:4px 0 2px}
+.intro{color:var(--mute);font-size:13px;margin:0 0 14px}
+h2{font-size:15px;color:var(--ice);margin:22px 0 10px;letter-spacing:.02em}
+.grid{display:flex;flex-wrap:wrap;gap:14px}
+.card{width:380px;max-width:100%;border-radius:22px;padding:18px 16px 16px;position:relative;overflow:hidden;
+  background:radial-gradient(120% 70% at 50% 30%,#1b1a55 0%,transparent 62%),radial-gradient(90% 55% at 10% 90%,#211a5c 0%,transparent 58%),#060818;border:1px solid rgba(190,200,255,.12)}
+.tag{display:inline-block;font-size:12px;font-weight:700;color:var(--bg);background:var(--ice);border-radius:8px;padding:1px 8px}
+.tag.rec{background:var(--good)}
+.cap{font-size:13px;color:var(--mute);margin:6px 0 10px;min-height:36px}
+.word{text-align:center;font-size:40px;font-weight:800;color:var(--good);margin:6px 0 0;line-height:1.1}
+.lab{text-align:center;font-size:14px;font-weight:700;margin:2px 0 10px}
+.n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+svg{display:block;margin:0 auto;overflow:visible}
+svg text{font-family:Heebo,system-ui,sans-serif}
+.stars{position:absolute;inset:0;pointer-events:none;opacity:.6}
+</style>
+</head>
+<body>
+<h1>מסך הבית: קונספטים</h1>
+<p class="intro">נתונים לדוגמה בלבד: חיטוב, משקל 82 ק״ג, קצב <span class="n">−0.62</span> ק״ג לשבוע. טווח היעד בחיטוב: ירידה של 0.5–1% מהמשקל בשבוע = <span class="n">0.41–0.82</span> ק״ג.</p>
+
+<h2>א. המד</h2>
+<div class="grid" id="gauges"></div>
+
+<h2>ב. העדשה (מה שבתוך העיגול)</h2>
+<div class="grid" id="lenses"></div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const S = (tag, a = {}, p, text) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (text != null) e.textContent = text; if (p) p.appendChild(e); return e; };
+const C = { good: '#7DE3C1', slow: '#4F9A86', bad: '#FF8F87', ice: '#A9C4FF', ink: '#EEF1FF', mute: '#B0B7DA', faint: '#8F97C6', track: 'rgba(190,200,255,.16)' };
+const M = '−';
+
+// sample: cut, 82 kg, rate -0.62 kg/wk -> speed toward the goal v = +0.62
+const V = 0.62;
+// goal-centred axis: zones with fixed share of the width; numbers at the borders (kg/week toward the goal)
+const Z = [
+  { id: 'gain', he: 'עלייה', from: -1, to: -0.2, a: 0, b: .16, col: C.bad, op: .55 },
+  { id: 'stuck', he: 'תקוע', from: -0.2, to: 0.2, a: .16, b: .31, col: C.mute, op: .22 },
+  { id: 'slow', he: 'איטי', from: 0.2, to: 0.41, a: .31, b: .40, col: C.slow, op: .6 },
+  { id: 'goal', he: 'יעד', from: 0.41, to: 0.82, a: .40, b: .64, col: C.good, op: .85 },
+  { id: 'fast', he: 'מהר מדי', from: 0.82, to: 1.6, a: .64, b: 1, col: C.ice, op: .35 }
+];
+const pos = v => { v = Math.max(-1, Math.min(1.6, v)); const z = Z.find(z => v <= z.to) || Z[Z.length - 1]; return z.a + (z.b - z.a) * (v - z.from) / (z.to - z.from); };
+
+function card(box, title, tag, cap, build, word = '↓ יורד', lab = 'בטווח היעד') {
+  const c = document.createElement('div'); c.className = 'card';
+  c.innerHTML = `<span class="tag ${tag === 'מומלץ' ? 'rec' : ''}">${title}${tag ? ' · ' + tag : ''}</span><p class="cap">${cap}</p>` +
+    (word ? `<p class="word">${word}</p><p class="lab">${lab}</p>` : '');
+  build(c); document.getElementById(box).append(c);
+}
+
+// A. goal-centred bar
+card('gauges', 'A. סרגל סביב היעד', 'מומלץ', 'היעד באמצע. שמאלה: איטי, תקוע, ובסוף עלייה. ימינה: מהר מדי. העין קוראת "כמה קרוב למרכז".', c => {
+  const W = 340, x = p => 10 + p * (W - 20), s = S('svg', { width: W, height: 92 }, c);
+  for (const z of Z) {
+    S('rect', { x: x(z.a) + 1, y: 34, width: x(z.b) - x(z.a) - 2, height: 14, rx: 7, fill: z.col, opacity: z.op }, s);
+    S('text', { x: (x(z.a) + x(z.b)) / 2, y: 70, 'text-anchor': 'middle', 'font-size': 12, fill: z.id === 'goal' ? C.good : C.mute, 'font-weight': z.id === 'goal' ? 700 : 400 }, s, z.he);
+  }
+  const m = x(pos(V));
+  S('path', { d: `M${m - 8},14 L${m + 8},14 L${m},28 Z`, fill: C.ink }, s);
+  S('line', { x1: m, x2: m, y1: 28, y2: 52, stroke: C.ink, 'stroke-width': 2 }, s);
+  S('text', { x: m, y: 88, 'text-anchor': 'middle', 'font-size': 13, fill: C.ink, 'font-weight': 700, direction: 'ltr' }, s, `${M}0.62 ק״ג/שבוע`);
+});
+
+// B. arc speedometer
+card('gauges', 'B. חצי שעון', '', 'אותם אזורים על קשת, היעד למעלה באמצע. מחוג שזז. מרגיש כמו לוח מחוונים.', c => {
+  const W = 340, cx = W / 2, cy = 150, R = 120, s = S('svg', { width: W, height: 230 }, c);
+  const ang = p => Math.PI * (1 - p); const pt = (p, r) => [cx + r * Math.cos(ang(p)), cy - r * Math.sin(ang(p))];
+  const arc = (a, b, r) => { const [x1, y1] = pt(a, r), [x2, y2] = pt(b, r); return `M${x1},${y1} A${r},${r} 0 0 1 ${x2},${y2}`; };
+  for (const z of Z) {
+    S('path', { d: arc(z.a + .004, z.b - .004, R), stroke: z.col, opacity: z.op, 'stroke-width': 16, fill: 'none', 'stroke-linecap': 'butt' }, s);
+    const [tx, ty] = pt((z.a + z.b) / 2, R + 22);
+    S('text', { x: tx, y: ty + 4, 'text-anchor': 'middle', 'font-size': 12, fill: z.id === 'goal' ? C.good : C.mute, 'font-weight': z.id === 'goal' ? 700 : 400 }, s, z.he);
+  }
+  const p = pos(V), [nx, ny] = pt(p, R - 26);
+  S('line', { x1: cx, y1: cy, x2: nx, y2: ny, stroke: C.ink, 'stroke-width': 3, 'stroke-linecap': 'round' }, s);
+  S('circle', { cx, cy, r: 6, fill: C.ink }, s);
+  S('text', { x: cx, y: cy + 44, 'text-anchor': 'middle', 'font-size': 34, 'font-weight': 800, fill: C.ink, direction: 'ltr' }, s, `${M}0.62`);
+  S('text', { x: cx, y: cy + 66, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 700, fill: C.ink }, s, 'ק״ג לשבוע');
+});
+
+// C. owner's literal order
+card('gauges', 'C. ההצעה שלך כלשונה', '', 'תקוע משמאל, ירידה באמצע, עלייה מימין. פשוט, אבל המספרים על הקו לא לפי הסדר (0, מינוס, פלוס).', c => {
+  const W = 340, s = S('svg', { width: W, height: 92 }, c);
+  const zones = [['תקוע', 0, .3, C.mute, .22, '0'], ['ירידה', .3, .7, C.good, .85, `${M}0.2 עד ${M}1`], ['עלייה', .7, 1, C.bad, .55, '+']];
+  const x = p => 10 + p * (W - 20);
+  for (const [he, a, b, col, op, n] of zones) {
+    S('rect', { x: x(a) + 1, y: 34, width: x(b) - x(a) - 2, height: 14, rx: 7, fill: col, opacity: op }, s);
+    S('text', { x: (x(a) + x(b)) / 2, y: 70, 'text-anchor': 'middle', 'font-size': 12, fill: C.mute }, s, he);
+    S('text', { x: (x(a) + x(b)) / 2, y: 86, 'text-anchor': 'middle', 'font-size': 12, fill: C.faint, direction: 'ltr' }, s, n);
+  }
+  const m = x(.3 + .4 * (0.62 - 0.2) / 0.8);
+  S('path', { d: `M${m - 8},14 L${m + 8},14 L${m},28 Z`, fill: C.ink }, s);
+});
+
+// D. today
+card('gauges', 'D. היום', '', 'קו מספרים רגיל, אפס באמצע. נכון, אבל לא אומר אם אתה ביעד.', c => {
+  const W = 340, x = v => 20 + (v + 1) / 2 * (W - 40), s = S('svg', { width: W, height: 80 }, c);
+  S('rect', { x: x(-.2), y: 30, width: x(.2) - x(-.2), height: 20, fill: 'rgba(169,196,255,.14)' }, s);
+  S('text', { x: x(0), y: 24, 'text-anchor': 'middle', 'font-size': 12, fill: C.mute }, s, 'תקוע');
+  S('line', { x1: x(-1), x2: x(1), y1: 40, y2: 40, stroke: C.faint }, s);
+  for (const v of [-1, -.5, 0, .5, 1]) { S('line', { x1: x(v), x2: x(v), y1: 34, y2: 46, stroke: C.faint }, s); S('text', { x: x(v), y: 66, 'text-anchor': 'middle', 'font-size': 12, fill: C.mute, direction: 'ltr' }, s, (v > 0 ? '+' : v < 0 ? M : '') + Math.abs(v).toFixed(1)); }
+  const m = x(-.62); S('path', { d: `M${m - 7},14 L${m + 7},14 L${m},26 Z`, fill: C.ink }, s); S('line', { x1: m, x2: m, y1: 26, y2: 50, stroke: C.ink, 'stroke-width': 2 }, s);
+});
+
+// ---------- lenses ----------
+function lens(c, R, inner) {
+  const W = 340, cx = W / 2, cy = R + 24, s = S('svg', { width: W, height: 2 * R + 48 }, c);
+  const g = S('radialGradient', { id: 'g' + Math.random().toString(36).slice(2), cx: '50%', cy: '20%', r: '80%' }, S('defs', {}, s));
+  S('stop', { offset: '0', 'stop-color': 'rgba(190,205,255,.30)' }, g); S('stop', { offset: '.5', 'stop-color': 'rgba(60,70,170,.30)' }, g); S('stop', { offset: '1', 'stop-color': 'rgba(14,18,60,.65)' }, g);
+  S('circle', { cx, cy, r: R, fill: `url(#${g.id})`, stroke: 'rgba(220,228,255,.3)' }, s);
+  inner(s, cx, cy, R); return s;
+}
+const rate = (s, cx, y, R) => {
+  S('text', { x: cx, y, 'text-anchor': 'middle', 'font-size': R * .42, 'font-weight': 800, fill: C.ink, direction: 'ltr' }, s, `${M}0.62`);
+  S('text', { x: cx, y: y + 22, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 700, fill: C.ink }, s, 'ק״ג לשבוע');
+};
+
+// L1. progress ring to the target weight
+card('lenses', 'L1. טבעת התקדמות ליעד', 'מומלץ', 'השפה של העדשה = כמה מהדרך ליעד עברת (כמו טבעות של אפל). בפנים הקצב. דורש משקל יעד (כבר אפשר להגדיר בשלב).', c => {
+  lens(c, 130, (s, cx, cy, R) => {
+    const r = R - 12, done = .62, a0 = -Math.PI / 2, a1 = a0 + done * 2 * Math.PI;
+    S('circle', { cx, cy, r, fill: 'none', stroke: C.track, 'stroke-width': 12 }, s);
+    const [x1, y1] = [cx + r * Math.cos(a0), cy + r * Math.sin(a0)], [x2, y2] = [cx + r * Math.cos(a1), cy + r * Math.sin(a1)];
+    S('path', { d: `M${x1},${y1} A${r},${r} 0 ${done > .5 ? 1 : 0} 1 ${x2},${y2}`, fill: 'none', stroke: C.good, 'stroke-width': 12, 'stroke-linecap': 'round' }, s);
+    S('circle', { cx: x2, cy: y2, r: 9, fill: C.ink }, s);
+    rate(s, cx, cy + 4, R);
+    S('text', { x: cx, y: cy + 52, 'text-anchor': 'middle', 'font-size': 13, fill: C.mute }, s, '6.2 מתוך 10 ק״ג ליעד · 62%');
+    S('text', { x: cx, y: cy - 52, 'text-anchor': 'middle', 'font-size': 12, fill: C.mute }, s, 'עוד כ־6 שבועות');
+  });
+});
+
+// L2. glowing trend line
+card('lenses', 'L2. קו המגמה זוהר', '', 'בפנים: קו הממוצע של 10 השבועות האחרונים, זוהר, עם נקודה של היום. מאחוריו קו מקווקו של קצב היעד. רואים אם אתה מעליו או מתחתיו.', c => {
+  lens(c, 130, (s, cx, cy, R) => {
+    const ys = [0, .06, .1, .18, .2, .28, .34, .38, .46, .52], X = i => cx - R * .62 + i * (R * 1.24 / 9), Y = v => cy - R * .55 + v * R * .7;
+    const defs = S('defs', {}, s), f = S('filter', { id: 'glow' }, defs); S('feGaussianBlur', { stdDeviation: 3 }, f);
+    S('line', { x1: X(0), y1: Y(0), x2: X(9), y2: Y(.62), stroke: C.faint, 'stroke-dasharray': '4 4' }, s);
+    const d = ys.map((v, i) => `${i ? 'L' : 'M'}${X(i)},${Y(v)}`).join(' ');
+    S('path', { d, fill: 'none', stroke: C.ice, 'stroke-width': 6, opacity: .5, filter: 'url(#glow)' }, s);
+    S('path', { d, fill: 'none', stroke: C.ink, 'stroke-width': 2.5 }, s);
+    S('circle', { cx: X(9), cy: Y(.52), r: 6, fill: C.ink }, s);
+    S('text', { x: X(0) - 2, y: Y(.62) + 14, 'font-size': 12, fill: C.faint, 'text-anchor': 'start' }, s, 'קצב יעד');
+    rate(s, cx, cy + 58, R * .8);
+  });
+});
+
+// L3. the gauge becomes the lens rim
+card('lenses', 'L3. המד הוא השפה של העדשה', '', 'שני הדברים באחד: האזורים של המד (A) מסביב לעדשה, נקודה זוהרת על השפה איפה שאתה. בפנים רק המספר הגדול. מפנה מקום במסך.', c => {
+  lens(c, 130, (s, cx, cy, R) => {
+    const r = R - 10, sweep = 1.5 * Math.PI, a0 = Math.PI / 2 + (2 * Math.PI - sweep) / 2; // gap at the bottom
+    const at = p => a0 + p * sweep, P = (p, rr) => [cx + rr * Math.cos(at(p)), cy + rr * Math.sin(at(p))];
+    for (const z of Z) {
+      const [x1, y1] = P(z.a + .006, r), [x2, y2] = P(z.b - .006, r);
+      S('path', { d: `M${x1},${y1} A${r},${r} 0 ${(z.b - z.a) * sweep > Math.PI ? 1 : 0} 1 ${x2},${y2}`, fill: 'none', stroke: z.col, opacity: z.op, 'stroke-width': 10 }, s);
+    }
+    const [lx, ly] = P(.04, r + 26), [rx, ry] = P(.96, r + 26);
+    S('text', { x: lx, y: ly, 'font-size': 12, fill: C.mute, 'text-anchor': 'middle' }, s, 'עלייה');
+    S('text', { x: rx, y: ry, 'font-size': 12, fill: C.mute, 'text-anchor': 'middle' }, s, 'מהר מדי');
+    const [gx, gy] = P(.52, r - 24); S('text', { x: gx, y: gy + 4, 'font-size': 12, 'font-weight': 700, fill: C.good, 'text-anchor': 'middle' }, s, 'יעד');
+    const [mx, my] = P(pos(V), r);
+    S('circle', { cx: mx, cy: my, r: 13, fill: C.good, opacity: .35 }, s); S('circle', { cx: mx, cy: my, r: 8, fill: C.ink }, s);
+    rate(s, cx, cy + 14, R);
+  });
+}, '↓ יורד', 'בטווח היעד');
+</script>
+</body>
+</html>
