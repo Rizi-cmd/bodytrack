@@ -84,11 +84,12 @@ export function journeyProjection(S, records, today) {
   };
 }
 
-// §5: kg left to the target, no sign; "הושג" once the trend is on or past it. null = no target in force.
+// §5: kg left to the target, no sign; "הושג" once the trend is on or past it. null = no target in force,
+// or under MIN_WEIGHINS weigh-ins (all three cells show "—" then, §9).
 export function kgLeft(S, records, today) {
   const rec = activePhase(records, today), dir = weightDirection(rec ? rec.phase : null);
   const target = rec ? rec.targetKg ?? null : null;
-  if ((dir !== 1 && dir !== -1) || target === null || S.avg === null) return null;
+  if ((dir !== 1 && dir !== -1) || target === null || S.avg === null || S.series.length < MIN_WEIGHINS) return null;
   const rem = target - S.avg;
   return dir * rem <= 0 ? 'הושג' : roundN(Math.abs(rem), 1).toFixed(1);
 }

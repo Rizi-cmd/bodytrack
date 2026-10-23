@@ -143,3 +143,36 @@ test('later phase: only points from its start', () => {
   assert.deepEqual(j.segments[0].map(p => p.date), ['2026-06-06', '2026-06-13', '2026-06-20']);
   assert.deepEqual(j.start, { date: '2026-06-06', kg: 70.875 });
 });
+
+// Added after the fitness-analyst verify (23.10).
+test('exactly 4 weigh-ins: hero = average, no line, no ring, no kg left', () => {
+  const R = [ph('2026-01-03', 'cut', 75)], w = V4.slice(0, 4), s = S(w, R, '2026-01-24');
+  assert.deepEqual(weightHero(s), { kg: '81.3', label: 'ממוצע 4 השקילות האחרונות', isAvg: true });
+  const j = journeyPoints(s.series, R, '2026-01-24');
+  assert.deepEqual(j.segments, []); assert.equal(j.raw.length, 4);
+  assert.equal(kgLeft(s, R, '2026-01-24'), null);
+  assert.equal(journeyProjection(s, R, '2026-01-24').reason, 'too_early');
+});
+test('G3/G4/G8 base dates and signed change text', () => {
+  const R3 = [ph('2026-01-20', 'cut', 78)], s3 = S(G2, R3, '2026-02-07');
+  assert.deepEqual(journeyBase(s3.series, R3, '2026-02-07'), { date: '2026-01-24', kg: 81.25 });
+  assert.equal(phaseProgress(s3, R3, '2026-02-07').changeText, M + '1.0');
+  const R8 = [ph('2026-01-03', 'cut')];
+  assert.deepEqual(journeyBase(S(V4, R8, '2026-01-31').series, R8, '2026-01-31'), { date: '2026-01-24', kg: 81.25 });
+  const up = weekly('2026-01-03', [80, 80, 80, 80, 80.4, 80.8, 81.2, 81.6]), R4 = [ph('2026-01-24', 'cut', 78)];
+  assert.equal(phaseProgress(S(up, R4, '2026-02-21'), R4, '2026-02-21').changeText, '+1.0');
+});
+test('#18 phase started before the first weigh-in', () => {
+  const R = [ph('2026-04-01', 'bulk', 75)], s = S(V6, R, '2026-06-20'), j = journeyPoints(s.series, R, '2026-06-20');
+  assert.equal(j.segments[0][0].date, '2026-05-23'); assert.deepEqual(j.start, { date: '2026-05-23', kg: 70.375 });
+  assert.equal(phaseProgress(s, R, '2026-06-20').pct, 21);
+});
+test('#21 same-day weigh-ins are averaged before the line is drawn', () => {
+  const w = [...V6, { date: '2026-06-20', kg: 71.55, id: 'dup' }]; // 71.75 and 71.55 → 71.65
+  const R = [ph('2026-05-02', 'bulk', 75)], j = journeyPoints(S(w, R, '2026-06-20').series, R, '2026-06-20');
+  near(j.segments[0][4].kg, (71.0 + 71.25 + 71.5 + 71.65) / 4);
+});
+test('#17 phase picked today, last weigh-in older → change "—"', () => {
+  const R = [ph('2026-05-02', 'cut'), ph('2026-06-25', 'bulk', 75)], g = phaseProgress(S(V6, R, '2026-06-25'), R, '2026-06-25');
+  assert.equal(g.changeText, '—'); assert.equal(g.pct, null);
+});
