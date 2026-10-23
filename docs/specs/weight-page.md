@@ -73,3 +73,33 @@ fitness-analyst, 23.10.2026. Builds on TE (`docs/specs/trend-engine.md`) and AN 
 ## 9. Decisions (23.10)
 - Owner: the 30-day change is removed; %/week of body weight with the target band takes its place (grid = kg/week · %/week · kg left).
 - Main agent: projection hidden when the last weigh-in is older than 10 days (`stale`); no "הגדרת יעד" link in maintenance; end label = month name only.
+- Owner approved the mockup `docs/design/weight-page.html` (23.10), with the designer's choices: target line ice/ink (not mint), no fill under the line, Y span at least 2 kg, head labelled "היום" only on the weigh-in day, the "צפי" row shows the reason only for `stale` / `too_far`, under 5 weigh-ins all three cells "—", "+ שקילה" = sticky wide pill, a key line under the figure, the phase row stays in the empty state.
+
+## 10. Scenario checklist (every one must have a unit test and a screen check)
+Unit tests: `tests/journey.test.js`. Screen checks: Playwright screenshot per state when the page is built.
+| # | Scenario | Expected | Unit test |
+|---|---|---|---|
+| 1 | No weigh-ins | empty state, no figure, + stands out, phase row stays | hero null; J4 empty |
+| 2 | 1–3 weigh-ins | hero = last weigh-in, raw dots, cells "—" | J4, hero |
+| 3 | Exactly 4 | hero = average, still no line/rate | hero, "under 5" |
+| 4 | Cut with target, in range | line, target, projection, % of the way | G2, G3 |
+| 5 | Bulk with target (line goes up) | same, target above | J1, G1, P1 |
+| 6 | Maintenance | no target line, no projection, "בשמירה אין יעד" | G7, kg left |
+| 7 | No phase | journey from first weigh-in, "לא נבחר שלב" | G7, "no phase" |
+| 8 | No target | no target line, no projection | G7, reasons |
+| 9 | Target behind the start | no ring | G6 |
+| 10 | Moving away from the target | 0%, empty ring, signed change, no projection | G4, reasons |
+| 11 | Stuck | no projection | reasons |
+| 12 | Provisional rate | no projection | reasons |
+| 13 | More than a year away | "יותר משנה בקצב הנוכחי", no line | reasons |
+| 14 | Target reached / passed | 100%, "הושג", "הגעת ליעד · שינוי שלב" | G5, reasons, kg left |
+| 15 | Last weigh-in > 10 days old | projection hidden with reason; day 10 still shown | P2, P3 |
+| 16 | Gap > 14 days | line breaks into segments | J2 |
+| 17 | Phase picked today / on the last weigh-in date | change "—" | "phase picked" |
+| 18 | Phase started before the first weigh-in | points from the first average | J1 |
+| 19 | Phase changed mid-history | only points from the new start | "later phase" |
+| 20 | Several weigh-ins in one week | one point, last average of that week | J3 |
+| 21 | Same-day duplicates / deleted weigh-ins | merged / ignored | "deleted and same-day" |
+| 22 | Edit or delete a weigh-in | everything recomputed from scratch (pure) | by design |
+| 23 | Long phase (a year+) | month labels thinned, never overlap | screen check |
+| 24 | Data can't be read | shared error state | screen check |
