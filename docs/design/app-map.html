@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BodyTrack · מפת האפליקציה</title>
+<!-- Design file only. Sample data, invented. The whole app structure: flow map + one wireframe per page (23.10.2026). -->
+<style>
+@font-face{font-family:Heebo;font-weight:400;src:url(../../fonts/heebo-hebrew-400-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:500;src:url(../../fonts/heebo-hebrew-500-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:700;src:url(../../fonts/heebo-hebrew-700-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:800;src:url(../../fonts/heebo-hebrew-800-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-800-normal.woff2) format("woff2")}
+:root{--bg:#060818;--ink:#EEF1FF;--mute:#B0B7DA;--faint:#8F97C6;--good:#7DE3C1;--bad:#FF8F87;--ice:#A9C4FF;--hair:rgba(190,200,255,.15);--rule:rgba(190,200,255,.28)}
+*{box-sizing:border-box}
+body{margin:0;background:#020309;color:var(--ink);font-family:Heebo,system-ui,sans-serif;font-size:14px;line-height:1.45;padding:28px 20px 60px}
+a{color:inherit;text-decoration:none}
+.n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+.g{color:var(--good)}
+.tx{text-decoration:underline dotted var(--faint);text-underline-offset:3px}
+h1{font-size:28px;font-weight:800;margin:0 0 4px}
+h2{font-size:20px;font-weight:800;margin:56px 0 4px;padding-top:10px;border-top:3px solid var(--ink)}
+.lead{color:var(--mute);max-width:900px;margin:0 0 18px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:13px;color:var(--mute);margin:10px 0 0}
+.legend i{display:inline-block;width:26px;height:14px;border-radius:5px;vertical-align:-2px;margin-inline-end:6px}
+.map{overflow-x:auto;border:1px solid var(--hair);border-radius:18px;background:var(--bg);padding:14px}
+.map svg{display:block;margin:0 auto}
+.map a:hover rect{stroke:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:34px 26px;margin-top:18px}
+.col{width:375px}
+.nm{font-size:16px;font-weight:800;margin:0}
+.nm small{font-size:13px;font-weight:500;color:var(--faint);margin-inline-start:6px}
+.q{font-size:14px;color:var(--ink);margin:10px 0 6px;font-weight:500}
+.q b{color:var(--ice);font-weight:700}
+.st{font-size:13px;color:var(--mute);margin:0;padding:0;list-style:none}
+.st li{padding:3px 0;border-top:1px solid var(--hair)}
+.st li b{color:var(--ink);font-weight:700}
+/* ---------- phone ---------- */
+.phone{width:375px;height:812px;border-radius:38px;overflow:hidden;position:relative;margin-top:8px;border:1px solid rgba(190,200,255,.12);
+  background:radial-gradient(90% 42% at 50% 44%,var(--sky,#17164d) 0%,transparent 66%),radial-gradient(70% 34% at 100% 100%,#14123f 0%,transparent 60%),var(--bg);
+  display:flex;flex-direction:column;padding:54px 20px 34px}
+.phone.short{height:auto;min-height:520px}
+.phone::after{content:"";position:absolute;bottom:9px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:rgba(238,241,255,.35)}
+.hdr{display:flex;justify-content:space-between;align-items:center;min-height:44px}
+.back{min-height:44px;min-width:44px;display:inline-flex;align-items:center;font-weight:700;font-size:15px;color:var(--ice)}
+.ttl{font-size:17px;font-weight:800}
+.today{font-size:13px;color:var(--mute);font-weight:500;line-height:1.3}.today b{display:block;color:var(--ink);font-size:15px;font-weight:700}
+.pill{min-height:44px;display:inline-flex;align-items:center}
+.pill span{border:1px solid var(--rule);border-radius:16px;padding:5px 14px;font-size:13px;font-weight:700}
+.verdict{text-align:center;margin-top:14px}
+.verdict .w{font-size:40px;font-weight:800;line-height:1.05}
+.verdict .l{font-size:14px;font-weight:500;margin-top:6px}
+.center{display:flex;justify-content:center}
+.btn{min-height:52px;border-radius:26px;border:1px solid var(--rule);background:rgba(160,175,255,.08);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn.pri{background:var(--ink);color:#05060f;border-color:var(--ink)}
+.btn.sm{min-height:44px;font-size:15px;font-weight:700}
+.link{min-height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--ice)}
+.foot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+.small{font-size:12px;color:var(--faint);text-align:center}
+.hero{text-align:center;margin-top:6px}
+.hero .k{font-size:13px;color:var(--mute)}
+.hero .v{font-size:72px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.hero .v small{font-size:19px;font-weight:700;margin-inline-start:6px;letter-spacing:0}
+.figt{font-size:13px;font-weight:700;margin:14px 0 4px;display:flex;justify-content:space-between;color:var(--mute)}
+.figt b{color:var(--ink)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);margin-top:8px}
+.grid3 div{text-align:center}.grid3 div+div{border-right:1px solid var(--hair)}
+.grid3 b{display:block;font-size:22px;font-weight:800;line-height:1.2}.grid3 span{font-size:12px;color:var(--mute)}
+.tbl{margin-top:12px;border-top:2px solid var(--rule)}
+.tbl .r{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:40px;border-bottom:1px solid var(--hair);font-size:14px}
+.tbl .r span:first-child{color:var(--mute)}
+.tbl .r b{font-weight:700}
+.tbl.tap .r{min-height:48px}
+.cap{font-size:12px;color:var(--faint);margin-top:6px}
+.fab{width:64px;height:64px;border-radius:50%;background:var(--ink);color:#05060f;font-size:34px;font-weight:500;display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 0 28px rgba(169,196,255,.35)}
+.fabl{font-size:13px;font-weight:700;text-align:center;margin-top:4px}
+.seg{display:flex;border:1px solid var(--rule);border-radius:14px;overflow:hidden;margin-top:8px}
+.seg span{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--mute)}
+.seg span+span{border-right:1px solid var(--hair)}
+.seg .on{background:rgba(169,196,255,.16);color:var(--ink)}
+.list a{display:flex;align-items:center;gap:12px;min-height:66px;border-bottom:1px solid var(--hair);padding:6px 0}
+.list .ix{font-size:12px;color:var(--faint);width:18px}
+.list .tt{flex:1}.list .tt b{display:block;font-size:16px;font-weight:800}.list .tt span{font-size:13px;color:var(--mute)}
+.list .ch{color:var(--faint);font-size:18px}
+.box{border:1px dashed var(--rule);border-radius:16px;display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:13px;text-align:center}
+.dim{position:absolute;inset:0;background:rgba(2,3,9,.62)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#0d1030;border-top:1px solid var(--rule);border-radius:24px 24px 0 0;padding:10px 20px 40px}
+.sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--rule);margin:0 auto 10px}
+.ghost{opacity:.35}
+.chip{display:inline-flex;min-height:36px;align-items:center;border:1px solid var(--rule);border-radius:18px;padding:0 14px;font-size:14px;font-weight:700}
+.stepper{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:10px}
+.rnd{width:56px;height:56px;border-radius:50%;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;font-size:26px;background:rgba(160,175,255,.08)}
+.card{border:1px solid var(--hair);border-radius:16px;padding:10px 14px;margin-top:8px;background:rgba(160,175,255,.05)}
+.card .h{display:flex;justify-content:space-between;font-size:15px;font-weight:700}
+.card .h span{font-size:12px;font-weight:500;color:var(--faint)}
+.card .c{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:6px}
+.card .rnd{width:44px;height:44px;font-size:22px}
+.card .fld{width:96px;min-height:44px;border-radius:12px;border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800}
+.fld.empty{color:var(--faint);font-weight:500}
+svg text{font-family:Heebo,system-ui,sans-serif}
+</style>
+</head>
+<body>
+
+<h1>מפת האפליקציה</h1>
+<p class="lead">כל העמודים של BodyTrack במקום אחד: איך מגיעים מעמוד לעמוד, ומה יש בכל עמוד ובאיזה סדר. נתונים לדוגמה בלבד, מומצאים. כל מספר באפליקציה מחושב בה. טקסט עם קו מנוקד = נוסח זמני, לבדיקת hebrew-writer.</p>
+
+<!-- ================= FLOW MAP ================= -->
+<div class="map">
+<svg width="920" height="700" viewBox="0 0 920 700" direction="rtl">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8F97C6"/></marker>
+    <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#A9C4FF"/></marker>
+  </defs>
+  <g fill="none" stroke="#8F97C6" stroke-width="1.4" marker-end="url(#ar)">
+    <!-- home -> level 1 -->
+    <path d="M720,300 C690,300 690,53 662,53"/>
+    <path d="M720,300 C690,300 690,273 662,273"/>
+    <path d="M720,300 C690,300 690,571 662,571"/>
+    <!-- weight -> weigh-in -->
+    <path d="M490,53 L432,53"/>
+    <!-- analytics -> categories -->
+    <path d="M490,273 C460,273 460,143 432,143"/>
+    <path d="M490,273 C460,273 460,195 432,195"/>
+    <path d="M490,273 C460,273 460,247 432,247"/>
+    <path d="M490,273 C460,273 460,299 432,299"/>
+    <path d="M490,273 C460,273 460,351 432,351"/>
+    <path d="M490,273 C460,273 460,403 432,403"/>
+    <!-- more -> pages -->
+    <path d="M490,571 C460,571 460,493 432,493"/>
+    <path d="M490,571 C460,571 460,545 432,545"/>
+    <path d="M490,571 C460,571 460,597 432,597"/>
+    <path d="M490,571 C460,571 460,649 432,649"/>
+    <!-- level 3 -->
+    <path d="M260,53 C230,53 230,27 202,27"/>
+    <path d="M260,53 C230,53 230,81 202,81"/>
+    <path d="M260,299 L202,299"/>
+    <path d="M260,545 L202,545"/>
+  </g>
+  <!-- after save: back to the weight page -->
+  <path d="M345,78 C345,108 575,108 575,80" fill="none" stroke="#A9C4FF" stroke-width="1.4" stroke-dasharray="4 4" marker-end="url(#ar2)"/>
+  <text x="460" y="112" text-anchor="middle" font-size="12" fill="#A9C4FF">אחרי שמירה: חזרה לעמוד המשקל</text>
+
+  <g font-size="14" text-anchor="middle">
+    <!-- card helper: rect 170x46, name at +20, sub at +37 -->
+    <a href="#p-home"><rect x="720" y="277" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF" stroke-width="1.6"/><text x="805" y="297" font-weight="800" fill="#EEF1FF">1 · בית</text><text x="805" y="314" font-size="12" fill="#B0B7DA">חדש · הכניסה</text></a>
+
+    <a href="#p-weight"><rect x="490" y="30" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="575" y="50" font-weight="800" fill="#EEF1FF">2 · עמוד המשקל</text><text x="575" y="67" font-size="12" fill="#B0B7DA">חדש</text></a>
+    <a href="#p-ana"><rect x="490" y="250" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="575" y="270" font-weight="800" fill="#EEF1FF">6 · ניתוח</text><text x="575" y="287" font-size="12" fill="#B0B7DA">חדש · רשימת נושאים</text></a>
+    <a href="#p-more"><rect x="490" y="548" width="170" height="46" rx="12" fill="#0b0e26" stroke="rgba(190,200,255,.28)"/><text x="575" y="568" font-weight="800" fill="#EEF1FF">14 · עוד</text><text x="575" y="585" font-size="12" fill="#B0B7DA">בנוי · חלון מלמטה</text></a>
+
+    <a href="#p-weigh"><rect x="260" y="30" width="170" height="46" rx="12" fill="#0b0e26" stroke="rgba(190,200,255,.28)"/><text x="345" y="50" font-weight="800" fill="#EEF1FF">3 · שקילה</text><text x="345" y="67" font-size="12" fill="#B0B7DA">בנוי</text></a>
+    <a href="#p-trend"><rect x="260" y="120" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="345" y="140" font-weight="800" fill="#EEF1FF">7 · מגמה</text><text x="345" y="157" font-size="12" fill="#B0B7DA">חדש · תוכן קיים</text></a>
+    <a href="#p-rate"><rect x="260" y="172" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="345" y="192" font-weight="800" fill="#EEF1FF">8 · קצב</text><text x="345" y="209" font-size="12" fill="#B0B7DA">חדש · תוכן קיים</text></a>
+    <a href="#p-reg"><rect x="260" y="224" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="345" y="244" font-weight="800" fill="#EEF1FF">9 · סדירות</text><text x="345" y="261" font-size="12" fill="#B0B7DA">חדש · תוכן קיים</text></a>
+    <a href="#p-body"><rect x="260" y="276" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="345" y="296" font-weight="800" fill="#EEF1FF">10 · היקפים בגוף</text><text x="345" y="313" font-size="12" fill="#B0B7DA">חדש · דמות + רשימה</text></a>
+    <a href="#p-ratio"><rect x="260" y="328" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="345" y="348" font-weight="800" fill="#EEF1FF">12 · יחסים והרכב</text><text x="345" y="365" font-size="12" fill="#B0B7DA">חדש · תוכן קיים</text></a>
+    <a href="#p-rec"><rect x="260" y="380" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="345" y="400" font-weight="800" fill="#EEF1FF">13 · שיאים</text><text x="345" y="417" font-size="12" fill="#B0B7DA">חדש · תוכן קיים</text></a>
+    <a href="#p-photos"><rect x="260" y="470" width="170" height="46" rx="12" fill="#0b0e26" stroke="rgba(190,200,255,.28)"/><text x="345" y="490" font-weight="800" fill="#EEF1FF">15 · תמונות</text><text x="345" y="507" font-size="12" fill="#B0B7DA">בנוי · לעיצוב כהה</text></a>
+    <a href="#p-hist"><rect x="260" y="522" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="345" y="542" font-weight="800" fill="#EEF1FF">16 · היסטוריה</text><text x="345" y="559" font-size="12" fill="#B0B7DA">חדש · עמוד משלה</text></a>
+    <a href="#p-backup"><rect x="260" y="574" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="345" y="594" font-weight="800" fill="#EEF1FF">18 · גיבוי</text><text x="345" y="611" font-size="12" fill="#B0B7DA">חדש · עמוד משלו</text></a>
+    <a href="#p-phase"><rect x="260" y="626" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="345" y="646" font-weight="800" fill="#EEF1FF">19 · שלב</text><text x="345" y="663" font-size="12" fill="#B0B7DA">חדש · היום חלון</text></a>
+
+    <a href="#p-circ"><rect x="30" y="4" width="170" height="46" rx="12" fill="#0b0e26" stroke="rgba(190,200,255,.28)"/><text x="115" y="24" font-weight="800" fill="#EEF1FF">4 · היקפים</text><text x="115" y="41" font-size="12" fill="#B0B7DA">בנוי · הזנה</text></a>
+    <a href="#p-tag"><rect x="30" y="58" width="170" height="46" rx="12" fill="#0b0e26" stroke="rgba(190,200,255,.28)"/><text x="115" y="78" font-weight="800" fill="#EEF1FF">5 · סוג שבוע והערה</text><text x="115" y="95" font-size="12" fill="#B0B7DA">בנוי · חלון</text></a>
+    <a href="#p-site"><rect x="30" y="276" width="170" height="46" rx="12" fill="#11143a" stroke="#A9C4FF"/><text x="115" y="296" font-weight="800" fill="#EEF1FF">11 · היקף אחד</text><text x="115" y="313" font-size="12" fill="#B0B7DA">חדש</text></a>
+    <a href="#p-fix"><rect x="30" y="522" width="170" height="46" rx="12" fill="#0b0e26" stroke="rgba(190,200,255,.28)"/><text x="115" y="542" font-weight="800" fill="#EEF1FF">17 · תיקון רשומה</text><text x="115" y="559" font-size="12" fill="#B0B7DA">בנוי · חלון, לעיצוב כהה</text></a>
+  </g>
+  <g font-size="12" fill="#8F97C6" text-anchor="middle">
+    <text x="805" y="690">רמה 0</text><text x="575" y="690">רמה 1</text><text x="345" y="692">רמה 2</text><text x="115" y="690">רמה 3</text>
+  </g>
+</svg>
+</div>
+<div class="legend">
+  <span><i style="border:1.6px solid #A9C4FF;background:#11143a"></i>עמוד חדש לבנות</span>
+  <span><i style="border:1px solid rgba(190,200,255,.28);background:#0b0e26"></i>כבר בנוי (חלק רק לעיצוב כהה)</span>
+  <span>חץ = הקשה פותחת את העמוד</span>
+  <span>חזרה: "‹ חזרה" למעלה בכל עמוד, או החלקה מקצה המסך. תמיד חוזרים לעמוד שממנו נפתח.</span>
+  <span>חלון = נפתח מלמטה מעל העמוד, נסגר בהחלקה למטה</span>
+</div>
+
+<!-- ================= 1. ENTRANCE ================= -->
+<h2>א. הכניסה והמשקל</h2>
+<div class="row">
+
+<!-- 1 HOME -->
+<div class="col" id="p-home">
+  <p class="nm">1 · בית<small>שמיים: ספירלה סגולה</small></p>
+  <div class="phone" style="--sky:#1d1656">
+    <div class="hdr">
+      <div class="today"><b>יום שישי, 23 באוקטובר</b><span class="n">08:42</span></div>
+      <a class="pill" href="#p-more"><span>עוד</span></a>
+    </div>
+    <div class="verdict">
+      <div class="w g">↓ יורד</div>
+      <div class="l"><span class="tx">בטווח היעד</span> · <span class="tx">שבוע 11 לחיטוב</span></div>
+    </div>
+    <a href="#p-weight" class="center" style="margin-top:22px" aria-label="עמוד המשקל">
+      <svg width="300" height="300" viewBox="0 0 300 300">
+        <circle cx="150" cy="150" r="126" fill="rgba(30,34,90,.55)" stroke="rgba(190,200,255,.22)"/>
+        <circle cx="150" cy="150" r="138" fill="none" stroke="rgba(190,200,255,.14)" stroke-width="6"/>
+        <circle cx="150" cy="150" r="138" fill="none" stroke="#A9C4FF" stroke-width="6" stroke-linecap="round" stroke-dasharray="537.6 329.5" transform="rotate(-90 150 150)"/>
+        <circle cx="150" cy="12" r="5" fill="#EEF1FF"/>
+        <text x="150" y="100" text-anchor="middle" font-size="13" fill="#B0B7DA">מתחילת השלב</text>
+        <text x="150" y="168" text-anchor="middle" font-size="68" font-weight="800" fill="#EEF1FF" direction="ltr">−5.0</text>
+        <text x="150" y="194" text-anchor="middle" font-size="15" font-weight="700" fill="#EEF1FF">ק״ג</text>
+        <text x="150" y="222" text-anchor="middle" font-size="13" fill="#B0B7DA">62% מהדרך ליעד</text>
+      </svg>
+    </a>
+    <p class="small" style="margin:6px 0 0"><span class="tx">שקילה אחרונה: לפני 3 ימים</span></p>
+    <div class="foot">
+      <a class="btn" href="#p-ana">ניתוח ‹</a>
+    </div>
+  </div>
+  <p class="q">שאלה: <b>אני בדרך הנכונה, וכמה מהדרך כבר עברתי?</b></p>
+  <ul class="st">
+    <li><b>רגיל:</b> מילת פסק דין + חץ; בעדשה: השינוי מתחילת השלב, טבעת שמתמלאת לפי החלק שעבר מהדרך ליעד. הקשה על העדשה ← עמוד המשקל. גלקסיה סביב העדשה.</li>
+    <li><b>אין יעד / שמירה:</b> טבעת ריקה (בלי מילוי), בפנים רק השינוי מתחילת השלב; שורה קטנה "<span class="tx">הגדרת יעד ‹</span>" ← שלב.</li>
+    <li><b>מעט נתונים (פחות מ-5):</b> "<span class="tx">מוקדם להגיד</span>" + הסיבה, בעדשה "—", טבעת ריקה.</li>
+    <li><b>ריק:</b> בעדשה "<span class="tx">עוד אין שקילות</span>" + "<span class="tx">הקשה להתחלה</span>"; הקשה ← עמוד המשקל.</li>
+    <li><b>לא נבחר שלב:</b> מילה "<span class="tx">לא נבחר שלב</span>" + "<span class="tx">בחירת שלב ‹</span>" ← שלב. אין צבע.</li>
+    <li><b>שגיאה:</b> הנתונים לא נקראו ← "<span class="tx">לא הצלחנו לקרוא את הנתונים</span>" + "<span class="tx">ניסיון נוסף</span>" (אותו מסך לכל האפליקציה).</li>
+  </ul>
+</div>
+
+<!-- 2 WEIGHT PAGE -->
+<div class="col" id="p-weight">
+  <p class="nm">2 · עמוד המשקל<small>שמיים: טבעת קרח</small></p>
+  <div class="phone" style="--sky:#0f2350">
+    <div class="hdr">
+      <a class="back" href="#p-home">‹ חזרה</a>
+      <div class="today" style="text-align:left"><b>יום שישי, 23 באוקטובר</b><span class="n">08:42</span></div>
+    </div>
+    <div class="hero">
+      <div class="k">משקל · ממוצע 4 השקילות האחרונות</div>
+      <div class="v"><span class="n">81.0</span><small>ק״ג</small></div>
+    </div>
+    <div class="figt"><b>איור 1 · המסע</b><span>מתחילת השלב עד היעד</span></div>
+    <svg width="335" height="226" viewBox="0 0 335 226">
+      <line x1="20" y1="179.6" x2="318" y2="179.6" stroke="rgba(125,227,193,.5)" stroke-dasharray="2 6"/>
+      <text x="318" y="198" text-anchor="end" font-size="13" font-weight="700" fill="#7DE3C1" direction="rtl">יעד <tspan direction="ltr">78.0</tspan></text>
+      <polyline points="20,40.4 42,47.4 64,59.6 86,68.3 108,80.4 130,90.9 152,103 174,115.2 196,127.4" fill="none" stroke="rgba(120,150,255,.25)" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+      <polyline points="20,40.4 42,47.4 64,59.6 86,68.3 108,80.4 130,90.9 152,103 174,115.2 196,127.4" fill="none" stroke="#C9D8FF" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+      <g fill="#EEF1FF"><circle cx="20" cy="40.4" r="3"/><circle cx="42" cy="47.4" r="3"/><circle cx="64" cy="59.6" r="3"/><circle cx="86" cy="68.3" r="3"/><circle cx="108" cy="80.4" r="3"/><circle cx="130" cy="90.9" r="3"/><circle cx="152" cy="103" r="3"/><circle cx="174" cy="115.2" r="3"/></g>
+      <circle cx="196" cy="127.4" r="12" fill="rgba(169,196,255,.25)"/><circle cx="196" cy="127.4" r="5" fill="#fff"/>
+      <line x1="196" y1="127.4" x2="302" y2="179.6" stroke="#A9C4FF" stroke-dasharray="1.5 5" stroke-linecap="round"/>
+      <circle cx="302" cy="179.6" r="5" fill="none" stroke="#7DE3C1" stroke-width="1.5"/>
+      <text x="302" y="167" text-anchor="middle" font-size="12" fill="#B0B7DA">סוף נוב׳</text>
+      <text x="196" y="108" text-anchor="middle" font-size="14" font-weight="800" fill="#EEF1FF">היום</text>
+      <text x="24" y="28" font-size="12" fill="#B0B7DA" direction="ltr">86.0</text>
+      <g font-size="12" fill="#8F97C6" text-anchor="middle"><text x="33" y="220">ספט׳</text><text x="128" y="220">אוק׳</text><text x="224" y="220">נוב׳</text></g>
+    </svg>
+    <div class="grid3">
+      <div><b class="n">−0.62</b><span>ק״ג לשבוע</span></div>
+      <div><b class="n">−2.7</b><span class="tx">ב-30 יום</span></div>
+      <div><b>נובמבר</b><span>צפי הגעה</span></div>
+    </div>
+    <div class="tbl">
+      <div class="r"><span>עד היעד</span><b><span class="n">3.0</span> ק״ג</b></div>
+      <div class="r"><span>צפי</span><b><span class="n">5</span> שבועות <span class="n" style="color:var(--mute);font-weight:500">(4–6)</span></b></div>
+      <div class="r"><span>שקילה אחרונה</span><b><span class="n">80.6</span> · <span class="n">20.10</span></b></div>
+    </div>
+    <p class="cap tx">הצפי בהנחה שהקצב הנוכחי נשמר.</p>
+    <div class="foot">
+      <a href="#p-weigh"><div class="fab">+</div><div class="fabl">שקילה</div></a>
+    </div>
+  </div>
+  <p class="q">שאלה: <b>כמה אני שוקל עכשיו, ומתי אגיע ליעד?</b></p>
+  <ul class="st">
+    <li><b>רגיל:</b> כמו בציור. הקו "המסע" חי: קו נקי, נקודות שבועיות זוהרות, ברק שעובר מדי פעם; דומם ב"הפחתת תנועה". מספרים כאן בצבע רגיל (הצבע של הכיוון נמצא בבית ובקצב).</li>
+    <li><b>אין יעד / שמירה:</b> הקו בלי קו יעד ובלי צפי; במקום "צפי הגעה": "<span class="tx">אין יעד</span>" ו"<span class="tx">הגדרת יעד ‹</span>" ← שלב.</li>
+    <li><b>מעט נתונים:</b> הנקודות שיש, בלי קו צפי; קצב "—"; "<span class="tx">צריך לפחות 5 שקילות לקצב</span>".</li>
+    <li><b>ריק:</b> בלי איור; "<span class="tx">עוד אין שקילות. הוסיפו את הראשונה.</span>" והכפתור + בולט.</li>
+    <li><b>שגיאה:</b> כמו בבית.</li>
+  </ul>
+</div>
+
+<!-- 3 WEIGH-IN -->
+<div class="col" id="p-weigh">
+  <p class="nm">3 · שקילה<small>בנוי (0.10–0.11)</small></p>
+  <div class="phone" style="--sky:#0f2350">
+    <div class="hdr"><a class="back" href="#p-weight">‹ חזרה</a><span class="chip">היום · <span class="n">&nbsp;23.10</span></span></div>
+    <div class="center" style="margin-top:40px">
+      <svg width="260" height="260" viewBox="0 0 260 260"><circle cx="130" cy="130" r="120" fill="rgba(30,34,90,.55)" stroke="rgba(190,200,255,.22)"/>
+        <text x="130" y="150" text-anchor="middle" font-size="72" font-weight="800" fill="#EEF1FF" direction="ltr">80.6</text>
+        <text x="130" y="180" text-anchor="middle" font-size="15" font-weight="700" fill="#EEF1FF">ק״ג</text></svg>
+    </div>
+    <div class="stepper"><span class="rnd">+</span><span class="rnd">−</span></div>
+    <div class="foot">
+      <div class="btn pri">שמירה</div>
+      <a class="link" href="#p-circ">+ היקפים</a>
+      <a class="link" href="#p-tag" style="margin-top:-10px">+ סוג שבוע והערה</a>
+    </div>
+  </div>
+  <p class="q">שאלה: <b>מה המשקל היום?</b></p>
+  <ul class="st">
+    <li><b>רגיל:</b> כבר בנוי, לא משתנה. שינוי אחד: "‹ חזרה" ו"שמירה" חוזרים לעמוד המשקל (לא לבית), והנקודה החדשה נכנסת לקו המסע.</li>
+    <li><b>שקילה ראשונה:</b> השדה ריק, בלי ערך קודם.</li>
+    <li><b>שגיאה:</b> קפיצה של יותר מ-2 ק״ג ← "לשמור בכל זאת?" (קיים); שמירה נכשלה ← הודעה, הערך נשאר בשדה.</li>
+  </ul>
+</div>
+
+<!-- 4 CIRCUMFERENCES -->
+<div class="col" id="p-circ">
+  <p class="nm">4 · היקפים (הזנה)<small>בנוי</small></p>
+  <div class="phone" style="--sky:#0b2b33">
+    <div class="hdr"><a class="back" href="#p-weigh">‹ חזרה</a><span class="ttl">היקפים</span></div>
+    <div class="card"><div class="h">מותניים (טבור)<span>קודם <span class="n">88.0</span> · <span class="n">12.10</span></span></div><div class="c"><span class="rnd">+</span><span class="fld n">87.5</span><span class="rnd">−</span></div></div>
+    <div class="card"><div class="h">מותן<span>קודם <span class="n">82.0</span> · <span class="n">12.10</span></span></div><div class="c"><span class="rnd">+</span><span class="fld empty n">82.0</span><span class="rnd">−</span></div></div>
+    <div class="card"><div class="h">ישבן<span>קודם <span class="n">99.5</span> · <span class="n">12.10</span></span></div><div class="c"><span class="rnd">+</span><span class="fld empty n">99.5</span><span class="rnd">−</span></div></div>
+    <div class="card"><div class="h">חזה<span>קודם <span class="n">104.0</span> · <span class="n">12.10</span></span></div><div class="c"><span class="rnd">+</span><span class="fld empty n">104.0</span><span class="rnd">−</span></div></div>
+    <p class="small">… עוד 7 היקפים בגלילה</p>
+    <div class="foot"><a class="btn pri" href="#p-weigh">סיום</a></div>
+  </div>
+  <p class="q">שאלה: <b>מה ההיקפים היום?</b></p>
+  <ul class="st">
+    <li><b>רגיל:</b> כבר בנוי, לא משתנה. ערך קודם חלש בשדה; שורה שלא נגעו בה = לא נמדד.</li>
+    <li><b>פעם ראשונה:</b> בלי "קודם", השדות ריקים.</li>
+  </ul>
+</div>
+
+<!-- 5 TAG SHEET -->
+<div class="col" id="p-tag">
+  <p class="nm">5 · סוג שבוע והערה<small>בנוי · חלון</small></p>
+  <div class="phone short" style="height:520px">
+    <div class="ghost"><div class="hdr"><span class="back">‹ חזרה</span><span class="chip">היום</span></div></div>
+    <div class="dim"></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="ttl">סוג שבוע</div>
+      <div class="seg"><span class="on">רגיל</span><span>מחלה</span><span>חופשה</span><span>אירוע</span></div>
+      <div class="ttl" style="margin-top:16px">הערה</div>
+      <div class="box" style="min-height:48px;justify-content:flex-start;padding:0 14px;margin-top:8px">עד 120 תווים</div>
+      <div class="btn pri" style="margin-top:18px">סיום</div>
+    </div>
+  </div>
+  <p class="q">שאלה: <b>היה משהו מיוחד השבוע?</b></p>
+  <ul class="st"><li><b>רגיל:</b> כבר בנוי, לא משתנה.</li></ul>
+</div>
+</div>
+
+<!-- ================= 2. ANALYTICS ================= -->
+<h2>ב. ניתוח: רשימת נושאים, ועמוד לכל נושא</h2>
+<div class="row">
+
+<!-- 6 ANALYTICS INDEX -->
+<div class="col" id="p-ana">
+  <p class="nm">6 · ניתוח<small>שמיים: ערפילית כחולה, דוממת</small></p>
+  <div class="phone" style="--sky:#121a46">
+    <div class="hdr"><a class="back" href="#p-home">‹ חזרה</a><span class="ttl">ניתוח</span></div>
+    <p class="small" style="text-align:right;margin:4px 0 6px"><span class="tx">שלב חיטוב · מ-14.08 · 41 שקילות</span></p>
+    <div class="list">
+      <a href="#p-trend"><span class="ix n">1</span><span class="tt"><b>מגמה</b><span>ממוצע מול שקילות, לפי שלבים</span></span><span class="ch">‹</span></a>
+      <a href="#p-rate"><span class="ix n">2</span><span class="tt"><b>קצב</b><span><span class="n">−0.77%</span> ממשקל הגוף בשבוע</span></span><span class="ch">‹</span></a>
+      <a href="#p-reg"><span class="ix n">3</span><span class="tt"><b>סדירות</b><span><span class="n">1.1</span> שקילות בשבוע · תנודה <span class="n">±0.4</span></span></span><span class="ch">‹</span></a>
+      <a href="#p-body"><span class="ix n">4</span><span class="tt"><b>היקפים בגוף</b><span>11 היקפים · מדידה אחרונה <span class="n">12.10</span></span></span><span class="ch">‹</span></a>
+      <a href="#p-ratio"><span class="ix n">5</span><span class="tt"><b>יחסים והרכב</b><span>מותן ÷ ישבן <span class="n">0.86</span></span></span><span class="ch">‹</span></a>
+      <a href="#p-rec"><span class="ix n">6</span><span class="tt"><b>שיאים</b><span>ממוצע נמוך ביותר <span class="n">81.0</span></span></span><span class="ch">‹</span></a>
+    </div>
+  </div>
+  <p class="q">שאלה: <b>על מה כדאי לי להסתכל לעומק?</b></p>
+  <ul class="st">
+    <li><b>רגיל:</b> שש שורות גדולות (66 נק׳), בכל אחת מספר אחד. בלי צבע ירוק/אדום ברשימה.</li>
+    <li><b>מעט נתונים:</b> שורה בלי מספר מראה "—"; העמוד שלה עדיין נפתח ומסביר מה חסר.</li>
+    <li><b>ריק:</b> הרשימה נשארת, כל השורות "—", ושורה למעלה "<span class="tx">הניתוח יתמלא אחרי כמה שקילות</span>".</li>
+  </ul>
+</div>
+
+<!-- 7 TREND -->
+<div class="col" id="p-trend">
+  <p class="nm">7 · מגמה</p>
+  <div class="phone" style="--sky:#121a46">
+    <div class="hdr"><a class="back" href="#p-ana">‹ ניתוח</a><span class="ttl">מגמה</span></div>
+    <div class="seg"><span>חודש</span><span>3 חודשים</span><span class="on">6 חודשים</span><span>הכול</span></div>
+    <div class="figt"><b>איור 1 · ממוצע מול שקילות</b></div>
+    <svg width="335" height="300" viewBox="0 0 335 300">
+      <rect x="34" y="10" width="92" height="250" fill="rgba(190,200,255,.06)"/><rect x="126" y="10" width="200" height="250" fill="rgba(169,196,255,.12)"/>
+      <text x="80" y="28" text-anchor="middle" font-size="12" fill="#B0B7DA">שמירה</text><text x="226" y="28" text-anchor="middle" font-size="12" fill="#B0B7DA">חיטוב</text>
+      <g stroke="rgba(190,200,255,.12)"><line x1="34" y1="60" x2="326" y2="60"/><line x1="34" y1="140" x2="326" y2="140"/><line x1="34" y1="220" x2="326" y2="220"/></g>
+      <g font-size="12" fill="#8F97C6" direction="ltr"><text x="2" y="64">88</text><text x="2" y="144">84</text><text x="2" y="224">80</text></g>
+      <polyline points="40,82 70,80 100,84 126,82 150,96 175,112 200,128 225,146 250,162 275,178 300,196 320,206" fill="none" stroke="#EEF1FF" stroke-width="2.2"/>
+      <g fill="#A9C4FF"><circle cx="40" cy="74" r="3"/><circle cx="56" cy="90" r="3"/><circle cx="70" cy="76" r="3"/><circle cx="88" cy="88" r="3"/><circle cx="104" cy="78" r="3"/><circle cx="126" cy="88" r="3"/><circle cx="142" cy="92" r="3"/><circle cx="160" cy="108" r="3"/><circle cx="178" cy="104" r="3"/><circle cx="196" cy="134" r="3"/><circle cx="214" cy="136" r="3"/><circle cx="232" cy="150" r="3"/><circle cx="250" cy="170" r="3"/><circle cx="268" cy="168" r="3"/><circle cx="286" cy="190" r="3"/><circle cx="304" cy="192" r="3"/></g>
+      <circle cx="320" cy="212" r="3.5" fill="none" stroke="#A9C4FF" stroke-width="1.5"/>
+      <g font-size="12" fill="#8F97C6" text-anchor="middle"><text x="40" y="280">מאי</text><text x="100" y="280">יוני</text><text x="160" y="280">אוג׳</text><text x="220" y="280">ספט׳</text><text x="290" y="280">אוק׳</text></g>
+    </svg>
+    <p class="cap">קו = ממוצע 4 שקילות · נקודה = שקילה · עיגול ריק = שבוע מסומן (חופשה, מחלה, אירוע)</p>
+    <p class="cap tx">לחיצה ארוכה על הגרף מראה את השקילה הקרובה.</p>
+  </div>
+  <p class="q">שאלה: <b>איך המשקל זז לאורך זמן, ובאיזה שלב?</b></p>
+  <ul class="st">
+    <li><b>שונה מעמוד המשקל:</b> כאן כל ההיסטוריה עם השקילות הבודדות ופסי שלבים; שם רק הממוצעים מתחילת השלב עד היעד.</li>
+    <li><b>מעט נתונים:</b> הנקודות שיש, בלי קו ממוצע עד 4 שקילות. <b>ריק:</b> "<span class="tx">אין עדיין שקילות</span>".</li>
+  </ul>
+</div>
+
+<!-- 8 RATE -->
+<div class="col" id="p-rate">
+  <p class="nm">8 · קצב</p>
+  <div class="phone" style="--sky:#121a46">
+    <div class="hdr"><a class="back" href="#p-ana">‹ ניתוח</a><span class="ttl">קצב</span></div>
+    <div class="hero" style="margin-top:10px">
+      <div class="v" style="font-size:64px"><span class="n">−0.62</span><small>ק״ג לשבוע</small></div>
+      <div class="k" style="margin-top:6px"><span class="n">−0.77%</span> ממשקל הגוף בשבוע</div>
+      <div class="g" style="font-weight:800;font-size:15px;margin-top:6px">↓ בטווח היעד</div>
+    </div>
+    <div class="figt"><b>טבלה 1 · אחוז לשבוע מול טווח היעד</b></div>
+    <svg width="335" height="70" viewBox="0 0 335 70">
+      <line x1="10" y1="30" x2="325" y2="30" stroke="rgba(190,200,255,.35)" stroke-width="2"/>
+      <rect x="136" y="20" width="126" height="20" fill="rgba(169,196,255,.18)" stroke="rgba(169,196,255,.5)"/>
+      <line x1="204" y1="12" x2="204" y2="48" stroke="#EEF1FF" stroke-width="3"/>
+      <g font-size="12" fill="#8F97C6" text-anchor="middle" direction="ltr"><text x="10" y="64">0%</text><text x="136" y="64">0.5%</text><text x="262" y="64">1%</text><text x="318" y="64">1.25%</text></g>
+    </svg>
+    <div class="figt"><b>איור 2 · שינוי שבועי בממוצע</b><span>8 שבועות</span></div>
+    <svg width="335" height="200" viewBox="0 0 335 200">
+      <line x1="0" y1="20" x2="335" y2="20" stroke="rgba(190,200,255,.35)"/>
+      <g fill="#A9C4FF"><rect x="8" y="20" width="26" height="105"/><rect x="50" y="20" width="26" height="97"/><rect x="92" y="20" width="26" height="90"/><rect x="134" y="20" width="26" height="106"/><rect x="176" y="20" width="26" height="87"/><rect x="218" y="20" width="26" height="103"/><rect x="260" y="20" width="26" height="99"/><rect x="302" y="20" width="26" height="93"/></g>
+      <g font-size="12" fill="#EEF1FF" text-anchor="middle" direction="ltr"><text x="21" y="145">−0.70</text><text x="63" y="160">−0.65</text><text x="105" y="145">−0.60</text><text x="147" y="160">−0.71</text><text x="189" y="145">−0.58</text><text x="231" y="160">−0.69</text><text x="273" y="145">−0.66</text><text x="315" y="160">−0.62</text></g>
+      <g font-size="12" fill="#8F97C6" text-anchor="middle" direction="ltr"><text x="21" y="190">2.9</text><text x="105" y="190">16.9</text><text x="189" y="190">30.9</text><text x="273" y="190">14.10</text></g>
+    </svg>
+  </div>
+  <p class="q">שאלה: <b>הקצב שלי בטווח הנכון?</b></p>
+  <ul class="st">
+    <li><b>צבע:</b> רק המילה עם החץ ("↓ בטווח היעד" / "↓ איטי" בירוק חלש / "↑ עולה" באדום). הפס והעמודות בצבע ניטרלי.</li>
+    <li><b>מעט נתונים:</b> "—" ו"<span class="tx">צריך לפחות 5 שקילות</span>"; עמודות: "אין מספיק נתונים". <b>אין שלב:</b> בלי טווח יעד, בלי צבע.</li>
+  </ul>
+</div>
+
+<!-- 9 REGULARITY -->
+<div class="col" id="p-reg">
+  <p class="nm">9 · סדירות</p>
+  <div class="phone" style="--sky:#121a46">
+    <div class="hdr"><a class="back" href="#p-ana">‹ ניתוח</a><span class="ttl">סדירות</span></div>
+    <div class="figt"><b>טבלה 2 · ב-8 השבועות האחרונים</b></div>
+    <div class="tbl">
+      <div class="r"><span>תנודה סביב המגמה</span><b><span class="n">±0.4</span> ק״ג</b></div>
+      <div class="r"><span>שקילות בשבוע</span><b class="n">1.1</b></div>
+      <div class="r"><span>ההפסקה הארוכה</span><b><span class="n">16</span> ימים <span class="n" style="color:var(--mute);font-weight:500">(3.9–19.9)</span></b></div>
+      <div class="r"><span>זמן ממוצע בין שקילות</span><b><span class="n">6.4</span> ימים</b></div>
+      <div class="r"><span>שקילה אחרונה</span><b>לפני <span class="n">3</span> ימים</b></div>
+    </div>
+    <p class="cap tx">תנודה רגילה היא 0.4–0.6 ק״ג. ככל שהיא קטנה יותר, המגמה ברורה יותר.</p>
+    <p class="cap"><span class="n">2</span> שקילות מסומנות בחלון (חופשה) נכללו.</p>
+  </div>
+  <p class="q">שאלה: <b>כמה אפשר לסמוך על המספרים, ואני נשקל מספיק?</b></p>
+  <ul class="st"><li><b>מעט נתונים:</b> כל שורה בלי חישוב = "—" + "<span class="tx">אין מספיק נתונים</span>". הכול בצבע רגיל.</li></ul>
+</div>
+
+<!-- 10 BODY -->
+<div class="col" id="p-body">
+  <p class="nm">10 · היקפים בגוף<small>שמיים: טורקיז עמוק, בלי חלקיקים</small></p>
+  <div class="phone" style="--sky:#0b2b33">
+    <div class="hdr"><a class="back" href="#p-ana">‹ ניתוח</a><span class="ttl">היקפים בגוף</span></div>
+    <div class="box" style="height:290px;margin-top:6px;position:relative">דמות גוף (חריטה)<br>11 טבעות, הקשה על טבעת ← היקף אחד
+      <svg width="335" height="290" style="position:absolute;inset:0" viewBox="0 0 335 290"><g fill="none" stroke="#A9C4FF" stroke-width="1.5"><circle cx="167" cy="52" r="9"/><circle cx="130" cy="72" r="9"/><circle cx="167" cy="96" r="9"/><circle cx="110" cy="112" r="9"/><circle cx="224" cy="112" r="9"/><circle cx="167" cy="140" r="9"/><circle cx="167" cy="160" r="9"/><circle cx="96" cy="160" r="9"/><circle cx="167" cy="184" r="9"/><circle cx="140" cy="214" r="9"/><circle cx="140" cy="258" r="9"/></g></svg>
+    </div>
+    <div class="figt"><b>טבלה 3 · היקפים</b><span>מ-<span class="n">14.08</span> · מהפעם הקודמת</span></div>
+    <div class="tbl tap">
+      <a class="r" href="#p-site"><span>מותניים (טבור)</span><b><span class="g">↓ ירד <span class="n">−4.5</span></span> · <span class="n">−0.5</span></b></a>
+      <div class="r"><span>מותן</span><b><span class="g">↓ ירד <span class="n">−3.0</span></span> · <span class="n">−0.5</span></b></div>
+      <div class="r"><span>ישבן</span><b><span class="n">−0.5</span><sup>*</sup> · <span class="n">0.0</span></b></div>
+      <div class="r"><span>יד קדמית רפוי</span><b><span class="n">+0.3</span><sup>*</sup> · <span class="n">+0.2</span><sup>*</sup></b></div>
+    </div>
+    <p class="cap">… עוד 7 · * בתוך טעות המדידה</p>
+  </div>
+  <p class="q">שאלה: <b>איפה הגוף שלי משתנה?</b></p>
+  <ul class="st">
+    <li><b>צבע:</b> רק לפי טבלת הכיוון לכל אתר ולשלב (analytics §0.1), ורק מעל טעות המדידה. שאר האתרים בצבע רגיל.</li>
+    <li><b>מעט נתונים:</b> מדידה אחת בלבד ← ערכים בלי שינוי ("—"). <b>ריק:</b> הדמות בלי טבעות + "<span class="tx">עוד אין מדידות היקף</span>" ו"<span class="tx">הוספת היקפים ‹</span>" ← שקילה ← היקפים.</li>
+  </ul>
+</div>
+
+<!-- 11 SITE -->
+<div class="col" id="p-site">
+  <p class="nm">11 · היקף אחד</p>
+  <div class="phone" style="--sky:#0b2b33">
+    <div class="hdr"><a class="back" href="#p-body">‹ היקפים</a><span class="ttl">מותניים (טבור)</span></div>
+    <div class="hero">
+      <div class="v" style="font-size:64px"><span class="n">88.0</span><small>ס״מ</small></div>
+      <div class="g" style="font-weight:800;font-size:15px;margin-top:6px">↓ ירד <span class="n">−4.5</span> מתחילת השלב</div>
+    </div>
+    <div class="figt"><b>איור 1 · מותניים (טבור)</b><span>כל המדידות</span></div>
+    <svg width="335" height="180" viewBox="0 0 335 180">
+      <g stroke="rgba(190,200,255,.12)"><line x1="34" y1="30" x2="330" y2="30"/><line x1="34" y1="90" x2="330" y2="90"/><line x1="34" y1="150" x2="330" y2="150"/></g>
+      <g font-size="12" fill="#8F97C6" direction="ltr"><text x="0" y="34">94</text><text x="0" y="94">91</text><text x="0" y="154">88</text></g>
+      <polyline points="44,40 90,36 136,60 182,84 228,104 274,138 320,150" fill="none" stroke="#EEF1FF" stroke-width="2"/>
+      <g fill="#A9C4FF"><circle cx="44" cy="40" r="3.5"/><circle cx="90" cy="36" r="3.5"/><circle cx="136" cy="60" r="3.5"/><circle cx="182" cy="84" r="3.5"/><circle cx="228" cy="104" r="3.5"/><circle cx="274" cy="138" r="3.5"/><circle cx="320" cy="150" r="3.5"/></g>
+      <g font-size="12" fill="#8F97C6" text-anchor="middle"><text x="44" y="174">מאי</text><text x="182" y="174">אוג׳</text><text x="320" y="174">אוק׳</text></g>
+    </svg>
+    <div class="tbl">
+      <div class="r"><span class="n">12.10</span><b class="n">88.0</b></div>
+      <div class="r"><span class="n">12.09</span><b class="n">88.5</b></div>
+      <div class="r"><span class="n">14.08</span><b class="n">92.5</b></div>
+    </div>
+  </div>
+  <p class="q">שאלה: <b>איך ההיקף הזה השתנה לאורך זמן?</b></p>
+  <ul class="st"><li><b>מדידה אחת:</b> נקודה אחת, בלי קו ובלי שינוי. תיקון ערך: דרך היסטוריה (לא כאן).</li></ul>
+</div>
+
+<!-- 12 RATIOS -->
+<div class="col" id="p-ratio">
+  <p class="nm">12 · יחסים והרכב</p>
+  <div class="phone" style="--sky:#121a46">
+    <div class="hdr"><a class="back" href="#p-ana">‹ ניתוח</a><span class="ttl">יחסים והרכב</span></div>
+    <div class="figt"><b>טבלה 4 · יחסים</b></div>
+    <div class="tbl">
+      <div class="r"><span>מותן ÷ ישבן</span><b><span class="n">0.86</span> <span style="color:var(--mute);font-weight:500">· <span class="n">12.10</span></span></b></div>
+      <div class="r"><span>ס״מ מותניים לכל ק״ג שירד</span><b><span class="n">0.9</span> <span class="n" style="color:var(--mute);font-weight:500">±0.2</span></b></div>
+    </div>
+    <div class="figt"><b>טבלה 5 · סימן להרכב גוף</b><span>מ-<span class="n">14.08</span></span></div>
+    <div class="tbl">
+      <div class="r"><span>מותניים (טבור)</span><b class="g">↓ ירד <span class="n">−4.5</span></b></div>
+      <div class="r"><span>יד קדמית רפוי</span><b class="n">+0.3</b></div>
+      <div class="r"><span>מסקנה</span><b class="tx">אין סימן ברור</b></div>
+    </div>
+    <p class="cap tx">סימן לפי סרט מדידה בלבד, לא מדידת שומן.</p>
+  </div>
+  <p class="q">שאלה: <b>אני מאבד שומן, או רק משקל?</b></p>
+  <ul class="st"><li><b>מעט נתונים:</b> כל שורה "—" עם הסיבה (למשל "<span class="tx">אין מדידה של שני ההיקפים באותו יום</span>"). צבע רק לפי טבלת הכיוון.</li></ul>
+</div>
+
+<!-- 13 RECORDS -->
+<div class="col" id="p-rec">
+  <p class="nm">13 · שיאים</p>
+  <div class="phone" style="--sky:#121a46">
+    <div class="hdr"><a class="back" href="#p-ana">‹ ניתוח</a><span class="ttl">שיאים</span></div>
+    <div class="figt"><b>טבלה 6 · כל ההיסטוריה</b></div>
+    <div class="tbl">
+      <div class="r"><span>הממוצע הנמוך ביותר</span><b><span class="n">81.0</span> · <span class="n">20.10</span></b></div>
+      <div class="r"><span>הממוצע הגבוה ביותר</span><b><span class="n">92.4</span> · <span class="n">03.01.25</span></b></div>
+    </div>
+    <div class="figt"><b>טבלה 7 · השלב הנוכחי</b></div>
+    <div class="tbl">
+      <div class="r"><span>28 הימים הטובים ביותר</span><b><span class="n">−3.1</span> · <span class="n">2.9–30.9</span></b></div>
+    </div>
+    <p class="cap tx">שיאים לפי הממוצע, לא לפי שקילה בודדת.</p>
+  </div>
+  <p class="q">שאלה: <b>מה ההישגים הכי טובים שלי?</b></p>
+  <ul class="st"><li><b>מעט נתונים / שמירה:</b> "—" בשורת 28 הימים. הכול בצבע רגיל.</li></ul>
+</div>
+</div>
+
+<!-- ================= 3. MORE ================= -->
+<h2>ג. עוד: עמוד לכל דבר</h2>
+<div class="row">
+
+<!-- 14 MORE SHEET -->
+<div class="col" id="p-more">
+  <p class="nm">14 · עוד<small>חלון מעל הבית</small></p>
+  <div class="phone short" style="height:560px">
+    <div class="ghost"><div class="hdr"><div class="today"><b>יום שישי, 23 באוקטובר</b></div><span class="pill"><span>עוד</span></span></div></div>
+    <div class="dim"></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="list">
+        <a href="#p-photos"><span class="tt"><b>תמונות</b><span>אחרונה <span class="n">12.10</span></span></span><span class="ch">‹</span></a>
+        <a href="#p-hist"><span class="tt"><b>היסטוריה</b><span>41 שקילות · 6 מדידות היקף</span></span><span class="ch">‹</span></a>
+        <a href="#p-backup"><span class="tt"><b>גיבוי</b><span class="tx">גיבוי אחרון לפני 5 ימים</span></span><span class="ch">‹</span></a>
+        <a href="#p-phase"><span class="tt"><b>שלב</b><span>חיטוב · יעד <span class="n">78.0</span></span></span><span class="ch">‹</span></a>
+      </div>
+    </div>
+  </div>
+  <p class="q">שאלה: <b>לאן עוד אפשר ללכת?</b></p>
+  <ul class="st"><li><b>תזכורת:</b> כשעברו 30 יום מהגיבוי, שורת הגיבוי אומרת "<span class="tx">הגיע הזמן לגבות</span>" (בצבע רגיל, לא אדום).</li></ul>
+</div>
+
+<!-- 15 PHOTOS -->
+<div class="col" id="p-photos">
+  <p class="nm">15 · תמונות<small>בנוי · לעיצוב כהה</small></p>
+  <div class="phone" style="--sky:#1a1438">
+    <div class="hdr"><a class="back" href="#p-home">‹ חזרה</a><span class="ttl">תמונות</span></div>
+    <div class="seg"><span class="on">חזית</span><span>צד</span><span>גב</span></div>
+    <div class="box" style="height:360px;margin-top:12px">איור 1 · התמונה האחרונה<br><span class="n">12.10</span> · <span class="n">81.2</span> ק״ג</div>
+    <div class="btn pri" style="margin-top:14px">צילום</div>
+    <div class="list" style="margin-top:6px">
+      <a><span class="tt"><b>לפני ואחרי</b><span>שתי תמונות זו לצד זו, לשמירה</span></span><span class="ch">‹</span></a>
+      <a><span class="tt"><b>כל התמונות</b><span>14 בחזית</span></span><span class="ch">‹</span></a>
+    </div>
+    <p class="small">בחירה מהגלריה · בתוך "צילום"</p>
+  </div>
+  <p class="q">שאלה: <b>איך הגוף נראה עכשיו לעומת פעם?</b></p>
+  <ul class="st">
+    <li><b>שינוי:</b> אותו תוכן כמו היום, בכהה. גיבוי התמונות עובר לעמוד גיבוי.</li>
+    <li><b>ריק:</b> "<span class="tx">עוד אין תמונות בתנוחה הזו</span>" + צילום. <b>שגיאה:</b> אין גישה למצלמה ← "<span class="tx">צריך לאשר גישה למצלמה בהגדרות</span>" + בחירה מהגלריה.</li>
+  </ul>
+</div>
+
+<!-- 16 HISTORY -->
+<div class="col" id="p-hist">
+  <p class="nm">16 · היסטוריה</p>
+  <div class="phone" style="--sky:#14183e">
+    <div class="hdr"><a class="back" href="#p-home">‹ חזרה</a><span class="ttl">היסטוריה</span></div>
+    <div class="seg"><span class="on">שקילות</span><span>היקפים</span></div>
+    <div class="figt"><b>אוקטובר 2026</b></div>
+    <div class="tbl tap">
+      <a class="r" href="#p-fix"><span><span class="n">20.10</span> · שלישי</span><b class="n">80.6</b></a>
+      <div class="r"><span><span class="n">13.10</span> · שלישי · חופשה</span><b class="n">81.4</b></div>
+      <div class="r"><span><span class="n">07.10</span> · רביעי</span><b class="n">81.3</b></div>
+      <div class="r"><span><span class="n">01.10</span> · חמישי</span><b class="n">81.9</b></div>
+    </div>
+    <div class="figt"><b>ספטמבר 2026</b></div>
+    <div class="tbl tap">
+      <div class="r"><span><span class="n">24.09</span> · חמישי</span><b class="n">82.3</b></div>
+      <div class="r"><span><span class="n">17.09</span> · חמישי · <span class="tx">"אחרי טיסה"</span></span><b class="n">83.0</b></div>
+      <div class="r"><span><span class="n">10.09</span> · חמישי</span><b class="n">82.8</b></div>
+    </div>
+    <p class="small">הקשה על שורה ← תיקון או מחיקה</p>
+  </div>
+  <p class="q">שאלה: <b>מה רשמתי, ואיך מתקנים טעות?</b></p>
+  <ul class="st">
+    <li><b>היקפים:</b> אותה רשימה לפי ימים; בשורה: התאריך + "<span class="tx">4 היקפים</span>"; הקשה ← תיקון של כל היום.</li>
+    <li><b>ריק:</b> "<span class="tx">עוד אין שקילות</span>". מספרים בצבע רגיל, בלי ירוק/אדום.</li>
+  </ul>
+</div>
+
+<!-- 17 FIX SHEET -->
+<div class="col" id="p-fix">
+  <p class="nm">17 · תיקון רשומה<small>חלון</small></p>
+  <div class="phone short" style="height:560px">
+    <div class="ghost"><div class="hdr"><span class="back">‹ חזרה</span><span class="ttl">היסטוריה</span></div></div>
+    <div class="dim"></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="ttl">שקילה · <span class="n">20.10</span></div>
+      <div class="stepper" style="margin-top:14px"><span class="rnd">+</span><span class="n" style="font-size:44px;font-weight:800">80.6</span><span class="rnd">−</span></div>
+      <div class="btn pri" style="margin-top:20px">שמירה</div>
+      <div class="btn sm" style="margin-top:10px">מחיקת השקילה</div>
+    </div>
+  </div>
+  <p class="q">שאלה: <b>מה הערך הנכון?</b></p>
+  <ul class="st"><li><b>רגיל:</b> קיים היום; רק עיצוב כהה. אחרי שמירה/מחיקה: הודעה עם "ביטול". המחיקה בצבע רגיל (אדום שמור לכיוון היעד).</li></ul>
+</div>
+
+<!-- 18 BACKUP -->
+<div class="col" id="p-backup">
+  <p class="nm">18 · גיבוי</p>
+  <div class="phone" style="--sky:#14183e">
+    <div class="hdr"><a class="back" href="#p-home">‹ חזרה</a><span class="ttl">גיבוי</span></div>
+    <div class="figt"><b>נתונים</b></div>
+    <div class="tbl"><div class="r"><span>גיבוי אחרון</span><b><span class="n">18.10</span> · לפני <span class="n">5</span> ימים</b></div></div>
+    <div class="btn pri" style="margin-top:12px">גיבוי נתונים</div>
+    <div class="figt" style="margin-top:22px"><b>תמונות</b></div>
+    <div class="tbl"><div class="r"><span>גיבוי אחרון</span><b><span class="n">12.10</span> · <span class="n">14</span> תמונות</b></div></div>
+    <div class="btn" style="margin-top:12px">גיבוי תמונות</div>
+    <div class="figt" style="margin-top:22px"><b>שחזור</b></div>
+    <div class="btn" style="margin-top:6px">שחזור מקובץ</div>
+    <p class="cap tx">אחרי בחירת הקובץ: מיזוג עם מה שיש, או החלפה של הכול.</p>
+    <p class="cap tx" style="margin-top:auto">הקובץ נשמר רק איפה שתבחר (קבצים / iCloud). שום דבר לא נשלח לשרת.</p>
+  </div>
+  <p class="q">שאלה: <b>הנתונים שלי שמורים?</b></p>
+  <ul class="st">
+    <li><b>אף פעם לא גובה:</b> "<span class="tx">עוד לא נעשה גיבוי</span>". <b>יותר מ-30 יום:</b> השורה בולטת יותר (לבן, עבה), בלי אדום.</li>
+    <li><b>שגיאה:</b> קובץ לא תקין ← "<span class="tx">הקובץ לא נראה כמו גיבוי של BodyTrack. שום דבר לא השתנה.</span>"; חלקי ← כמה רשומות דולגו.</li>
+  </ul>
+</div>
+
+<!-- 19 PHASE -->
+<div class="col" id="p-phase">
+  <p class="nm">19 · שלב</p>
+  <div class="phone" style="--sky:#14183e">
+    <div class="hdr"><a class="back" href="#p-home">‹ חזרה</a><span class="ttl">שלב</span></div>
+    <div class="card" style="margin-top:10px"><div class="h">השלב עכשיו<span>שבוע <span class="n">11</span></span></div>
+      <div style="font-size:24px;font-weight:800;margin-top:4px">חיטוב</div>
+      <div style="font-size:13px;color:var(--mute)">מ-<span class="n">14.08</span> · יעד <span class="n">78.0</span> ק״ג</div></div>
+    <div class="figt" style="margin-top:20px"><b>שינוי</b></div>
+    <div class="seg"><span class="on">חיטוב</span><span>מסה</span><span>שמירה</span></div>
+    <div class="tbl"><div class="r"><span>משקל יעד (לא חובה)</span><b class="n">78.0</b></div></div>
+    <div class="btn pri" style="margin-top:14px">שמירה</div>
+    <p class="cap tx">שלב חדש מתחיל היום. השלבים הקודמים נשמרים.</p>
+    <div class="figt" style="margin-top:18px"><b>שלבים קודמים</b></div>
+    <div class="tbl">
+      <div class="r"><span>שמירה</span><b class="n">01.05–13.08</b></div>
+      <div class="r"><span>חיטוב</span><b class="n">02.01–30.04</b></div>
+    </div>
+  </div>
+  <p class="q">שאלה: <b>מה המטרה שלי עכשיו?</b></p>
+  <ul class="st">
+    <li><b>לא נבחר שלב:</b> בלי כרטיס; "<span class="tx">בחרו שלב כדי לראות כיוון וצבעים</span>". <b>יעד בלבד השתנה:</b> מעדכן את השלב הנוכחי (כמו היום).</li>
+    <li><b>שגיאה:</b> יעד מחוץ ל-30–300 ← "<span class="tx">משקל יעד בין 30 ל-300</span>".</li>
+  </ul>
+</div>
+</div>
+
+</body>
+</html>
