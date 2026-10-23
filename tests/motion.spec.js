@@ -25,7 +25,7 @@ async function save(page, kg) {
 const gl = page => page.evaluate(() => document.documentElement.classList.contains('gl'));
 const galaxy = page => page.evaluate(() => document.documentElement.dataset.galaxy);
 
-test('galaxy: runs on the home only, stops when hidden; hero moment plays after a save', async ({ page }) => {
+test('galaxy: runs on the home and the weight screen only, stops when hidden; hero moment plays after a save', async ({ page }) => {
   const problems = [];
   page.on('pageerror', e => problems.push(e.message));
   page.on('console', m => { if (m.type() === 'error') problems.push(m.text()); });
@@ -40,6 +40,13 @@ test('galaxy: runs on the home only, stops when hidden; hero moment plays after 
     await expect.poll(() => galaxy(page)).toBe('still');               // app hidden: no more frames
     await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false }); document.dispatchEvent(new Event('visibilitychange')); });
     await expect.poll(() => galaxy(page)).toBe('running');
+    await page.locator('#lensBtn').click();
+    await expect.poll(() => galaxy(page)).toBe('running');             // weight screen: around the weight
+    await page.locator('#ciCircBtn').click();
+    await expect.poll(() => galaxy(page)).toBe('off');                 // not behind the circumference list
+    await page.locator('#ciCircBack').click();
+    await expect.poll(() => galaxy(page)).toBe('running');
+    await page.locator('#ciCancelTop').click();
   } else {
     test.info().annotations.push({ type: 'note', description: 'no WebGL2 in this browser: static fallback checked' });
     expect(await page.locator('#gal').isVisible()).toBe(false);        // fallback = CSS gradient on .home

@@ -157,16 +157,30 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await page.locator('#ciKg').fill('80.0');
   await page.locator('[data-for="ciKg"][data-step="-0.1"]').click();
   await expect(page.locator('#ciKg')).toHaveValue('79.9');
+  await layoutOk('weigh-in');
+  await page.screenshot({ path: testInfo.outputPath('weighin.png') });
+  // Circumferences are their own screen; a bad value is named there, nothing saved.
+  await expect(page.locator('#ciCircBtn')).toHaveText('+ היקפים');
+  await expect(page.locator('#ciNoteBtn')).toHaveText('+ סוג שבוע והערה');
+  await page.locator('#ciCircBtn').click();
+  await expect(page.locator('#ciC')).toBeVisible();
+  await expect(page.locator('#ciW')).toBeHidden();
   await page.locator('#ci-waist').fill('7.9.1');
+  await page.locator('#ciCircDone').click();
   await page.locator('#ciSave').click();
   await expect(page.locator('#ci-err-waist')).toBeVisible();       // bad circumference is named, nothing saved
   await page.locator('#ci-waist').fill('79');
   await expect(page.locator('#ci-err-waist')).toBeHidden();        // fixing the value clears the error
+  await layoutOk('circumferences');
+  await page.screenshot({ path: testInfo.outputPath('circumferences.png'), fullPage: true });
+  await page.locator('#ciCircDone').click();
+  await expect(page.locator('#ciCircBtn')).toHaveText('היקפים · 1 מתוך 11');
+  await page.locator('#ciNoteBtn').click();
   await page.locator('[data-tag="vacation"]').click();
   await expect(page.locator('[data-tag="vacation"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#ciNote').fill('SAMPLE note');
-  await layoutOk('check-in');
-  await page.screenshot({ path: testInfo.outputPath('checkin.png'), fullPage: true });
+  await page.locator('#ciNoteDone').click();
+  await expect(page.locator('#ciNoteBtn')).toHaveText('חופשה · SAMPLE note');
   await page.locator('#ciSave').click();
   await expect(page.locator('#homeView')).toBeVisible();             // saving goes back to the dark home
   await expect(page.locator('#hWhen')).toContainText('שקילה אחרונה');
@@ -184,7 +198,7 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect(page.locator('#chartRead')).toContainText('חופשה · SAMPLE note');
   await page.mouse.up();
   await page.locator('#toastAct').click();
-  await expect(page.locator('#toastMsg')).toHaveText('הצ׳ק-אין בוטל.');
+  await expect(page.locator('#toastMsg')).toHaveText('השמירה בוטלה.');
   await expect(page.locator('#lastKg')).toHaveText('80.2');
   await expect(page.locator('#listW .row')).toHaveCount(16);
   await expect(page.locator('#notes')).not.toContainText('חופשה');

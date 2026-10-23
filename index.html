@@ -126,46 +126,52 @@
 </div>
 
 <!-- Check-in -->
-<form class="app" id="checkinView" hidden novalidate>
-  <header class="top">
-    <h1>צ׳ק-אין</h1>
-    <button type="button" class="chip" id="ciCancelTop">ביטול</button>
-  </header>
-  <p class="note" id="ciEditing" hidden>כבר נשמר צ׳ק-אין בתאריך הזה. השמירה תעדכן אותו.</p>
-
-  <section class="sec stack">
-    <label class="lab" for="ciDate">תאריך</label>
-    <input class="field n" type="date" id="ciDate" dir="ltr" required>
-    <p class="lab bad" id="ciDateErr" hidden></p>
-  </section>
-
-  <section class="sec stack">
-    <label for="ciKg"><h2>משקל (ק״ג)</h2></label>
-    <div class="stepper">
-      <button type="button" class="step" data-step="-0.1" data-for="ciKg" aria-label="פחות 0.1 ק״ג">−</button>
-      <input class="field big-field n" id="ciKg" inputmode="decimal" dir="ltr" autocomplete="off" required>
-      <button type="button" class="step" data-step="0.1" data-for="ciKg" aria-label="עוד 0.1 ק״ג">+</button>
+<!-- Dark weigh-in (redesign stage 1 §4): the weight is the main action; circumferences are their own screen. -->
+<form class="wv dark" id="checkinView" data-pane="w" hidden novalidate>
+  <section class="wPane" id="ciW" aria-label="שקילה">
+    <div class="wTop">
+      <button type="button" class="wBack" id="ciCancelTop">‹ חזרה</button>
+      <h1>שקילה</h1>
     </div>
-    <p class="lab" id="ciKgInfo"></p>
-    <p class="lab bad" id="ciKgErr" hidden></p>
+    <label class="wDate"><span id="ciDateLab"></span><span aria-hidden="true"> ▾</span>
+      <input type="date" id="ciDate" dir="ltr" required aria-label="תאריך"></label>
+    <p class="wErr" id="ciDateErr" hidden></p>
+    <p class="wNote" id="ciEditing" hidden>כבר שמרת בתאריך הזה. השמירה תעדכן.</p>
+    <div class="wLens">
+      <input class="wKg n" id="ciKg" inputmode="decimal" enterkeyhint="done" dir="ltr" autocomplete="off" required aria-label="משקל בק״ג" aria-describedby="ciKgInfo">
+      <span class="wUnit">ק״ג</span>
+    </div>
+    <div class="wSteps">
+      <button type="button" class="wStep" data-step="-0.1" data-for="ciKg" aria-label="פחות 0.1 ק״ג">−</button>
+      <button type="button" class="wStep" data-step="0.1" data-for="ciKg" aria-label="עוד 0.1 ק״ג">+</button>
+    </div>
+    <p class="wInfo" id="ciKgInfo"></p>
+    <p class="wErr" id="ciKgErr" hidden></p>
+    <button type="submit" class="wSave" id="ciSave">שמירה</button>
+    <div class="wMore">
+      <button type="button" class="wLink" id="ciCircBtn">+ היקפים</button>
+      <button type="button" class="wLink" id="ciNoteBtn">+ סוג שבוע והערה</button>
+    </div>
   </section>
 
-  <section class="sec">
-    <h2>טבלה 1 · היקפים (ס״מ)</h2>
-    <p class="lab">אפשר לדלג על מה שלא מדדת.</p>
-    <table class="ciTable" id="ciSites"></table>
+  <section class="cPane" id="ciC" aria-label="היקפים">
+    <div class="wTop">
+      <button type="button" class="wBack" id="ciCircBack">‹ משקל</button>
+      <h1>היקפים</h1>
+    </div>
+    <p class="cSub">ס״מ · אפשר לדלג על מה שלא מדדת</p>
+    <table class="cList" id="ciSites"></table>
+    <div class="cDone"><button type="button" class="wSave" id="ciCircDone">סיום</button></div>
   </section>
 
-  <section class="sec stack">
-    <h2>סוג שבוע</h2>
-    <div class="seg wide" role="group" aria-label="סוג שבוע" id="ciTags"></div>
-    <label class="lab" for="ciNote">הערה (לא חובה)</label>
-    <input class="field note-field" id="ciNote" maxlength="120" autocomplete="off" enterkeyhint="done">
-  </section>
-
-  <div class="actions">
-    <button type="submit" class="btn" id="ciSave">שמירה</button>
-    <button type="button" class="btn ghost" id="ciCancel">ביטול</button>
+  <div class="sheet dark" id="ciNoteSheet" hidden>
+    <div class="sheetBox stack" role="dialog" aria-modal="true" aria-label="סוג שבוע והערה">
+      <h2 class="nTitle">סוג שבוע</h2>
+      <div class="seg wide" role="group" aria-label="סוג שבוע" id="ciTags"></div>
+      <label class="nTitle" for="ciNote">הערה (לא חובה)</label>
+      <input class="field note-field" id="ciNote" maxlength="120" autocomplete="off" enterkeyhint="done">
+      <button type="button" class="wSave" id="ciNoteDone">סיום</button>
+    </div>
   </div>
 </form>
 

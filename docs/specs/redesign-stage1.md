@@ -29,7 +29,7 @@ Stage 1 replaces only the home (verdict) screen and the check-in / quick weigh-i
 ## 4. Weigh-in screen (replaces check-in + quick weigh-in)
 - One dark screen. Weight first, prefilled from the previous weigh-in, −/+0.1 buttons, date (default today, no future; small, under the weight).
 - Weight is the main action (owner, 23.10): it fills the screen (big number, −/+ and "שמירה" right under it, reachable with one thumb). Circumferences are an occasional extra, not equal to the weight: one small secondary line "+ הוספת היקפים" under the save button, never a big section on first view.
-- Folded rows, closed by default: "היקפים" (11 sites, previous value + date beside each), "סוג שבוע" (רגיל/מחלה/חופשה/אירוע), "הערה" (max 120).
+- Built 0.10.0 (owner 23.10: circumferences open their own screen): the weight sits in a glass lens like the home's (galaxy around it), round −/+ (hold = repeat), date chip on top, "שמירה" under it. Two small links under the save: "+ היקפים" → its own screen (11 sites as cards, previous value + date, "סיום" back; link then shows "היקפים · N מתוך 11"), and "+ סוג שבוע והערה" → a small sheet (רגיל/מחלה/חופשה/אירוע + note, max 120). No galaxy behind the circumference list.
 - One "שמירה" button. Saving with only the weight = quick weigh-in. Same rules as today (`buildCheckin` / `buildWeighin`: one weigh-in per date, typo guard over 2 kg, undo toast).
 - "‹ חזרה" closes without saving.
 

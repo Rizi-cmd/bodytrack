@@ -15,7 +15,7 @@ import { initPhotos, openPhotos } from './photosScreen.js';
 import { startGalaxy } from './galaxy.js';
 import { heroTracks, heroAt, countAt, HERO_MS } from './motion.js';
 
-export const VERSION = '0.9.3';
+export const VERSION = '0.10.0';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -415,11 +415,18 @@ function showView(v) {
   if (v === 'home' || v === 'main') state.back = v;
   state.view = v;
   for (const [k, sel] of Object.entries(VIEWS)) $(sel).hidden = k !== v;
-  document.documentElement.classList.toggle('dk', v === 'home');
+  document.documentElement.classList.toggle('dk', v === 'home' || v === 'checkin');
+  document.documentElement.classList.toggle('lock', v === 'home');
   scrollTo(0, 0);
   // the scale is drawn at the box's width, which is 0 while the home is hidden
   if (v === 'home' && state.summary) drawScale(state.summary.rate, '#hScale');
-  galaxy?.show(v === 'home');
+  galaxyFor();
+}
+// The galaxy runs on the home (around the lens) and on the weight screen (around the weight); not over the circumference list.
+function galaxyFor() {
+  const w = state.view === 'checkin' && $('#checkinView').dataset.pane === 'w';
+  galaxy?.setLens(w ? $('#ciW .wLens') : $('#lens'));
+  galaxy?.show(state.view === 'home' || w);
 }
 showView('home');
 function showErr(input, errEl, msg) {
@@ -429,8 +436,8 @@ function showErr(input, errEl, msg) {
 // "Previous weigh-in" line under the weight field.
 function kgInfo(box, d) {
   box.replaceChildren();
-  if (!d.prev) { box.append(d.kgSource === 'same_day' ? 'כבר שקלת בתאריך הזה.' : 'אין שקילה קודמת.'); return; }
-  box.append(d.kgSource === 'same_day' ? 'כבר שקלת בתאריך הזה. השקילה הקודמת: ' : 'מולא מהשקילה הקודמת: ',
+  if (!d.prev) { box.append(d.kgSource === 'same_day' ? 'כבר שקלת בתאריך הזה. השמירה תעדכן.' : 'אין שקילה קודמת.'); return; }
+  box.append(d.kgSource === 'same_day' ? 'כבר שקלת בתאריך הזה. השמירה תעדכן. קודם לכן: ' : 'שקילה קודמת: ',
     num(fmtWeight(d.prev.kg)), ' ק״ג ב־', num(fmtDay(d.prev.date)));
 }
 const markTags = () => document.querySelectorAll('[data-tag]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tag === ci.tag));
@@ -466,15 +473,41 @@ function jumpOk(kg, prev) {
 function fillCheckin(date) {
   const d = checkinDefaults(ci.data, date);
   $('#ciDate').value = date; $('#ciDate').max = todayISO();
+  $('#ciDateLab').replaceChildren(...(date === todayISO() ? ['היום · '] : []), num(fmtFull(date)));
   $('#ciKg').value = d.kg;
   kgInfo($('#ciKgInfo'), d);
   showErr($('#ciDate'), $('#ciDateErr'), null); showErr($('#ciKg'), $('#ciKgErr'), null);
   siteRows($('#ciSites'), d.sites, 'ci');
   ci.tag = d.tag; markTags();
   $('#ciNote').value = d.note;
-  $('#ciEditing').hidden = !d.editing;
-  ci.dirty = false;
+  $('#ciEditing').hidden = !d.editing || d.kgSource === 'same_day'; // the weight line already says it
+  ci.dirty = false; ci.date = date;
+  setPane('w'); $('#ciNoteSheet').hidden = true; ciLinks();
 }
+// Weight screen ↔ circumference screen (one form, one save). The links under "שמירה" say what was added.
+function setPane(p, focus = false) {
+  $('#checkinView').dataset.pane = p;
+  scrollTo(0, 0);
+  if (focus) $(p === 'c' ? '#ciCircBack' : '#ciCircBtn').focus();
+  if (state.view === 'checkin') galaxyFor();
+}
+function ciLinks() {
+  const n = Object.values(siteValues('ci')).filter(v => v.trim()).length;
+  $('#ciCircBtn').textContent = n ? `היקפים · ${n} מתוך ${SITES.length}` : '+ היקפים';
+  const t = TAGS.find(x => x.id === ci.tag), note = $('#ciNote').value.trim();
+  const bits = [ci.tag !== 'normal' && t ? t.he : '', note].filter(Boolean).join(' · ');
+  $('#ciNoteBtn').textContent = bits ? (bits.length > 28 ? bits.slice(0, 27) + '…' : bits) : '+ סוג שבוע והערה';
+}
+$('#ciCircBtn').onclick = () => setPane('c', true);
+$('#ciCircBack').onclick = $('#ciCircDone').onclick = () => { setPane('w', true); ciLinks(); };
+$('#ciNoteBtn').onclick = () => { $('#ciNoteSheet').hidden = false; $('#ciTags [aria-pressed=true]')?.focus(); };
+$('#ciNoteDone').onclick = () => { $('#ciNoteSheet').hidden = true; ciLinks(); $('#ciNoteBtn').focus(); };
+// 6: tapping the weight selects it, so a new number replaces the old one; a tap outside the fields closes the keyboard
+$('#ciKg').addEventListener('focus', e => setTimeout(() => e.target.select(), 0));
+$('#ciW').addEventListener('pointerdown', e => {
+  const a = document.activeElement;
+  if (a && a.matches('input') && !e.target.closest('input,label,button')) a.blur();
+});
 
 const tagBox = $('#ciTags');
 for (const t of TAGS) {
@@ -488,7 +521,12 @@ async function openCheckin() {
   showView('checkin');
 }
 $('#checkinBtn').onclick = openCheckin; $('#lensBtn').onclick = openCheckin;
-$('#ciDate').onchange = () => { if ($('#ciDate').value) fillCheckin($('#ciDate').value); };
+$('#ciDate').onchange = () => {
+  const v = $('#ciDate').value;
+  if (!v) return;
+  if (ci.dirty && !confirm('להחליף תאריך? מה שהקלדת לא יישמר.')) { $('#ciDate').value = ci.date; return; }
+  fillCheckin(v);
+};
 // Typing in a field clears its error until the next save.
 const clearErr = (input, errEl) => { if (input.getAttribute('aria-invalid') === 'true') showErr(input, errEl, null); };
 $('#checkinView').addEventListener('input', e => {
@@ -500,12 +538,21 @@ $('#checkinView').addEventListener('input', e => {
 $('#qKg').addEventListener('input', e => clearErr(e.target, $('#qKgErr')));
 $('#ciNote').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }; // Enter closes the keyboard, doesn't save
 const leaveCheckin = () => { if (!ci.dirty || confirm('לצאת בלי לשמור?')) showView(state.back); };
-$('#ciCancel').onclick = leaveCheckin; $('#ciCancelTop').onclick = leaveCheckin;
+$('#ciCancelTop').onclick = leaveCheckin;
 
-document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
+const stepOnce = b => {
   const i = document.getElementById(b.dataset.for);
   i.value = stepKg(i.value, +b.dataset.step);
   i.dispatchEvent(new Event('input', { bubbles: true }));
+};
+document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => { if (b.dataset.held) delete b.dataset.held; else stepOnce(b); });
+// On the weight screen, holding − or + keeps stepping (after 0.4 s, about 12 steps a second).
+document.querySelectorAll('.wStep').forEach(b => {
+  let t = null;
+  const stop = () => { clearTimeout(t); clearInterval(t); t = null; };
+  b.addEventListener('pointerdown', () => { stop(); delete b.dataset.held; t = setTimeout(() => { b.dataset.held = '1'; stepOnce(b); t = setInterval(() => stepOnce(b), 80); }, 400); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, stop);
+  b.addEventListener('contextmenu', e => e.preventDefault());
 });
 
 $('#checkinView').onsubmit = async e => {
@@ -514,16 +561,23 @@ $('#checkinView').onsubmit = async e => {
   const r = buildCheckin(form, ci.data, todayISO(), Date.now());
   showErr($('#ciDate'), $('#ciDateErr'), r.errors.date); showErr($('#ciKg'), $('#ciKgErr'), r.errors.kg);
   siteErrors('ci', r.errors.sites);
-  if (!r.ok) { const bad = $('#checkinView [aria-invalid=true]'); if (bad) bad.focus(); return; }
+  if (!r.ok) {
+    // show the screen that holds the first error: the weight/date first, then the circumferences
+    const onW = r.errors.kg || r.errors.date;
+    $('#ciNoteSheet').hidden = true; setPane(onW ? 'w' : 'c');
+    const bad = $(`#${onW ? 'ciW' : 'ciC'} [aria-invalid=true]`); if (bad) bad.focus();
+    return;
+  }
   if (!jumpOk(r.apply.weighins[0].kg, prevWeighin(ci.data, form.date))) return;
   keepLens();
   try { await writeAll(r.apply); } catch { state.hero = null; toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
   await requestPersistence();
   showView('home');
   await render();
-  toast('הצ׳ק-אין נשמר.', 8000, async () => {
+  const withSites = Object.values(form.cm).some(v => v.trim());
+  toast(withSites ? 'השקילה וההיקפים נשמרו.' : 'השקילה נשמרה.', 8000, async () => {
     try { await writeAll(r.undo); } catch { toast('לא הצלחתי לבטל.'); return; }
-    await render(); toast('הצ׳ק-אין בוטל.');
+    await render(); toast('השמירה בוטלה.');
   });
 };
 

@@ -29,7 +29,7 @@ void main(){
   vec2 tv=pos-uTouch.xy; float td=length(tv);
   pos+=tv/(td+.001)*exp(-td*td/7200.)*uTouch.z*34.;
   // inside the lens the dots fade, so text there sits on glass
-  float ld=length(pos-uLens.xy)/uLens.z; a*=mix(.35,1.,smoothstep(.9,1.08,ld));
+  float ld=length(pos-uLens.xy)/uLens.z; a*=mix(.12,1.,smoothstep(.9,1.08,ld));
   // and they stay in the lens row, never behind the verdict word or the scale
   if(kind<.5) a*=1.-smoothstep(1.,1.2,abs(pos.y-uLens.y)/uLens.z);
   vA=a*uIntro;
@@ -111,12 +111,22 @@ export function startGalaxy(canvas, lensEl) {
     if (rm.matches || document.hidden) { cancelAnimationFrame(s.raf); s.raf = 0; s.intro0 = null; draw(performance.now()); return; }
     if (!s.raf) { s.last = -1e9; s.raf = requestAnimationFrame(frame); }
   }
+  // the page can move without a resize (keyboard opening, scroll): re-measure the lens only
+  const follow = () => {
+    if (!s.on) return;
+    const b = lensEl.getBoundingClientRect();
+    s.lens = [b.left + b.width / 2, b.top + b.height / 2, Math.max(b.width / 2, 40)];
+    if (!s.raf) draw(performance.now());
+  };
+  addEventListener('scroll', follow, { passive: true });
+  visualViewport?.addEventListener('resize', follow);
+  visualViewport?.addEventListener('scroll', follow);
   document.addEventListener('visibilitychange', kick);
   rm.addEventListener?.('change', kick);
   addEventListener('resize', kick);
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); s.on = false; document.documentElement.classList.remove('gl'); });
-  // touch anywhere on the home bends the dots near the finger; the lens itself never moves
-  const host = lensEl.closest('main');
+  // touch anywhere on the screen bends the dots near the finger; the lens itself never moves
+  const host = document;
   const at = e => { s.touch.x = e.clientX; s.touch.y = e.clientY; };
   host.addEventListener('pointerdown', e => { at(e); s.touch.held = true; }, { passive: true });
   host.addEventListener('pointermove', e => { if (s.touch.held) at(e); }, { passive: true });
@@ -127,10 +137,12 @@ export function startGalaxy(canvas, lensEl) {
     // shown: the home is on screen. intro: play the ≤1 s condense (app open only).
     show(shown, intro = false) {
       s.on = shown;
-      if (!shown) { cancelAnimationFrame(s.raf); s.raf = 0; document.documentElement.dataset.galaxy = 'off'; return; }
+      if (!shown) { cancelAnimationFrame(s.raf); s.raf = 0; gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); document.documentElement.dataset.galaxy = 'off'; return; }
       if (intro && !rm.matches) s.intro0 = performance.now();
       kick();
     },
-    relayout: kick
+    relayout: kick,
+    // the galaxy gathers around this element (the home lens, or the weight on the weigh-in screen)
+    setLens(el) { lensEl = el; kick(); }
   };
 }
