@@ -68,12 +68,11 @@ test('photos: gallery photo, before/after, delete + undo, photo backup round tri
   await page.locator('#importFile').setInputFiles(FIXTURE);           // invented weigh-ins for the captions
   await page.locator('#impMerge').click();
   await expect(page.locator('#toastMsg')).toContainText('שוחזרו');
-  await layoutOk(page, 'verdict header with two buttons');
 
   // Empty screen.
-  await page.locator('#phoBtn').click();
+  await page.locator('#hMore').click(); await page.locator('[data-more="photos"]').click();
   await expect(page.locator('#phoView')).toBeVisible();
-  await expect(page.locator('#main')).toBeHidden();
+  await expect(page.locator('#homeView')).toBeHidden();
   await expect(page.locator('#pLastEmpty')).toHaveText('אין עדיין תמונות חזית.');
   await expect(page.locator('#pCmpEmpty')).toBeVisible();
   await expect(page.locator('#pBackupInfo')).toContainText('עוד לא נשמר גיבוי תמונות');
@@ -174,7 +173,7 @@ test('photos: gallery photo, before/after, delete + undo, photo backup round tri
     q.onerror = () => rej(q.error);
   }));
   await page.reload();
-  await page.locator('#phoBtn').click();
+  await page.locator('#hMore').click(); await page.locator('[data-more="photos"]').click();
   await expect(page.locator('#pLastEmpty')).toBeVisible();
   page.once('dialog', d => d.accept());
   await page.locator('#pImport').setInputFiles(file);
@@ -204,7 +203,7 @@ test('photos: gallery photo, before/after, delete + undo, photo backup round tri
   await expect(page.locator('#pGrid .thumb')).toHaveCount(3);
 
   await page.locator('#phoBack').click();
-  await expect(page.locator('#main')).toBeVisible();
+  await expect(page.locator('#homeView')).toBeVisible();
 
   expect(problems).toEqual([]);
   expect([...hosts]).toEqual([new URL(origin).host]);
@@ -214,7 +213,7 @@ test('photos: the real self-hosted model loads and reports a photo with no body'
   test.setTimeout(180_000);
   const { problems, hosts } = watch(page, context);
   await page.goto(origin + '/');
-  await page.locator('#phoBtn').click();
+  await page.locator('#hMore').click(); await page.locator('[data-more="photos"]').click();
   await expect(page.locator('#pModel')).toContainText('מוכן', { timeout: 150_000 });
   await page.locator('#pFile').setInputFiles(PHOTO);
   await expect(page.locator('#prNotes')).toContainText('לא זיהיתי גוף', { timeout: 60_000 });

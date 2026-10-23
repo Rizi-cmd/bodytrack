@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>BodyTrack</title>
-<meta name="theme-color" content="#F7F7F5">
+<meta name="theme-color" content="#060818">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="BodyTrack">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -15,11 +15,43 @@
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<div class="app" id="main">
+<!-- Dark home (docs/specs/redesign-stage1.md §2) -->
+<main class="home" id="homeView" aria-label="פסק דין">
+  <div class="hTop">
+    <p class="hWhen" id="hWhen"></p>
+    <button type="button" class="hMore" id="hMore" aria-haspopup="dialog">עוד</button>
+  </div>
+  <h1 class="hWord" id="hWord"></h1>
+  <p class="hLabel"><span id="hLabel"></span><span class="hSlow" id="hSlow" hidden></span></p>
+  <div class="lens" id="lens">
+    <svg class="lensDots" id="lensDots" viewBox="0 0 100 100" aria-hidden="true"></svg>
+    <div class="lensText">
+      <span class="hRate n" dir="ltr" id="hRate"></span>
+      <span class="hUnit">ק״ג לשבוע</span>
+      <span class="hSub" id="hSub">שיפוע ממוצע 4 שקילות</span>
+    </div>
+    <button type="button" class="lensBtn" id="lensBtn" aria-label="הוספת שקילה"></button>
+  </div>
+  <p class="hHint" aria-hidden="true">+ שקילה</p>
+  <div class="hScale" id="hScale"></div>
+  <button type="button" class="hAna" id="hAna">ניתוח ‹</button>
+</main>
+
+<div class="sheet dark" id="moreSheet" hidden>
+  <div class="sheetBox stack" role="dialog" aria-label="עוד">
+    <button class="btn ghost" data-more="photos">תמונות</button>
+    <button class="btn ghost" data-more="history">היסטוריה</button>
+    <button class="btn ghost" data-more="backup">גיבוי</button>
+    <button class="btn ghost" data-more="phase">שלב</button>
+    <button class="btn ghost" id="moreCancel">סגירה</button>
+  </div>
+</div>
+
+<div class="app" id="main" hidden>
   <header class="top">
     <h1>פסק הדין</h1>
     <span class="meta" id="meta"></span>
-    <span class="navs"><button class="chip" id="phoBtn">תמונות ›</button><button class="chip" id="anaBtn">ניתוח ›</button></span>
+    <span class="navs"><button class="chip" id="phoBtn">תמונות ›</button><button class="chip" id="anaBtn">ניתוח ›</button><button class="chip" id="mainBack">‹ חזרה</button></span>
   </header>
 
   <p class="note" id="backupNag" hidden></p>
@@ -68,7 +100,6 @@
     <table id="circTable"></table>
     <p class="empty" id="circEmpty" hidden>אין עדיין מדידות היקף.</p>
   </details>
-  <div class="actions" id="doneBar" hidden><button class="btn" id="doneBtn">סיום</button></div>
 
   <!-- History -->
   <details class="sec fold" id="histSec">
@@ -83,7 +114,7 @@
   </details>
 
   <!-- Backup -->
-  <section class="sec stack">
+  <section class="sec stack" id="backupSec">
     <h2>גיבוי</h2>
     <p class="lab" id="backupInfo"></p>
     <button class="btn" id="exportBtn">שמירת גיבוי לקבצים</button>

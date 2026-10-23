@@ -8,12 +8,12 @@ import {
 import { validate, restore, shareBackup } from './backup.js';
 import { trendSummary, fmtRate, fmtWeight, EMPTY } from './trend.js';
 import {
-  PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, weightChart, nearestPoint, pointReadout, fmtDay, fmtFull
+  PHASE_HE, isPhaseRecord, phasePick, activePhase, parseTarget, circCaption, verdictText, weighinStats, cadenceText, changeView, footnotes, circRows, scaleGeometry, weightChart, nearestPoint, pointReadout, fmtDay, fmtFull, lensPoints, lastWeighinLine
 } from './report.js';
 import { renderAnalytics, redraw as redrawAnalytics } from './analyticsScreen.js';
 import { initPhotos, openPhotos } from './photosScreen.js';
 
-export const VERSION = '0.7.1';
+export const VERSION = '0.8.0';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -36,8 +36,8 @@ const num = (text, cls = 'n') => { const s = el('span', cls, text); s.dir = 'ltr
 
 let state = { summary: null, range: 'quarter', phases: [] };
 
-function drawScale(rate) {
-  const box = $('#scale'); box.replaceChildren();
+function drawScale(rate, sel = '#scale') {
+  const box = $(sel); box.replaceChildren();
   const w = Math.max(240, Math.round(box.clientWidth || 350));
   const g = scaleGeometry(rate, w);
   const svg = sv('svg', { width: w, height: 80, viewBox: `0 0 ${w} 80`, role: 'img',
@@ -136,10 +136,34 @@ function showPoint(clientX) {
 // iPhone ignores "no zoom" in the page settings for pinching; this stops the pinch itself.
 document.addEventListener('gesturestart', e => e.preventDefault());
 
+// Dark home (redesign stage 1 §2): last weigh-in date, verdict, the lens on the last 4 weigh-ins, rate scale.
+function renderHome(s, v) {
+  const line = lastWeighinLine(s.series, todayISO()), wh = $('#hWhen');
+  wh.replaceChildren(); wh.className = 'hWhen' + (line && line.stale ? ' stale' : '');
+  if (line) {
+    wh.append('שקילה אחרונה ', num(line.date));
+    if (line.stale) wh.append(el('span', 'ago', line.ago));
+  } else wh.append('עוד אין שקילות');
+  const hw = $('#hWord');
+  hw.className = 'hWord ' + v.tone + (v.slow ? ' slow' : '');
+  hw.textContent = (v.arrow ? v.arrow + ' ' : '') + v.word;
+  $('#hLabel').textContent = v.label;
+  $('#hSlow').hidden = !v.slow; $('#hSlow').textContent = v.slowWord || '';
+  $('#hRate').textContent = s.rate === null ? EMPTY : fmtRate(s.rate);
+  $('#hSub').hidden = s.rate === null;
+  // The 4 points sit in the upper part of the lens (y 14–44 of 100), clear of the rate number.
+  const L = lensPoints(s.series), svg = $('#lensDots'); svg.replaceChildren();
+  const X = x => 8 + 84 * x, Y = y => 14 + 30 * y;
+  if (L.avgY !== null) svg.append(sv('line', { class: 'lavg', x1: 18, x2: 82, y1: Y(L.avgY), y2: Y(L.avgY) }));
+  L.points.forEach((p, i) => svg.append(sv('circle', { class: 'ldot' + (i === L.points.length - 1 ? ' new' : ''), cx: X(p.x), cy: Y(p.y), r: i === L.points.length - 1 ? 2.6 : 1.9 })));
+  drawScale(s.rate, '#hScale');
+}
+
 function renderVerdict(W, M, C) {
   const s = state.summary = trendSummary(W, state.phases, todayISO());
   const n = s.series.length;
   const v = verdictText(s, n);
+  renderHome(s, v);
 
   $('#meta').textContent = `היום ${fmtFull(todayISO())}`;
   $('#phaseBtn').textContent = s.phase ? `${PHASE_HE[s.phase]} ▾` : 'בחירת שלב ▾';
@@ -242,14 +266,15 @@ document.querySelectorAll('[data-range]').forEach(b => b.onclick = () => { state
 // Phase sheet: pick a phase (first pick covers all history, later ones start today) and an optional target weight.
 let picked = null;
 const markPicked = () => document.querySelectorAll('[data-phase]').forEach(b => b.setAttribute('aria-pressed', b.dataset.phase === picked));
-$('#phaseBtn').onclick = () => {
+function openPhase() {
   const act = activePhase(state.phases, todayISO());
   picked = act ? act.phase : null; markPicked();
   $('#phaseInfo').textContent = act ? `מאז ${fmtFull(act.from)}` : 'בלי שלב אין יעד להשוואה.';
   $('#targetKg').value = act && act.targetKg != null ? String(act.targetKg) : '';
   $('#targetErr').hidden = true;
   $('#phaseSheet').hidden = false;
-};
+}
+$('#phaseBtn').onclick = openPhase;
 document.querySelectorAll('[data-phase]').forEach(b => b.onclick = () => { picked = b.dataset.phase; markPicked(); });
 $('#phaseCancel').onclick = () => { $('#phaseSheet').hidden = true; };
 $('#phaseSave').onclick = async () => {
@@ -265,23 +290,48 @@ $('#phaseSave').onclick = async () => {
 };
 
 let rz;
+// The home scale follows its box's width directly (screen turned, or the home shown after being hidden).
+let hsW = 0;
+new ResizeObserver(([e]) => {
+  const w = Math.round(e.contentRect.width);
+  if (w && w !== hsW && state.summary) { hsW = w; drawScale(state.summary.rate, '#hScale'); }
+}).observe($('#hScale'));
 addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => {
-  if (state.summary) { drawScale(state.summary.rate); drawChart(); }
+  if (state.summary) { drawScale(state.summary.rate); drawScale(state.summary.rate, '#hScale'); drawChart(); }
   if (!$('#anaView').hidden) redrawAnalytics();
 }, 150); });
 
 // Analytics screen: opened from the header, recomputed from the stored records every time.
-$('#anaBtn').onclick = () => {
+function openAnalytics() {
   if (!state.data) return; // first render not finished yet
   showView('analytics');
   renderAnalytics({ ...state.data, phases: state.phases, today: todayISO() });
-};
-$('#anaBack').onclick = () => showView('main');
+}
+$('#anaBtn').onclick = openAnalytics; $('#hAna').onclick = openAnalytics;
+$('#anaBack').onclick = () => showView(state.back);
 
 // Photos screen: its own module; gets the toast and the weigh-ins (for the before/after captions).
 initPhotos({ toast, weighins: () => (state.data ? state.data.W : []) });
-$('#phoBtn').onclick = () => { showView('photos'); openPhotos(); };
-$('#phoBack').onclick = () => showView('main');
+const goPhotos = () => { showView('photos'); openPhotos(); };
+$('#phoBtn').onclick = goPhotos;
+$('#phoBack').onclick = () => showView(state.back);
+$('#mainBack').onclick = () => showView('home');
+
+// "עוד" on the dark home: photos, history, backup (light screens until stage 3), phase.
+$('#hMore').onclick = () => { $('#moreSheet').hidden = false; };
+$('#moreCancel').onclick = () => { $('#moreSheet').hidden = true; };
+document.querySelectorAll('[data-more]').forEach(b => b.onclick = () => {
+  $('#moreSheet').hidden = true;
+  const m = b.dataset.more;
+  if (m === 'photos') goPhotos();
+  else if (m === 'phase') openPhase();
+  else {
+    showView('main');
+    const sec = $(m === 'history' ? '#histSec' : '#backupSec');
+    if (m === 'history') sec.open = true;
+    sec.scrollIntoView();
+  }
+});
 
 document.querySelectorAll('[data-list]').forEach(b => b.onclick = () => {
   document.querySelectorAll('[data-list]').forEach(x => x.setAttribute('aria-selected', x === b));
@@ -336,16 +386,19 @@ async function rawData() {
   return { weighins, measurements, checkins };
 }
 const ci = { data: null, tag: 'normal', dirty: false };
+// One view at a time. Sub-screens return to the screen they were opened from (home or the light report).
+const VIEWS = { home: '#homeView', main: '#main', checkin: '#checkinView', analytics: '#anaView', photos: '#phoView' };
+state.view = 'home'; state.back = 'home';
 function showView(v) {
-  $('#main').hidden = v !== 'main'; $('#checkinView').hidden = v !== 'checkin'; $('#anaView').hidden = v !== 'analytics';
-  $('#phoView').hidden = v !== 'photos';
+  if (v === 'home' || v === 'main') state.back = v;
+  state.view = v;
+  for (const [k, sel] of Object.entries(VIEWS)) $(sel).hidden = k !== v;
+  document.documentElement.classList.toggle('dk', v === 'home');
   scrollTo(0, 0);
+  // the scale is drawn at the box's width, which is 0 while the home is hidden
+  if (v === 'home' && state.summary) drawScale(state.summary.rate, '#hScale');
 }
-// After a check-in the verdict screen shows "סיום" at the bottom instead of the entry buttons (mockup).
-function afterCheckin(on, measured = false) {
-  $('#actions').hidden = on; $('#doneBar').hidden = !on;
-  $('#circSec').open = on && measured;
-}
+showView('home');
 function showErr(input, errEl, msg) {
   input.setAttribute('aria-invalid', msg ? 'true' : 'false');
   errEl.hidden = !msg; errEl.textContent = msg || '';
@@ -406,11 +459,12 @@ for (const t of TAGS) {
   b.onclick = () => { ci.tag = t.id; ci.dirty = true; markTags(); };
   tagBox.append(b);
 }
-$('#checkinBtn').onclick = async () => {
+async function openCheckin() {
   ci.data = await rawData();
   fillCheckin(todayISO());
   showView('checkin');
-};
+}
+$('#checkinBtn').onclick = openCheckin; $('#lensBtn').onclick = openCheckin;
 $('#ciDate').onchange = () => { if ($('#ciDate').value) fillCheckin($('#ciDate').value); };
 // Typing in a field clears its error until the next save.
 const clearErr = (input, errEl) => { if (input.getAttribute('aria-invalid') === 'true') showErr(input, errEl, null); };
@@ -422,7 +476,7 @@ $('#checkinView').addEventListener('input', e => {
 });
 $('#qKg').addEventListener('input', e => clearErr(e.target, $('#qKgErr')));
 $('#ciNote').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }; // Enter closes the keyboard, doesn't save
-const leaveCheckin = () => { if (!ci.dirty || confirm('לצאת בלי לשמור?')) showView('main'); };
+const leaveCheckin = () => { if (!ci.dirty || confirm('לצאת בלי לשמור?')) showView(state.back); };
 $('#ciCancel').onclick = leaveCheckin; $('#ciCancelTop').onclick = leaveCheckin;
 
 document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
@@ -441,15 +495,13 @@ $('#checkinView').onsubmit = async e => {
   if (!jumpOk(r.apply.weighins[0].kg, prevWeighin(ci.data, form.date))) return;
   try { await writeAll(r.apply); } catch { toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
   await requestPersistence();
-  showView('main');
-  afterCheckin(true, (r.apply.measurements || []).some(m => !m.deleted));
+  showView('home');
   await render();
   toast('הצ׳ק-אין נשמר.', 8000, async () => {
     try { await writeAll(r.undo); } catch { toast('לא הצלחתי לבטל.'); return; }
-    afterCheckin(false); await render(); toast('הצ׳ק-אין בוטל.');
+    await render(); toast('הצ׳ק-אין בוטל.');
   });
 };
-$('#doneBtn').onclick = () => { afterCheckin(false); scrollTo(0, 0); };
 
 $('#quickBtn').onclick = async () => {
   ci.data = await rawData();

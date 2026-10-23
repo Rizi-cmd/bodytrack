@@ -47,7 +47,16 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
     await expect(page.locator('#circTable tr')).toHaveCount(11);
     await expect(page.locator('#notes')).toContainText('מחלה');    // invented sick-tagged weigh-in in the window
   };
+  // The light report (history, backup, chart) opens from "עוד" on the dark home.
+  const toReport = async () => {
+    await page.locator('#hMore').click();
+    await page.locator('[data-more="history"]').click();
+    await expect(page.locator('#main')).toBeVisible();
+  };
   const expectCut = async () => {
+    await expect(page.locator('#hWord')).toHaveText('↓ יורד');
+    await expect(page.locator('#hWord')).toHaveClass(/good/);
+    await expect(page.locator('#hLabel')).toHaveText('לכיוון היעד');
     await expect(page.locator('#vWord')).toHaveText('↓ יורד');
     await expect(page.locator('#vWord')).toHaveClass(/good/);
     await expect(page.locator('#vLabel')).toHaveText('לכיוון היעד');
@@ -57,6 +66,13 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
 
   // 1. Fresh start: empty state.
   await page.goto(origin + '/');
+  await expect(page.locator('#homeView')).toBeVisible();
+  await expect(page.locator('#main')).toBeHidden();
+  await expect(page.locator('#hWord')).toHaveText('מוקדם להגיד');
+  await expect(page.locator('#hRate')).toHaveText('—');
+  await expect(page.locator('#hWhen')).toHaveText('עוד אין שקילות');
+  await layoutOk('home empty');
+  await toReport();
   await expect(page.locator('#vWord')).toHaveText('מוקדם להגיד');
   await expect(page.locator('#vLabel')).toHaveText('אין עדיין שקילות');
   await expect(page.locator('#rate')).toHaveText('—');
@@ -152,7 +168,10 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await layoutOk('check-in');
   await page.screenshot({ path: testInfo.outputPath('checkin.png'), fullPage: true });
   await page.locator('#ciSave').click();
-  await expect(page.locator('#main')).toBeVisible();
+  await expect(page.locator('#homeView')).toBeVisible();             // saving goes back to the dark home
+  await expect(page.locator('#hWhen')).toContainText('שקילה אחרונה');
+  await expect(page.locator('#lensDots .ldot')).toHaveCount(4);
+  await toReport();
   await expect(page.locator('#lastKg')).toHaveText('79.9');
   await expect(page.locator('#listW .row')).toHaveCount(17);
   await expect(page.locator('#notes')).toContainText('חופשה');
@@ -164,12 +183,6 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect(page.locator('#chartRead')).toContainText('79.9');
   await expect(page.locator('#chartRead')).toContainText('חופשה · SAMPLE note');
   await page.mouse.up();
-  await expect(page.locator('#actions')).toBeHidden();
-  await expect(page.locator('#circSec')).toHaveAttribute('open', '');
-  await expect(page.locator('#doneBar')).toBeVisible();
-  await page.locator('#doneBtn').click();
-  await expect(page.locator('#doneBar')).toBeHidden();
-  await expect(page.locator('#actions')).toBeVisible();
   await page.locator('#toastAct').click();
   await expect(page.locator('#toastMsg')).toHaveText('הצ׳ק-אין בוטל.');
   await expect(page.locator('#lastKg')).toHaveText('80.2');
@@ -204,11 +217,10 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await expect(page.locator('#lastKg')).toHaveText('80.2');
 
   // Circumferences tab shows the newest full set (waist 84 - 4.5 = 79.5).
-  await expect(page.locator('#histSec')).not.toHaveAttribute('open', '');   // closed by default
+  await expect(page.locator('#histSec')).toHaveAttribute('open', '');       // "היסטוריה" in "עוד" opens it
   await expect(page.locator('#circSec')).not.toHaveAttribute('open', '');
   await page.locator('#circSec summary').click();
   await expect(page.locator('#circTable')).toBeVisible();
-  await page.locator('#histSec summary').click();
   await page.locator('[data-list="m"]').click();
   await expect(page.locator('#listM .mday')).toHaveCount(5);
   await expect(page.locator('#listM .mday').first()).toContainText('79.5');
@@ -276,6 +288,37 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   expect(await page.evaluate(() => { const h = document.querySelector('.hero'); return h.scrollWidth <= h.clientWidth + 1; })).toBe(true);
   await page.screenshot({ path: testInfo.outputPath('verdict-375.png') });
   await page.setViewportSize({ width: 440, height: 956 });
+
+  // Dark home: same numbers, lens with the last 4 weigh-ins, fits on both phone sizes.
+  await page.locator('#mainBack').click();
+  await expect(page.locator('#homeView')).toBeVisible();
+  await expectCut();
+  await expect(page.locator('#hRate')).toHaveText(M + '0.33');
+  await expect(page.locator('#hWhen')).toContainText('10.10.2026');
+  await expect(page.locator('#lensDots .ldot')).toHaveCount(4);
+  await expect(page.locator('#lensDots .lavg')).toHaveCount(1);
+  await page.locator('#toast').evaluate(e => { e.hidden = true; });
+  await layoutOk('home');
+  for (const [width, height] of [[375, 667], [375, 812], [440, 956]]) {
+    await page.setViewportSize({ width, height });
+    await page.waitForTimeout(200);
+    const fits = await page.evaluate(() => document.querySelector('#hAna').getBoundingClientRect().bottom <= innerHeight + 1);
+    expect(fits, `home @${width}x${height}: ניתוח button below the fold`).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath(`home-${width}x${height}.png`) });
+  }
+  // "עוד" → phase opens the phase sheet; the lens opens the weigh-in form; back returns home.
+  await page.locator('#hMore').click();
+  await page.locator('[data-more="phase"]').click();
+  await expect(page.locator('#phaseSheet')).toBeVisible();
+  await page.locator('#phaseCancel').click();
+  await page.locator('#lensBtn').click();
+  await expect(page.locator('#checkinView')).toBeVisible();
+  await page.locator('#ciCancelTop').click();
+  await expect(page.locator('#homeView')).toBeVisible();
+  await page.locator('#hAna').click();
+  await expect(page.locator('#anaView')).toBeVisible();
+  await page.locator('#anaBack').click();
+  await expect(page.locator('#homeView')).toBeVisible();
 
   // 3. Wait until the service worker controls the page and has cached the shell.
   await page.evaluate(() => navigator.serviceWorker.ready);
