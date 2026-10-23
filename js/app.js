@@ -3,7 +3,7 @@
 import { SITES, fmtDate, fmtCm, todayISO } from './model.js';
 import { getAll, put, writeAll, getMeta, requestPersistence } from './db.js';
 import {
-  TAGS, stepKg, checkinDefaults, buildCheckin, buildWeighin, bigJump, prevWeighin, editWeighin, deleteWeighin, editMeasureDay, deleteMeasureDay
+  TAGS, stepKg, stepCm, CM_STEP, checkinDefaults, buildCheckin, buildWeighin, bigJump, prevWeighin, editWeighin, deleteWeighin, editMeasureDay, deleteMeasureDay
 } from './checkin.js';
 import { validate, restore, shareBackup } from './backup.js';
 import { trendSummary, fmtRate, fmtWeight, EMPTY } from './trend.js';
@@ -15,7 +15,7 @@ import { initPhotos, openPhotos } from './photosScreen.js';
 import { startGalaxy } from './galaxy.js';
 import { heroTracks, heroAt, countAt, HERO_MS } from './motion.js';
 
-export const VERSION = '0.10.0';
+export const VERSION = '0.11.0';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -425,7 +425,8 @@ function showView(v) {
 // The galaxy runs on the home (around the lens) and on the weight screen (around the weight); not over the circumference list.
 function galaxyFor() {
   const w = state.view === 'checkin' && $('#checkinView').dataset.pane === 'w';
-  galaxy?.setLens(w ? $('#ciW .wLens') : $('#lens'));
+  document.documentElement.dataset.page = state.view === 'checkin' ? ($('#checkinView').dataset.pane === 'c' ? 'circ' : 'weigh') : 'home';
+  galaxy?.setLens(w ? $('#ciW .wLens') : $('#lens'), w ? 'weigh' : 'home');
   galaxy?.show(state.view === 'home' || w);
 }
 showView('home');
@@ -443,7 +444,52 @@ function kgInfo(box, d) {
 const markTags = () => document.querySelectorAll('[data-tag]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tag === ci.tag));
 
 // One row per site: name (+ error), previous value and date, input. Ids: `${prefix}-${site}`, `${prefix}-err-${site}`.
+// −/+ buttons: weight steps by 0.1; a circumference (data-prev) by CM_STEP, starting from the previous value when empty.
+// hold = keep stepping (after 0.4 s, about 12 steps a second), on the dark screens only.
+function stepOnce(b) {
+  const i = document.getElementById(b.dataset.for);
+  i.value = 'prev' in b.dataset ? stepCm(i.value, b.dataset.prev === '' ? null : +b.dataset.prev, +b.dataset.step) : stepKg(i.value, +b.dataset.step);
+  i.dispatchEvent(new Event('input', { bubbles: true }));
+}
+function stepper(b, hold) {
+  b.onclick = () => { if (b.dataset.held) delete b.dataset.held; else stepOnce(b); };
+  if (!hold) return;
+  let t = null;
+  const stop = () => { clearTimeout(t); clearInterval(t); t = null; };
+  b.addEventListener('pointerdown', () => { stop(); delete b.dataset.held; t = setTimeout(() => { b.dataset.held = '1'; stepOnce(b); t = setInterval(() => stepOnce(b), 80); }, 400); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, stop);
+  b.addEventListener('contextmenu', e => e.preventDefault());
+}
+// Dark circumference card: name + previous value, then − [value] +. An untouched row stays empty (= not measured);
+// the previous value shows faintly in the field, and tapping the field takes it as today's value.
+function cmCard(tb, s, prefix) {
+  const id = `${prefix}-${s.id}`, tr = el('tr');
+  const name = el('td', 'nm'); const lab = el('label', null, s.he); lab.htmlFor = id;
+  const prev = el('span', 'prev');
+  if (s.prev) prev.append('קודם ', num(fmtWeight(s.prev.cm)), ' · ', num(fmtDay(s.prev.date)));
+  else prev.append('מדידה ראשונה');
+  const err = el('span', 'err', ''); err.hidden = true; err.id = `${prefix}-err-${s.id}`;
+  name.append(lab, prev, err);
+  const inp = el('input', 'field n'); inp.id = id; inp.inputMode = 'decimal'; inp.dir = 'ltr'; inp.autocomplete = 'off'; inp.value = s.value;
+  inp.enterKeyHint = 'done';
+  if (s.prev) inp.placeholder = fmtWeight(s.prev.cm);
+  inp.addEventListener('focus', () => {
+    if (!inp.value && s.prev) { inp.value = fmtWeight(s.prev.cm); inp.dispatchEvent(new Event('input', { bubbles: true })); }
+    setTimeout(() => inp.select(), 0);
+  });
+  const ctl = el('td', 'ctl'), box = el('div', 'cStep');
+  for (const [d, sign, he] of [[-CM_STEP, '−', 'פחות'], [CM_STEP, '+', 'עוד']]) {
+    const b = el('button', 'cBtn', sign); b.type = 'button';
+    b.dataset.for = id; b.dataset.step = d; b.dataset.prev = s.prev ? s.prev.cm : '';
+    b.setAttribute('aria-label', `${s.he}: ${he} ${CM_STEP} ס״מ`);
+    stepper(b, true);
+    box.append(b);
+    if (d < 0) box.append(inp);
+  }
+  ctl.append(box); tr.append(name, ctl); tb.append(tr);
+}
 function siteRows(tb, sites, prefix) {
+  if (prefix === 'ci') { tb.replaceChildren(); for (const s of sites) cmCard(tb, s, prefix); return; }
   tb.replaceChildren();
   for (const s of sites) {
     const tr = el('tr');
@@ -540,20 +586,7 @@ $('#ciNote').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); e.t
 const leaveCheckin = () => { if (!ci.dirty || confirm('לצאת בלי לשמור?')) showView(state.back); };
 $('#ciCancelTop').onclick = leaveCheckin;
 
-const stepOnce = b => {
-  const i = document.getElementById(b.dataset.for);
-  i.value = stepKg(i.value, +b.dataset.step);
-  i.dispatchEvent(new Event('input', { bubbles: true }));
-};
-document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => { if (b.dataset.held) delete b.dataset.held; else stepOnce(b); });
-// On the weight screen, holding − or + keeps stepping (after 0.4 s, about 12 steps a second).
-document.querySelectorAll('.wStep').forEach(b => {
-  let t = null;
-  const stop = () => { clearTimeout(t); clearInterval(t); t = null; };
-  b.addEventListener('pointerdown', () => { stop(); delete b.dataset.held; t = setTimeout(() => { b.dataset.held = '1'; stepOnce(b); t = setInterval(() => stepOnce(b), 80); }, 400); });
-  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, stop);
-  b.addEventListener('contextmenu', e => e.preventDefault());
-});
+document.querySelectorAll('[data-step]').forEach(b => stepper(b, b.classList.contains('wStep')));
 
 $('#checkinView').onsubmit = async e => {
   e.preventDefault();

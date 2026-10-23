@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { stepCm, CM_STEP } from '../js/checkin.js';
 import { parseNum, stepKg, checkinDefaults, buildCheckin, buildWeighin, bigJump, prevWeighin, editWeighin, deleteWeighin, editMeasureDay, deleteMeasureDay, KG, CM, NOTE_MAX } from '../js/checkin.js';
 import { trendSummary } from '../js/trend.js';
 import { footnotes } from '../js/report.js';
@@ -224,4 +225,16 @@ test('history: fix or delete one day of circumferences; undo restores', () => {
   assert.equal(liveM(apply(data, del.apply)).filter(m => m.date === day).length, 0);
   assert.deepEqual(liveM(apply(apply(data, del.apply), del.undo)), liveM(data));
   assert.equal(deleteMeasureDay(data, '1999-01-01', AT).ok, false);
+});
+
+test('stepCm: empty row starts from the previous value; typed value steps; stays in range', () => {
+  assert.equal(CM_STEP, 0.5);
+  assert.equal(stepCm('', 83.5, -0.5), '83.0');
+  assert.equal(stepCm('', 83.5, 0.5), '84.0');
+  assert.equal(stepCm('79', 83.5, 0.5), '79.5');        // what was typed wins over the previous value
+  assert.equal(stepCm('79,3', null, -0.5), '78.8');     // comma accepted, no float noise
+  assert.equal(stepCm('', null, 0.5), '');              // no previous measurement: nothing invented
+  assert.equal(stepCm('  ', undefined, 0.5), '');
+  assert.equal(stepCm('5.2', null, -0.5), '5.2');        // would leave the range: unchanged
+  assert.equal(stepCm('abc', 80, 0.5), 'abc');           // junk left for the validator to name
 });

@@ -165,6 +165,15 @@ test('restore fixture, reload, reload offline; no errors, no outside network', a
   await page.locator('#ciCircBtn').click();
   await expect(page.locator('#ciC')).toBeVisible();
   await expect(page.locator('#ciW')).toBeHidden();
+  // −/+ start from the previous value; an untouched row stays empty (not measured).
+  await expect(page.locator('#ci-hips')).toHaveValue('');
+  await expect(page.locator('#ci-hips')).toHaveAttribute('placeholder', '94.5');
+  await page.locator('[data-for="ci-hips"][data-step="-0.5"]').click();
+  await expect(page.locator('#ci-hips')).toHaveValue('94.0');
+  await page.locator('[data-for="ci-hips"][data-step="0.5"]').click();
+  await page.locator('[data-for="ci-hips"][data-step="0.5"]').click();
+  await expect(page.locator('#ci-hips')).toHaveValue('95.0');
+  await page.locator('#ci-hips').fill('');
   await page.locator('#ci-waist').fill('7.9.1');
   await page.locator('#ciCircDone').click();
   await page.locator('#ciSave').click();

@@ -31,6 +31,17 @@ export function stepKg(text, delta) {
   return r >= KG.lo && r <= KG.hi ? String(r) : String(text);
 }
 
+// Circumference −/+ (owner 23.10): an empty row starts from the previous measurement, so one tap is "a bit less/more than last time".
+// An empty row stays empty (= not measured) until the owner touches it; with no previous value −/+ does nothing.
+export const CM_STEP = 0.5;
+export function stepCm(text, prevCm, delta) {
+  const t = String(text ?? '').trim();
+  const base = t ? parseNum(t, { lo: -Infinity, hi: Infinity }) : (typeof prevCm === 'number' ? prevCm : null);
+  if (base === null || Number.isNaN(base)) return t;
+  const r = roundN(base + delta, 1);
+  return r >= CM.lo && r <= CM.hi ? r.toFixed(1) : t;
+}
+
 const live = list => (list || []).filter(r => r && !r.deleted);
 const before = (list, date) => live(list).filter(r => isISODate(r.date) && r.date < date)
   .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));

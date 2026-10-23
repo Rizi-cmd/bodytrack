@@ -7,16 +7,18 @@ const VS = `#version 300 es
 precision highp float;
 in vec4 aP; // kind (0 disc, 1 star), radius or x, angle or y, seed
 uniform vec2 uRes; uniform vec3 uLens; uniform float uTime, uIntro, uDpr; uniform vec3 uTouch;
+uniform vec4 uShape; uniform vec3 uCore, uArm1, uArm2; // per-page look: squash, tilt, scale, ring (0 spiral → 1 ring)
 out vec3 vCol; out float vA;
 void main(){
   float kind=aP.x, seed=aP.w; vec2 pos; float a, size;
   if(kind<.5){
-    float r=aP.y*mix(1.7,1.,uIntro);
+    float r0=mix(aP.y,.72+(aP.y-.5)*.32,uShape.w);   // ring pages pull the dots into a band
+    float r=r0*mix(1.7,1.,uIntro);
     float ang=aP.z+uTime*.035/(.25+aP.y);
-    vec2 d=vec2(cos(ang),sin(ang))*r; d.y*=.55;
-    float cr=cos(-.2), sr=sin(-.2); d=vec2(d.x*cr-d.y*sr,d.x*sr+d.y*cr);
-    pos=uLens.xy+d*uLens.z*2.5;
-    vCol=mix(vec3(.88,.88,1.),mix(vec3(.52,.60,1.),vec3(.62,.48,.96),smoothstep(.3,1.,aP.y)),smoothstep(0.,.3,aP.y));
+    vec2 d=vec2(cos(ang),sin(ang))*r; d.y*=uShape.x;
+    float cr=cos(uShape.y), sr=sin(uShape.y); d=vec2(d.x*cr-d.y*sr,d.x*sr+d.y*cr);
+    pos=uLens.xy+d*uLens.z*uShape.z;
+    vCol=mix(uCore,mix(uArm1,uArm2,smoothstep(.3,1.,aP.y)),smoothstep(0.,.3,r0));
     a=mix(.85,.6,smoothstep(0.,.35,aP.y))*(1.-smoothstep(.85,1.1,aP.y)*.6)*(.75+.25*sin(uTime*.8+seed*60.));
     size=2.4+2.2*fract(seed*7.31);
   }else{
@@ -40,6 +42,11 @@ const FS = `#version 300 es
 precision mediump float; in vec3 vCol; in float vA; out vec4 o;
 void main(){float d=length(gl_PointCoord-.5)*2.;float a=1.-smoothstep(0.,1.,d);a*=a*vA;if(a<.003)discard;o=vec4(vCol*a,a);}`;
 
+// Same family, a different galaxy per page (owner 23.10). shape = [squash, tilt, scale × lens radius, ring].
+const THEMES = {
+  home: { shape: [.55, -.2, 2.5, 0], core: [.88, .88, 1], arm1: [.52, .60, 1], arm2: [.62, .48, .96] },   // violet two-arm spiral
+  weigh: { shape: [.34, .22, 2.3, 1], core: [.85, .97, 1], arm1: [.50, .78, 1], arm2: [.42, .90, .95] }  // ice-cyan ring, tilted the other way
+};
 const N_DISC = 5600, N_STARS = 420, INTRO_MS = 900;
 
 function rnd(seed) { return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -69,14 +76,14 @@ export function startGalaxy(canvas, lensEl) {
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
   } catch { return null; }
   const U = n => gl.getUniformLocation(prog, n);
-  const u = { res: U('uRes'), lens: U('uLens'), time: U('uTime'), intro: U('uIntro'), dpr: U('uDpr'), touch: U('uTouch') };
+  const u = { shape: U('uShape'), core: U('uCore'), arm1: U('uArm1'), arm2: U('uArm2'), res: U('uRes'), lens: U('uLens'), time: U('uTime'), intro: U('uIntro'), dpr: U('uDpr'), touch: U('uTouch') };
   const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, particles(), gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 0, 0);
   gl.useProgram(prog); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
 
   const rm = matchMedia('(prefers-reduced-motion: reduce)');
-  const s = { on: false, raf: 0, last: -1e9, t0: performance.now(), clock: 0, intro0: null, lens: [0, 0, 1], w: 0, h: 0, dpr: 1,
+  const s = { theme: 'home', on: false, raf: 0, last: -1e9, t0: performance.now(), clock: 0, intro0: null, lens: [0, 0, 1], w: 0, h: 0, dpr: 1,
     touch: { x: -1e4, y: -1e4, k: 0, held: false } };
 
   function resize() {
@@ -90,6 +97,8 @@ export function startGalaxy(canvas, lensEl) {
     const ie = 1 - (1 - intro) ** 3;
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    const t = THEMES[s.theme] || THEMES.home;
+    gl.uniform4f(u.shape, ...t.shape); gl.uniform3f(u.core, ...t.core); gl.uniform3f(u.arm1, ...t.arm1); gl.uniform3f(u.arm2, ...t.arm2);
     gl.uniform2f(u.res, s.w, s.h); gl.uniform3f(u.lens, ...s.lens); gl.uniform1f(u.time, s.clock);
     gl.uniform1f(u.intro, ie); gl.uniform1f(u.dpr, s.dpr); gl.uniform3f(u.touch, s.touch.x, s.touch.y, s.touch.k);
     gl.drawArrays(gl.POINTS, 0, N_DISC + N_STARS);
@@ -143,6 +152,6 @@ export function startGalaxy(canvas, lensEl) {
     },
     relayout: kick,
     // the galaxy gathers around this element (the home lens, or the weight on the weigh-in screen)
-    setLens(el) { lensEl = el; kick(); }
+    setLens(el, theme = 'home') { lensEl = el; s.theme = theme; kick(); }
   };
 }
