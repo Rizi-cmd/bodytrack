@@ -12,8 +12,10 @@ import {
 } from './report.js';
 import { renderAnalytics, redraw as redrawAnalytics } from './analyticsScreen.js';
 import { initPhotos, openPhotos } from './photosScreen.js';
+import { startGalaxy } from './galaxy.js';
+import { heroTracks, heroAt, countAt, HERO_MS } from './motion.js';
 
-export const VERSION = '0.8.0';
+export const VERSION = '0.9.0';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -149,15 +151,32 @@ function renderHome(s, v) {
   hw.textContent = (v.arrow ? v.arrow + ' ' : '') + v.word;
   $('#hLabel').textContent = v.label;
   $('#hSlow').hidden = !v.slow; $('#hSlow').textContent = v.slowWord || '';
-  $('#hRate').textContent = s.rate === null ? EMPTY : fmtRate(s.rate);
   $('#hSub').hidden = s.rate === null;
-  // The 4 points sit in the upper part of the lens (y 14–44 of 100), clear of the rate number.
-  const L = lensPoints(s.series), svg = $('#lensDots'); svg.replaceChildren();
-  const X = x => 8 + 84 * x, Y = y => 14 + 30 * y;
-  if (L.avgY !== null) svg.append(sv('line', { class: 'lavg', x1: 18, x2: 82, y1: Y(L.avgY), y2: Y(L.avgY) }));
-  L.points.forEach((p, i) => svg.append(sv('circle', { class: 'ldot' + (i === L.points.length - 1 ? ' new' : ''), cx: X(p.x), cy: Y(p.y), r: i === L.points.length - 1 ? 2.6 : 1.9 })));
+  const L = lensPoints(s.series), hero = state.hero; state.hero = null;
+  const frameOf = L => ({ points: L.points.map((p, i) => ({ ...p, o: 1, last: i === L.points.length - 1 })), avg: L.avgY === null ? null : { y: L.avgY, o: 1 } });
+  const still = () => { drawLens(frameOf(L)); $('#hRate').textContent = s.rate === null ? EMPTY : fmtRate(s.rate); };
   drawScale(s.rate, '#hScale');
+  // Hero moment (§5): after a save the new weigh-in rises into the lens, the oldest leaves, the rate counts to its new value.
+  if (!hero || state.view !== 'home' || matchMedia('(prefers-reduced-motion: reduce)').matches) return still();
+  const tr = heroTracks(hero.L, L), t0 = performance.now();
+  const step = now => {
+    const t = Math.min((now - t0) / HERO_MS, 1);
+    drawLens(heroAt(tr, t));
+    const r = countAt(hero.rate, s.rate, t);
+    $('#hRate').textContent = r === null ? EMPTY : fmtRate(r);
+    if (t < 1) requestAnimationFrame(step); else still();
+  };
+  requestAnimationFrame(step);
 }
+// The 4 points sit in the upper part of the lens (y 14–44 of 100), clear of the rate number.
+function drawLens(f) {
+  const svg = $('#lensDots'); svg.replaceChildren();
+  const X = x => 8 + 84 * x, Y = y => 14 + 30 * y;
+  if (f.avg) svg.append(sv('line', { class: 'lavg', x1: 18, x2: 82, y1: Y(f.avg.y), y2: Y(f.avg.y), style: `opacity:${0.8 * f.avg.o}` }));
+  f.points.forEach(p => svg.append(sv('circle', { class: 'ldot' + (p.last ? ' new' : ''), cx: X(p.x), cy: Y(p.y), r: p.last ? 2.6 : 1.9, style: `opacity:${p.o}` })));
+}
+// Before a save: remember the lens, so the home can play the hero moment once it is redrawn.
+const keepLens = () => { if (state.summary) state.hero = { L: lensPoints(state.summary.series), rate: state.summary.rate }; };
 
 function renderVerdict(W, M, C) {
   const s = state.summary = trendSummary(W, state.phases, todayISO());
@@ -389,6 +408,7 @@ const ci = { data: null, tag: 'normal', dirty: false };
 // One view at a time. Sub-screens return to the screen they were opened from (home or the light report).
 const VIEWS = { home: '#homeView', main: '#main', checkin: '#checkinView', analytics: '#anaView', photos: '#phoView' };
 state.view = 'home'; state.back = 'home';
+const galaxy = startGalaxy($('#gal'), $('#lens'));
 function showView(v) {
   if (v === 'home' || v === 'main') state.back = v;
   state.view = v;
@@ -397,6 +417,7 @@ function showView(v) {
   scrollTo(0, 0);
   // the scale is drawn at the box's width, which is 0 while the home is hidden
   if (v === 'home' && state.summary) drawScale(state.summary.rate, '#hScale');
+  galaxy?.show(v === 'home');
 }
 showView('home');
 function showErr(input, errEl, msg) {
@@ -493,7 +514,8 @@ $('#checkinView').onsubmit = async e => {
   siteErrors('ci', r.errors.sites);
   if (!r.ok) { const bad = $('#checkinView [aria-invalid=true]'); if (bad) bad.focus(); return; }
   if (!jumpOk(r.apply.weighins[0].kg, prevWeighin(ci.data, form.date))) return;
-  try { await writeAll(r.apply); } catch { toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
+  keepLens();
+  try { await writeAll(r.apply); } catch { state.hero = null; toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
   await requestPersistence();
   showView('home');
   await render();
@@ -518,6 +540,7 @@ $('#quickForm').onsubmit = async e => {
   showErr($('#qKg'), $('#qKgErr'), r.errors.kg || r.errors.date);
   if (!r.ok) { $('#qKg').focus(); return; }
   if (!jumpOk(r.apply.weighins[0].kg, prevWeighin(ci.data, todayISO()))) return;
+  keepLens();
   try { await writeAll(r.apply); } catch { toast('לא הצלחתי לשמור. שום דבר לא השתנה.'); return; }
   await requestPersistence();
   $('#quickSheet').hidden = true;
@@ -592,5 +615,8 @@ $('#eDelete').onclick = async () => {
 $('#eCancel').onclick = () => { $('#editSheet').hidden = true; };
 
 $('#ver').textContent = 'גרסה ' + VERSION + '.';
-render();
+// Intro on open (≤1 s, §5): the galaxy gathers around the lens while the home fades in.
+document.documentElement.classList.add('intro');
+setTimeout(() => document.documentElement.classList.remove('intro'), 1000);
+render().then(() => galaxy?.show(state.view === 'home', true));
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
