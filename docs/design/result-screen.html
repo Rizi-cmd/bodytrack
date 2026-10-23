@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Result screen</title>
+<!-- Design file only (sample data). The journey as the result after a weigh-in: clean line + Tesla points + a passing bolt (owner 23.10.2026). -->
+<style>
+@font-face{font-family:Heebo;font-weight:500;src:url(../../fonts/heebo-hebrew-500-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:700;src:url(../../fonts/heebo-hebrew-700-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:800;src:url(../../fonts/heebo-hebrew-800-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-800-normal.woff2) format("woff2")}
+:root{--ink:#EEF1FF;--mute:#A9B0D6;--faint:#7E86B8;--good:#7DE3C1;--rule:rgba(190,200,255,.24)}
+*{box-sizing:border-box}
+body{margin:0;background:#020309;color:var(--ink);font-family:Heebo,system-ui,sans-serif;display:flex;gap:28px;justify-content:center;flex-wrap:wrap;padding:20px}
+.phone{width:375px;height:812px;border-radius:40px;overflow:hidden;position:relative;border:1px solid rgba(190,200,255,.10);
+  background:radial-gradient(110% 50% at 50% 52%,#15164a 0%,transparent 64%),radial-gradient(80% 40% at 0% 100%,#191552 0%,transparent 60%),#05060f;
+  display:flex;flex-direction:column;padding:22px 20px}
+.phone>*{position:relative}
+.n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+.hd{display:flex;justify-content:space-between;align-items:flex-start}
+.today{font-size:13px;color:var(--mute);font-weight:500;line-height:1.35}.today b{display:block;color:var(--ink);font-size:15px;font-weight:700}
+.saved{font-size:13px;font-weight:700;color:var(--good);border:1px solid rgba(125,227,193,.3);border-radius:14px;padding:4px 10px}
+.hero{text-align:center;margin-top:20px}
+.hero .w{font-size:20px;font-weight:800;color:var(--good)}
+.hero .v{font-size:84px;font-weight:800;letter-spacing:-.03em;line-height:.95;margin-top:6px}
+.hero .v small{font-size:20px;font-weight:700;margin-inline-start:6px;letter-spacing:0}
+.hero .k{font-size:13px;color:var(--mute);margin-top:6px}
+canvas{display:block;margin:8px -20px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:6px}
+.stats div{text-align:center}.stats div+div{border-right:1px solid rgba(190,200,255,.12)}
+.stats b{display:block;font-size:22px;font-weight:800;line-height:1.15}.stats span{font-size:12px;color:var(--mute)}
+.stats .g{color:var(--good)}
+.done{margin-top:auto;min-height:54px;border-radius:27px;background:var(--ink);color:#05060f;font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+<div class="phone" id="ph">
+  <svg id="stars" width="375" height="812" style="position:absolute;inset:0"></svg>
+  <div class="hd"><div class="today"><b id="day"></b><span class="n" id="clock"></span></div><span class="saved">✓ נשמר</span></div>
+  <div class="hero">
+    <div class="w">↓ יורד · בטווח היעד</div>
+    <div class="v n">81.0<small>ק״ג</small></div>
+    <div class="k">ממוצע 4 השקילות האחרונות</div>
+  </div>
+  <canvas id="cv"></canvas>
+  <div class="stats">
+    <div><b class="n g">−0.62</b><span>ק״ג לשבוע</span></div>
+    <div><b class="n">3.0</b><span>ק״ג עד היעד</span></div>
+    <div><b>דצמבר</b><span>צפי הגעה</span></div>
+  </div>
+  <div class="done">סיום</div>
+</div>
+<script>
+const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'], MON = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+const d0 = new Date(); document.getElementById('day').textContent = `יום ${DAYS[d0.getDay()]}, ${d0.getDate()} ב${MON[d0.getMonth()]}`;
+const tick = () => document.getElementById('clock').textContent = new Date().toTimeString().slice(0, 5); tick(); setInterval(tick, 10000);
+function rnd(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+{ const st = document.getElementById('stars'), r = rnd(5); for (let i = 0; i < 110; i++) { const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); c.setAttribute('cx', r() * 375); c.setAttribute('cy', r() * 812); c.setAttribute('r', .4 + r() * .9); c.setAttribute('fill', '#C8D2FF'); c.setAttribute('opacity', .08 + r() * .3); st.append(c); } }
+
+// ---- sample data ----
+const AVG = [86, 85.6, 84.9, 84.4, 83.7, 83.1, 82.4, 81.7, 81.0], TARGET = 78, ETA = 8 + 3 / .62;
+const W = 375, H = 380, PAD = { l: 30, r: 30, t: 44, b: 34 }, TMAX = ETA + .4, LO = 77.3, HI = 86.5;
+const X = t => PAD.l + t / TMAX * (W - PAD.l - PAD.r), Y = kg => PAD.t + (HI - kg) / (HI - LO) * (H - PAD.t - PAD.b);
+const cv = document.getElementById('cv'), dpr = Math.min(devicePixelRatio || 1, 2);
+cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+const g = cv.getContext('2d'); g.scale(dpr, dpr);
+function smooth(P, step = 2) {
+  const out = [];
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || P[i + 1];
+    const n = Math.max(4, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step));
+    for (let k = 0; k < n; k++) { const t = k / n, t2 = t * t, t3 = t2 * t;
+      out.push([0, 1].map(j => .5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3))); }
+  }
+  out.push(P[P.length - 1]); return out;
+}
+const NODES = AVG.map((v, i) => [X(i), Y(v)]), PTS = smooth(NODES), HEAD = NODES[NODES.length - 1], tgtY = Y(TARGET), etaX = X(ETA);
+const nodeIdx = NODES.map(n => PTS.findIndex(p => Math.abs(p[0] - n[0]) < .01 && Math.abs(p[1] - n[1]) < .01)).map((v, i, a) => v < 0 ? (i ? PTS.length - 1 : 0) : v);
+const path = P => { g.beginPath(); P.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); };
+function stroke(P, w, c, blur, bc) { g.save(); g.lineJoin = g.lineCap = 'round'; g.lineWidth = w; g.strokeStyle = c; if (blur) { g.shadowBlur = blur; g.shadowColor = bc || c; } path(P); g.stroke(); g.restore(); }
+function bolt(a, b, rough, depth, r) {
+  if (!depth) return [a, b];
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, nx = -(b[1] - a[1]) / len, ny = (b[0] - a[0]) / len, dd = (r() - .5) * len * rough;
+  const m = [(a[0] + b[0]) / 2 + nx * dd, (a[1] + b[1]) / 2 + ny * dd];
+  return [...bolt(a, m, rough, depth - 1, r).slice(0, -1), ...bolt(m, b, rough, depth - 1, r)];
+}
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const lineGrad = (() => { const gr = g.createLinearGradient(NODES[0][0], 0, HEAD[0], 0); gr.addColorStop(0, '#7b5cff'); gr.addColorStop(.6, '#62c6ff'); gr.addColorStop(1, '#ffffff'); return gr; })();
+const area = (() => { const gr = g.createLinearGradient(0, PAD.t, 0, tgtY); gr.addColorStop(0, 'rgba(110,140,255,.20)'); gr.addColorStop(1, 'rgba(110,140,255,0)'); return gr; })();
+const PERIOD = 3600, BOLT = 900;   // a bolt runs start → today for 0.9 s every 3.6 s
+
+function draw(ms) {
+  g.clearRect(0, 0, W, H);
+  const r = rnd(Math.floor(ms / 55));
+  // target hairline, label; projection dots flow toward the arrival month
+  g.save(); g.setLineDash([2, 6]); g.strokeStyle = 'rgba(125,227,193,.40)'; g.beginPath(); g.moveTo(PAD.l, tgtY); g.lineTo(W - PAD.r, tgtY); g.stroke(); g.restore();
+  g.direction = 'rtl'; g.font = '700 13px Heebo'; g.fillStyle = '#7DE3C1'; g.textAlign = 'right'; g.fillText('יעד 78.0', W - PAD.r, tgtY + 20);
+  const flow = RM ? 0 : (ms / 2000) % 1;
+  for (let k = 0; k < 12; k++) { const t = (k + flow) / 12; g.fillStyle = `rgba(190,215,255,${(.5 * (1 - t) + .08).toFixed(3)})`; g.beginPath(); g.arc(HEAD[0] + (etaX - HEAD[0]) * t, HEAD[1] + (tgtY - HEAD[1]) * t, 1.3, 0, 7); g.fill(); }
+  g.strokeStyle = 'rgba(125,227,193,.9)'; g.lineWidth = 1.5; g.beginPath(); g.arc(etaX, tgtY, 4.5, 0, 7); g.stroke();
+  g.font = '500 12px Heebo'; g.fillStyle = '#A9B0D6'; g.textAlign = 'center'; g.fillText('דצמ׳', etaX, tgtY - 12);
+  // soft area under the line
+  g.save(); path(PTS); g.lineTo(HEAD[0], tgtY); g.lineTo(NODES[0][0], tgtY); g.closePath(); g.fillStyle = area; g.fill(); g.restore();
+  // the clean line
+  g.save(); g.globalCompositeOperation = 'lighter';
+  stroke(PTS, 9, 'rgba(100,130,255,.10)', 18, 'rgba(110,150,255,.9)');
+  stroke(PTS, 2.6, lineGrad, 6, 'rgba(140,180,255,.8)');
+  // the bolt: a short lightning segment riding the line, arcs jump to the points it passes
+  const ph = (ms % PERIOD) / BOLT;
+  if (!RM && ph < 1) {
+    const e = ph < .5 ? 2 * ph * ph : 1 - (-2 * ph + 2) ** 2 / 2, i = Math.floor(e * (PTS.length - 1)), j0 = Math.max(0, i - 40);
+    const seg = PTS.slice(j0, i + 1); if (seg.length > 2) {
+      const b = []; for (let k = 0; k < seg.length - 8; k += 8) b.push(...bolt(seg[k], seg[k + 8], .55, 3, r).slice(k ? 1 : 0));
+      if (b.length > 1) { stroke(b, 5, 'rgba(170,160,255,.25)', 14, '#a9a0ff'); stroke(b, 1.4, 'rgba(255,255,255,.95)'); }
+    }
+    NODES.forEach((n, k) => { const d = Math.abs(nodeIdx[k] - i); if (d < 30 && k > 0) { const a = 1 - d / 30, bb = bolt(NODES[k - 1], n, .5, 4, r); stroke(bb, .9, `rgba(215,215,255,${.6 * a})`, 6, '#b9b0ff'); } });
+  }
+  // the weekly points: small electrodes, brighter right after the bolt passes
+  NODES.forEach((n, k) => {
+    if (k === NODES.length - 1) return;
+    const since = RM ? 9 : ((ms % PERIOD) - nodeIdx[k] / (PTS.length - 1) * BOLT) / 600, glow = since > 0 && since < 1 ? 1 - since : 0;
+    const R = 6 + 6 * glow, cg = g.createRadialGradient(n[0], n[1], 0, n[0], n[1], R);
+    cg.addColorStop(0, `rgba(240,240,255,${.75 + .25 * glow})`); cg.addColorStop(.35, `rgba(160,150,255,${.25 + .35 * glow})`); cg.addColorStop(1, 'rgba(120,100,255,0)');
+    g.fillStyle = cg; g.beginPath(); g.arc(n[0], n[1], R, 0, 7); g.fill();
+  });
+  // today: plasma point; gentle arcs crackle around it
+  const pr = RM ? 1 : 1 + .06 * Math.sin(ms / 300), hg = g.createRadialGradient(HEAD[0], HEAD[1], 0, HEAD[0], HEAD[1], 30 * pr);
+  hg.addColorStop(0, 'rgba(240,245,255,1)'); hg.addColorStop(.22, 'rgba(160,190,255,.45)'); hg.addColorStop(1, 'rgba(90,120,255,0)');
+  g.fillStyle = hg; g.beginPath(); g.arc(HEAD[0], HEAD[1], 30 * pr, 0, 7); g.fill();
+  if (!RM && r() < .5) { const a = r() * Math.PI * 2, L = 14 + r() * 10; stroke(bolt([HEAD[0] + Math.cos(a) * 5, HEAD[1] + Math.sin(a) * 5], [HEAD[0] + Math.cos(a) * L, HEAD[1] + Math.sin(a) * L], .6, 2, r), .8, 'rgba(220,225,255,.7)', 5, '#b9b0ff'); }
+  g.restore();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(HEAD[0], HEAD[1], 4.5, 0, 7); g.fill();
+  // labels
+  g.direction = 'rtl'; g.textAlign = 'center'; g.font = '800 15px Heebo'; g.fillStyle = '#EEF1FF'; g.fillText('היום', HEAD[0], HEAD[1] - 26);
+  g.direction = 'ltr'; g.textAlign = 'left'; g.font = '500 12px Heebo'; g.fillStyle = '#A9B0D6'; g.fillText('86.0', NODES[0][0] - 4, NODES[0][1] - 14);
+  g.direction = 'rtl'; g.textAlign = 'center'; g.fillStyle = '#7E86B8'; g.fillText('אוג׳', NODES[0][0], H - 8);
+  if (!RM) requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
