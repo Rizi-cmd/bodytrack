@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BodyTrack · עמוד המשקל</title>
+<!-- Design file only. Sample data, invented. Weight page (journey), dark, per docs/specs/weight-page.md (23.10.2026).
+     Text with a dotted underline = placeholder wording for hebrew-writer. Canvas labels marked in the build spec. -->
+<style>
+@font-face{font-family:Heebo;font-weight:400;src:url(../../fonts/heebo-hebrew-400-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:500;src:url(../../fonts/heebo-hebrew-500-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:700;src:url(../../fonts/heebo-hebrew-700-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:800;src:url(../../fonts/heebo-hebrew-800-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-800-normal.woff2) format("woff2")}
+:root{--bg:#060818;--ink:#EEF1FF;--mute:#B0B7DA;--faint:#8F97C6;--ice:#A9C4FF;--hair:rgba(190,200,255,.15);--rule:rgba(190,200,255,.28)}
+*{box-sizing:border-box}
+body{margin:0;background:#020309;color:var(--ink);font-family:Heebo,system-ui,sans-serif;font-size:14px;line-height:1.45;padding:28px 20px 60px}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+.tx{text-decoration:underline dotted var(--faint);text-underline-offset:3px}
+h1{font-size:28px;font-weight:800;margin:0 0 4px}
+h2{font-size:20px;font-weight:800;margin:48px 0 4px;padding-top:10px;border-top:3px solid var(--ink)}
+.lead{color:var(--mute);max-width:900px;margin:0 0 18px}
+.row{display:flex;flex-wrap:wrap;gap:30px 24px;align-items:flex-start}
+.lbl{font-size:15px;font-weight:800;margin:0 0 6px}.lbl small{font-size:13px;font-weight:500;color:var(--faint);margin-inline-start:6px}
+
+/* ---------- phone frame (mock only) ---------- */
+.phone{position:relative;overflow:hidden;border-radius:44px;border:1px solid rgba(190,200,255,.12);
+  background:radial-gradient(110% 42% at 50% 14%,#0f2350 0%,transparent 64%),radial-gradient(80% 36% at 0% 100%,#0e1a44 0%,transparent 60%),var(--bg)}
+.phone .sky{position:absolute;inset:0;pointer-events:none}
+.phone .island{position:absolute;top:11px;left:50%;width:126px;height:37px;margin-left:-63px;border-radius:20px;background:#000;z-index:5}
+.phone.se .island{display:none}
+.phone::after{content:"";position:absolute;bottom:8px;left:50%;width:140px;height:5px;margin-left:-70px;border-radius:3px;background:rgba(238,241,255,.35);z-index:5}
+.phone.se::after{display:none}
+.scr{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:none;scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
+
+/* ---------- the page (what frontend builds) ---------- */
+.wp{min-height:100%;display:flex;flex-direction:column;padding:calc(var(--st) + 10px) 16px calc(var(--sb) + 16px)}
+.top{display:flex;justify-content:space-between;align-items:center;min-height:44px}
+.back{min-height:44px;padding:0 14px;border:1px solid var(--rule);border-radius:22px;font-size:14px;font-weight:600}
+.today{font-size:13px;color:var(--mute);font-weight:500;line-height:1.3;text-align:left}.today b{display:block;color:var(--ink);font-size:15px;font-weight:700}
+.hero{text-align:center;margin-top:6px}
+.hero .k{font-size:13px;color:var(--mute);font-weight:500}
+.hero .v{display:inline-block;font-weight:800;letter-spacing:-.03em;line-height:1;margin-top:2px}
+.hero .v small{font-size:19px;font-weight:700;margin-inline-start:6px;letter-spacing:0}
+.figt{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 0;padding-top:6px;border-top:1px solid var(--rule);font-size:13px;color:var(--mute)}
+.figt b{color:var(--ink);font-weight:700}
+.wp canvas.ch{display:block;margin:2px 0 0}
+.key{font-size:12px;color:var(--faint);margin:2px 0 0;text-align:center}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);margin-top:10px;border-top:1px solid var(--hair);padding-top:8px}
+.grid3>div{text-align:center;padding:0 4px;min-width:0}.grid3>div+div{border-right:1px solid var(--hair)}
+.grid3 b{display:block;font-size:22px;font-weight:800;line-height:1.2}
+.grid3 span{display:block;font-size:12px;color:var(--mute);line-height:1.35}
+.note{font-size:13px;color:var(--mute);text-align:center;margin:8px 0 0}
+.tbl{margin-top:10px;border-top:2px solid var(--rule)}
+.tbl .r{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px;border-bottom:1px solid var(--hair);font-size:14px}
+.tbl .r>span:first-child{color:var(--mute);flex:none}
+.tbl .r b{font-weight:700;text-align:left}
+.tbl .r .m{color:var(--mute);font-weight:500}
+.tbl .r .loud{font-weight:700;color:var(--ink)}
+.cap{font-size:12px;color:var(--faint);margin:6px 0 0}
+.phase{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;min-height:48px;margin-top:8px;
+  border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);font-size:14px;font-weight:600;text-align:right}
+.phase .ch2{font-size:18px;color:var(--ice);flex:none;padding-inline-start:8px}
+.addw{position:sticky;bottom:calc(var(--sb) + 16px);margin-top:auto;padding-top:16px;display:flex;justify-content:center;
+  background:linear-gradient(to bottom,rgba(6,8,24,0),rgba(6,8,24,.92) 40%)}
+.add{width:min(100%,320px);min-height:56px;border-radius:28px;background:var(--ink);color:#060818;font-size:18px;font-weight:800}
+.empty{margin:auto 0 0;text-align:center}
+.empty p{margin:0;font-size:20px;font-weight:800}
+.empty span{display:block;margin-top:6px;font-size:14px;color:var(--mute)}
+.retry{margin:16px auto 0;display:flex;align-items:center;justify-content:center;width:min(100%,260px);min-height:50px;border-radius:25px;border:1px solid var(--rule);background:rgba(160,175,255,.10);font-size:16px;font-weight:700}
+.spec{font-size:13px;color:var(--mute);margin:6px 0 0;padding:0;list-style:none;max-width:375px}
+.spec li{padding:3px 0;border-top:1px solid var(--hair)}.spec b{color:var(--ink)}
+</style>
+</head>
+<body>
+<h1>עמוד המשקל · המסע</h1>
+<p class="lead">מצב רגיל בגודל מלא (440×956, הקו חי, דומם ב"הפחתת תנועה"), אחריו אותו עמוד ב-375×667 (מה נגלל), ואחריו מסגרות קטנות של שאר המצבים. נתונים לדוגמה בלבד, מומצאים. כל המספרים בעמוד בצבע רגיל: אין כאן ירוק או אדום. קו מנוקד מתחת לטקסט = נוסח זמני ל-hebrew-writer.</p>
+
+<div class="row">
+  <div><p class="lbl">רגיל<small>440×956 · חי</small></p><div id="main"></div></div>
+  <div><p class="lbl">רגיל<small>375×667 · נגלל: שקילה אחרונה, הערה ושורת השלב. הכפתור + נשאר במקום</small></p><div id="se"></div></div>
+</div>
+
+<h2>שאר המצבים</h2>
+<div class="row" id="states"></div>
+
+<script>
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const M = '−'; // U+2212
+function rnd(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+// Catmull-Rom through the weekly points; y clamped between each pair so the curve never overshoots a real value.
+function smooth(P, step = 2) {
+  const out = [], idx = [];
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || P[i + 1];
+    const lo = Math.min(p1[1], p2[1]), hi = Math.max(p1[1], p2[1]);
+    const n = Math.max(4, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step));
+    idx.push(out.length);
+    for (let k = 0; k < n; k++) { const t = k / n, t2 = t * t, t3 = t2 * t;
+      const q = [0, 1].map(j => .5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3));
+      q[1] = Math.min(hi, Math.max(lo, q[1])); out.push(q); }
+  }
+  idx.push(out.length); out.push(P[P.length - 1]); return { pts: out, idx };
+}
+function bolt(a, b, rough, depth, r) {
+  if (!depth) return [a, b];
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, nx = -(b[1] - a[1]) / len, ny = (b[0] - a[0]) / len, dd = (r() - .5) * len * rough;
+  const m = [(a[0] + b[0]) / 2 + nx * dd, (a[1] + b[1]) / 2 + ny * dd];
+  return [...bolt(a, m, rough, depth - 1, r).slice(0, -1), ...bolt(m, b, rough, depth - 1, r)];
+}
+
+/* ---------- figure 1: the journey ---------- */
+function chart(cv, m, W, H, live) {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  const g = cv.getContext('2d'); g.scale(dpr, dpr);
+  const PAD = { l: 12, r: 12, t: 34, b: 30 }, base = H - PAD.b + 8;
+  const X = t => PAD.l + t / m.tmax * (W - PAD.l - PAD.r);
+  const vals = [...m.segs.flat().map(p => p[1]), ...m.raw.map(p => p[1])];
+  if (m.start) vals.push(m.start[1]); if (m.target != null) vals.push(m.target);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (hi - lo < 2) { const c = (hi + lo) / 2; lo = c - 1; hi = c + 1; }      // min span 2 kg
+  const pd = (hi - lo) * .08; lo -= pd; hi += pd;
+  const Y = kg => PAD.t + (hi - kg) / (hi - lo) * (H - PAD.t - PAD.b);
+  const segs = m.segs.map(s => s.map(p => [X(p[0]), Y(p[1])]));
+  const paths = segs.map(s => s.length > 1 ? smooth(s) : { pts: s, idx: [0] });
+  const flat = []; paths.forEach((p, si) => p.pts.forEach(q => flat.push(si)));       // segment id per path point
+  const offs = []; { let o = 0; paths.forEach(p => { offs.push(o); o += p.pts.length; }); }
+  const all = paths.flatMap(p => p.pts);
+  const nodes = []; paths.forEach((p, si) => segs[si].forEach((n, k) => nodes.push({ p: n, i: offs[si] + p.idx[k], si })));
+  const head = segs.length ? segs[segs.length - 1].at(-1) : null;
+  const tgtY = m.target != null ? Y(m.target) : null, end = m.proj ? [X(m.proj.t), tgtY] : null;
+  const st = m.start ? [X(m.start[0]), Y(m.start[1])] : null;
+  const grad = head ? (() => { const gr = g.createLinearGradient(all[0][0], 0, head[0], 0); gr.addColorStop(0, '#5b6cff'); gr.addColorStop(.6, '#62c6ff'); gr.addColorStop(1, '#ffffff'); return gr; })() : null;
+
+  // ---- labels: placed once, by priority; flip to the other side, else drop ----
+  const boxes = [], labels = [];
+  const ob = (x, y, r) => boxes.push([x - r, y - r, x + r, y + r]);
+  if (head) ob(head[0], head[1], 9); if (end) ob(end[0], end[1], 7); if (st) ob(st[0], st[1], 7);
+  nodes.forEach(n => ob(n.p[0], n.p[1], 4));
+  const hit = b => b[0] < 2 || b[2] > W - 2 || b[1] < 0 || b[3] > H || boxes.some(o => b[0] < o[2] + 3 && b[2] > o[0] - 3 && b[1] < o[3] + 3 && b[3] > o[1] - 3);
+  function place(text, font, size, color, dir, cands, must) {
+    g.font = font; g.direction = dir; const w = g.measureText(text).width;
+    for (let k = 0; k < cands.length; k++) {
+      const [x, y, al] = cands[k], x0 = al === 'center' ? x - w / 2 : al === 'right' ? x - w : x, b = [x0, y - size * .82, x0 + w, y + size * .22];
+      if (!hit(b) || (must && k === cands.length - 1)) { boxes.push(b); labels.push({ text, font, color, dir, x: x0 + w / 2, y }); return; }
+    }
+  }
+  boxes.push([PAD.l, base - 1, W - PAD.r, base + 1]);   // axis line: labels never sit on it
+  if (head) {
+    const tgtAbove = tgtY != null && tgtY < head[1];   // bulk: target above the head
+    const c = [[head[0], head[1] - 20, 'center'], [head[0], head[1] + 30, 'center']];
+    place(m.headLabel, '800 14px Heebo', 14, '#EEF1FF', 'rtl', tgtAbove ? c.reverse() : c, true);
+  }
+  if (tgtY != null) {
+    const t = 'יעד ' + m.target.toFixed(1);
+    place(t, '700 13px Heebo', 13, '#EEF1FF', 'rtl', [[W - PAD.r, tgtY + 18, 'right'], [W - PAD.r, tgtY - 8, 'right'], [PAD.l, tgtY + 18, 'left'], [PAD.l, tgtY - 8, 'left']], true);
+  }
+  if (end) place(m.proj.label, '500 12px Heebo', 12, '#B0B7DA', 'rtl', [[end[0], end[1] - 14, 'center'], [end[0], end[1] + 22, 'center']]);
+  if (st) place(m.start[1].toFixed(1), '500 12px Heebo', 12, '#B0B7DA', 'ltr', [[st[0] - 2, st[1] - 14, 'left'], [st[0] - 2, st[1] + 22, 'left']]);
+  if (m.todayT != null) place('היום', '500 12px Heebo', 12, '#B0B7DA', 'rtl', [[X(m.todayT) - 4, PAD.t - 14, 'right']]);
+  m.months.forEach(mo => place(mo.l, '500 12px Heebo', 12, '#8F97C6', 'rtl', [[X(mo.t) + 4, H - 4, 'left']]));
+
+  function frame(ms, still) {
+    g.clearRect(0, 0, W, H);
+    const r = rnd(Math.floor(ms / 55));
+    // axis: baseline hairline + month ticks
+    g.strokeStyle = 'rgba(190,200,255,.15)'; g.lineWidth = 1; g.beginPath(); g.moveTo(PAD.l, base); g.lineTo(W - PAD.r, base); g.stroke();
+    m.months.forEach(mo => { g.beginPath(); g.moveTo(X(mo.t), base); g.lineTo(X(mo.t), base + 5); g.stroke(); });
+    if (m.todayT != null) { g.save(); g.setLineDash([2, 4]); g.strokeStyle = 'rgba(190,200,255,.30)'; g.beginPath(); g.moveTo(X(m.todayT), PAD.t - 8); g.lineTo(X(m.todayT), base); g.stroke(); g.restore(); }
+    // target hairline (ink/ice, never green)
+    if (tgtY != null) { g.save(); g.setLineDash([2, 6]); g.strokeStyle = 'rgba(169,196,255,.50)'; g.beginPath(); g.moveTo(PAD.l, tgtY); g.lineTo(W - PAD.r, tgtY); g.stroke(); g.restore(); }
+    // projection: dots flowing from the head to the arrival month
+    if (end && head) {
+      const flow = still ? 0 : (ms / 2000) % 1;
+      for (let k = 0; k < 12; k++) { const t = (k + flow) / 12; g.fillStyle = `rgba(190,215,255,${(.5 * (1 - t) + .12).toFixed(3)})`; g.beginPath(); g.arc(head[0] + (end[0] - head[0]) * t, head[1] + (end[1] - head[1]) * t, 1.4, 0, 7); g.fill(); }
+      g.strokeStyle = 'rgba(169,196,255,.9)'; g.lineWidth = 1.5; g.beginPath(); g.arc(end[0], end[1], 4.5, 0, 7); g.stroke();
+    }
+    // fewer than 5: raw weigh-ins as dim dots, nothing else
+    m.raw.forEach(p => { g.fillStyle = 'rgba(176,183,218,.7)'; g.beginPath(); g.arc(X(p[0]), Y(p[1]), 3.5, 0, 7); g.fill(); });
+    if (!head) { drawLabels(); return; }
+    g.save(); g.globalCompositeOperation = 'lighter';
+    const stroke = (P, w, c, blur, bc) => { if (P.length < 2) return; g.save(); g.lineJoin = g.lineCap = 'round'; g.lineWidth = w; g.strokeStyle = c; if (blur) { g.shadowBlur = blur; g.shadowColor = bc || c; } g.beginPath(); P.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); g.restore(); };
+    paths.forEach(p => { stroke(p.pts, 9, 'rgba(100,140,255,.10)', 18, 'rgba(110,160,255,.9)'); stroke(p.pts, 2.6, grad, 6, 'rgba(140,190,255,.8)'); });
+    // the passing bolt: 0.9 s every 3.6 s, start → head, only on drawn segments
+    const PERIOD = 3600, BOLT = 900, ph = (ms % PERIOD) / BOLT;
+    let bi = -1;
+    if (!still && ph < 1 && all.length > 2) {
+      const e = ph < .5 ? 2 * ph * ph : 1 - (-2 * ph + 2) ** 2 / 2; bi = Math.floor(e * (all.length - 1));
+      let j0 = Math.max(0, bi - 40); while (flat[j0] !== flat[bi]) j0++;
+      const seg = all.slice(j0, bi + 1);
+      if (seg.length > 9) { const b = []; for (let k = 0; k < seg.length - 8; k += 8) b.push(...bolt(seg[k], seg[k + 8], .55, 3, r).slice(k ? 1 : 0)); stroke(b, 5, 'rgba(160,190,255,.25)', 14, '#9fc0ff'); stroke(b, 1.4, 'rgba(255,255,255,.95)'); }
+      nodes.forEach((n, k) => { const d = Math.abs(n.i - bi); if (d < 30 && k > 0 && nodes[k - 1].si === n.si) stroke(bolt(nodes[k - 1].p, n.p, .5, 4, r), .9, `rgba(215,225,255,${(.6 * (1 - d / 30)).toFixed(3)})`, 6, '#b0c8ff'); });
+    }
+    // weekly points: glowing, brighter right after the bolt passes
+    nodes.forEach(n => {
+      if (n.p === head) return;
+      if (st && Math.abs(n.p[0] - st[0]) < 1 && Math.abs(n.p[1] - st[1]) < 1) return;   // start marker replaces a point on the same date
+      const since = still ? 9 : ((ms % PERIOD) - n.i / (all.length - 1) * BOLT) / 600, glow = since > 0 && since < 1 ? 1 - since : 0;
+      const R = 6 + 6 * glow, cg = g.createRadialGradient(n.p[0], n.p[1], 0, n.p[0], n.p[1], R);
+      cg.addColorStop(0, `rgba(240,246,255,${.8 + .2 * glow})`); cg.addColorStop(.35, `rgba(150,190,255,${.28 + .35 * glow})`); cg.addColorStop(1, 'rgba(100,140,255,0)');
+      g.fillStyle = cg; g.beginPath(); g.arc(n.p[0], n.p[1], R, 0, 7); g.fill();
+    });
+    // head: plasma point, gentle crackle
+    const pr = still ? 1 : 1 + .06 * Math.sin(ms / 300), hg = g.createRadialGradient(head[0], head[1], 0, head[0], head[1], 28 * pr);
+    hg.addColorStop(0, 'rgba(240,248,255,1)'); hg.addColorStop(.22, 'rgba(150,200,255,.45)'); hg.addColorStop(1, 'rgba(80,130,255,0)');
+    g.fillStyle = hg; g.beginPath(); g.arc(head[0], head[1], 28 * pr, 0, 7); g.fill();
+    if (!still && r() < .5) { const a = r() * Math.PI * 2, L = 14 + r() * 10; stroke(bolt([head[0] + Math.cos(a) * 5, head[1] + Math.sin(a) * 5], [head[0] + Math.cos(a) * L, head[1] + Math.sin(a) * L], .6, 2, r), .8, 'rgba(220,232,255,.7)', 5, '#b0c8ff'); }
+    g.restore();
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(head[0], head[1], 4.5, 0, 7); g.fill();
+    // start marker: hollow, no glow
+    if (st) { g.strokeStyle = '#B0B7DA'; g.lineWidth = 1.6; g.fillStyle = '#060818'; g.beginPath(); g.arc(st[0], st[1], 5, 0, 7); g.fill(); g.stroke(); }
+    drawLabels();
+  }
+  function drawLabels() { labels.forEach(l => { g.font = l.font; g.direction = l.dir; g.textAlign = 'center'; g.fillStyle = l.color; g.fillText(l.text, l.x, l.y); }); }
+
+  if (!live || RM) { frame(0, true); return; }
+  let last = -1e9, on = true;
+  const loop = ms => { if (!on) return; if (ms - last >= 33) { last = ms; frame(ms, false); } requestAnimationFrame(loop); };   // ≤30 fps
+  document.addEventListener('visibilitychange', () => { on = !document.hidden; if (on) requestAnimationFrame(loop); });
+  requestAnimationFrame(loop);
+}
+
+/* ---------- sky: ice-cyan tilted ring around the hero (mock: still; the app uses galaxy.js "weigh" look) ---------- */
+function sky(cv, W, H, hero) {
+  const dpr = Math.min(devicePixelRatio || 1, 2); cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  const g = cv.getContext('2d'); g.scale(dpr, dpr); const r = rnd(11);
+  for (let i = 0; i < 70; i++) { g.fillStyle = `rgba(200,215,255,${(.06 + r() * .18).toFixed(3)})`; g.beginPath(); g.arc(r() * W, r() * H, .4 + r() * .8, 0, 7); g.fill(); }
+  if (!hero) return;
+  const cx = hero.x, cy = hero.y, R = W * .62, sq = .34, tilt = .22, c = Math.cos(tilt), s = Math.sin(tilt);
+  for (let i = 0; i < 1100; i++) {
+    const a = r() * Math.PI * 2, rr = R * (.72 + (r() - .5) * .32 + (r() - .5) * .12), lx = Math.cos(a) * rr, ly = Math.sin(a) * rr * sq;
+    const x = cx + lx * c - ly * s, y = cy + lx * s + ly * c;
+    let al = .14 + r() * .5;
+    const dy = Math.max(0, Math.abs(y - cy) - hero.h / 2 - 10); al *= Math.max(0, 1 - dy / 30);                       // fade out above/below the hero row
+    if (Math.abs(x - cx) < hero.w / 2 + 12 && Math.abs(y - cy) < hero.h / 2 + 6) al = 0;                              // clear behind the number
+    if (al <= .01) continue;
+    const hue = r(); g.fillStyle = hue < .5 ? `rgba(215,245,255,${al.toFixed(3)})` : hue < .8 ? `rgba(128,200,255,${al.toFixed(3)})` : `rgba(107,230,242,${al.toFixed(3)})`;
+    g.beginPath(); g.arc(x, y, .5 + r() * 1.1, 0, 7); g.fill();
+  }
+}
+
+/* ---------- page renderer ---------- */
+const n = v => `<span class="n">${v}</span>`;
+function page(host, c) {
+  const ph = document.createElement('div'); ph.className = 'phone' + (c.se ? ' se' : '');
+  ph.style.cssText = `width:${c.w}px;height:${c.h}px;--st:${c.st}px;--sb:${c.sb}px`;
+  let body = `<div class="top"><button class="back">‹ חזרה</button><div class="today"><b>${c.date}</b>${n(c.time)}</div></div>`;
+  if (c.error) {
+    body += `<div class="empty"><p class="tx">לא הצלחנו לקרוא את הנתונים</p></div><button class="retry tx">ניסיון נוסף</button><div style="margin-top:auto"></div>`;
+  } else if (c.empty) {
+    body += `<div class="empty"><p class="tx">עוד אין שקילות</p><span class="tx">הוסיפו את הראשונה.</span></div>
+      <button class="phase"><span>${c.phase}</span><span class="ch2">‹</span></button>`;
+  } else {
+    body += `<div class="hero"><div class="k">${c.hero.k}</div><div class="v" style="font-size:${c.heroPx}px">${n(c.hero.v)}<small>ק״ג</small></div></div>
+      <div class="figt"><b class="tx">איור 1 · המסע</b><span class="tx">${c.figCap || 'מתחילת השלב עד היעד'}</span></div>
+      <canvas class="ch"></canvas>
+      <p class="key tx">${c.key || 'נקודה = ממוצע שבועי · ○ תחילת השלב · ┄ צפי'}</p>
+      <div class="grid3">${c.grid.map(x => `<div><b>${x[0]}</b><span>${x[1]}</span>${x[2] ? `<span>${x[2]}</span>` : ''}</div>`).join('')}</div>
+      ${c.note ? `<p class="note">${c.note}</p>` : ''}
+      ${c.rows.length ? `<div class="tbl">${c.rows.map(x => `<div class="r"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}</div>` : ''}
+      ${c.cap ? `<p class="cap">${c.cap}</p>` : ''}
+      <button class="phase"><span>${c.phase}</span><span class="ch2">‹</span></button>`;
+  }
+  if (!c.error) body += `<div class="addw"><button class="add tx">+ שקילה</button></div>`;
+  ph.innerHTML = `<canvas class="sky"></canvas><div class="island"></div><div class="scr"><div class="wp">${body}</div></div>`;
+  const wrap = document.createElement('div');
+  if (c.title) wrap.innerHTML = `<p class="lbl">${c.title}<small>${c.sub || ''}</small></p>`;
+  wrap.append(ph); if (c.spec) wrap.insertAdjacentHTML('beforeend', `<ul class="spec">${c.spec.map(s => `<li>${s}</li>`).join('')}</ul>`);
+  host.append(wrap);
+  const cv = ph.querySelector('canvas.ch'); if (cv) chart(cv, c.chart, c.w - 32, c.chartH, c.live);
+  const v = ph.querySelector('.hero .v'), pr = ph.getBoundingClientRect();
+  if (v) { const b = v.getBoundingClientRect(); sky(ph.querySelector('.sky'), c.w, c.h, { x: b.left - pr.left + b.width / 2, y: b.top - pr.top + b.height / 2, w: b.width, h: b.height }); }
+  else sky(ph.querySelector('.sky'), c.w, c.h, null);
+}
+
+/* ---------- sample data (invented). t = days from 1.9.2026 ---------- */
+const MON = { aug: 'אוג׳', sep: 'ספט׳', oct: 'אוק׳', nov: 'נוב׳', dec: 'דצמ׳' };
+const monthsCut = [{ t: 0, l: MON.sep }, { t: 30, l: MON.oct }, { t: 61, l: MON.nov }, { t: 91, l: MON.dec }];
+const CUT = [[4, 85.1], [11, 84.6], [18, 84.2], [25, 83.6], [32, 83.1], [39, 82.5], [46, 82.0], [52, 81.6]];
+const L = { w: 440, h: 956, st: 62, sb: 34, heroPx: 76, chartH: 296 }, S = { w: 375, h: 667, st: 20, sb: 0, heroPx: 56, chartH: 220, se: true };
+const SM = { w: 375, h: 812, st: 54, sb: 34, heroPx: 64, chartH: 240 };
+const normal = {
+  date: 'יום שישי, 23 באוקטובר', time: '08:42',
+  hero: { k: 'ממוצע 4 השקילות האחרונות', v: '81.6' },
+  chart: { segs: [CUT], raw: [], start: [0, 85.4], target: 78.0, proj: { t: 99, label: MON.dec }, tmax: 105, months: monthsCut, headLabel: 'היום' },
+  grid: [[n(M + '0.54'), 'ק״ג לשבוע'], [n(M + '0.66%'), '<span class="tx">מהמשקל לשבוע</span>', '<span class="tx">יעד <span class="n">0.5–1%</span></span>'], [n('3.6'), '<span class="tx">ק״ג עד היעד</span>']],
+  rows: [['צפי', `דצמבר ${n('2026')} · ${n('7')} שבועות <span class="m">(${n('6–8')})</span>`], ['<span class="tx">שקילה אחרונה</span>', `${n('81.4')} · ${n('23.10')}`]],
+  cap: 'הערכה בהנחה שהקצב הנוכחי נשמר',
+  phase: `שלב: חיטוב · מ-${n('1.9')} · יעד ${n('78.0')}`
+};
+const ST = document.getElementById('states');
+const noTgtChart = { ...normal.chart, target: null, proj: null, tmax: 59 };
+const states = [
+  { title: 'לא נבחר שלב', sub: 'המסע מהשקילה הראשונה · פער > 14 יום שובר את הקו',
+    ...normal, hero: { k: normal.hero.k, v: '82.6' }, figCap: '<span class="tx">מהשקילה הראשונה</span>',
+    chart: { segs: [[[0, 84.0], [7, 83.8], [14, 83.9], [21, 83.5]], [[49, 83.0], [56, 82.9], [63, 82.6]]], raw: [], start: [0, 84.0], target: null, proj: null, tmax: 70,
+      months: [{ t: 14, l: MON.sep }, { t: 44, l: MON.oct }], headLabel: 'היום' },
+    key: 'נקודה = ממוצע שבועי · ○ השקילה הראשונה',
+    grid: [[n(M + '0.30'), 'ק״ג לשבוע'], [n(M + '0.36%'), '<span class="tx">מהמשקל לשבוע</span>'], ['—', '<span class="tx">ק״ג עד היעד</span>']],
+    rows: [['<span class="tx">שקילה אחרונה</span>', `${n('82.4')} · ${n('22.10')}`]], cap: '',
+    phase: 'לא נבחר שלב · בחירת שלב' },
+  { title: 'שמירה', sub: 'בלי קו יעד ובלי צפי',
+    ...normal, hero: { k: normal.hero.k, v: '76.1' },
+    chart: { segs: [[[4, 76.3], [11, 76.0], [18, 76.2], [25, 76.4], [32, 76.1], [39, 76.0], [46, 76.2], [52, 76.1]]], raw: [], start: [0, 76.2], target: null, proj: null, tmax: 59, months: monthsCut.slice(0, 2), headLabel: 'היום' },
+    figCap: '<span class="tx">מתחילת השלב</span>', key: 'נקודה = ממוצע שבועי · ○ תחילת השלב',
+    grid: [[n(M + '0.05'), 'ק״ג לשבוע'], [n(M + '0.07%'), '<span class="tx">מהמשקל לשבוע</span>'], ['—', 'בשמירה אין יעד']],
+    rows: [['<span class="tx">שקילה אחרונה</span>', `${n('76.0')} · ${n('23.10')}`]], cap: '',
+    phase: `שלב: שמירה · מ-${n('1.9')}` },
+  { title: 'אין יעד', sub: 'חיטוב בלי משקל יעד',
+    ...normal, chart: { ...noTgtChart, months: monthsCut.slice(0, 2) }, figCap: '<span class="tx">מתחילת השלב</span>', key: 'נקודה = ממוצע שבועי · ○ תחילת השלב',
+    grid: [normal.grid[0], normal.grid[1], ['—', '<span class="tx">אין יעד</span>']],
+    rows: [normal.rows[1]], cap: '',
+    phase: `שלב: חיטוב · מ-${n('1.9')} · <span class="tx">הגדרת יעד</span>` },
+  { title: 'הגעת ליעד', sub: 'על פי הממוצע · בלי צפי',
+    ...normal, chart: { ...normal.chart, target: 82.0, proj: null, tmax: 59, months: monthsCut.slice(0, 2) },
+    grid: [normal.grid[0], normal.grid[1], ['הושג', '<span class="tx">ק״ג עד היעד</span>']],
+    rows: [normal.rows[1]], cap: '',
+    phase: 'הגעת ליעד · שינוי שלב' },
+  { title: 'פחות מ-5 שקילות', sub: 'שקילות בודדות כנקודות עמומות, בלי קו ובלי צפי',
+    ...normal, hero: { k: 'שקילה אחרונה', v: '83.9' },
+    chart: { segs: [], raw: [[2, 84.2], [8, 83.6], [15, 83.9]], start: null, target: 78.0, proj: null, tmax: 22, months: [{ t: 0, l: MON.sep }], headLabel: '' },
+    key: '<span class="tx">נקודה = שקילה</span>',
+    grid: [['—', 'ק״ג לשבוע'], ['—', '<span class="tx">מהמשקל לשבוע</span>', '<span class="tx">יעד <span class="n">0.5–1%</span></span>'], ['—', '<span class="tx">ק״ג עד היעד</span>']],
+    note: 'צריך לפחות 5 שקילות לקצב', rows: [], cap: '' },
+  { title: 'השקילה האחרונה ישנה', sub: 'מעל 10 ימים · בלי צפי',
+    ...normal, date: 'יום חמישי, 5 בנובמבר', time: '08:42',
+    chart: { ...normal.chart, proj: null, tmax: 70, todayT: 65, headLabel: '23.10' },
+    rows: [['צפי', '<span class="m">השקילה האחרונה ישנה מדי לצפי</span>'], ['<span class="tx">שקילה אחרונה</span>', `${n('81.4')} · ${n('23.10')} · <span class="loud">לפני ${n('13')} ימים</span>`]], cap: '' },
+  { title: 'ריק', sub: 'אין שקילות', ...normal, empty: true, phase: `שלב: חיטוב · מ-${n('1.9')} · יעד ${n('78.0')}` },
+  { title: 'שגיאה', sub: 'הנתונים לא נקראו', ...normal, error: true }
+];
+// canvas text needs Heebo loaded first (the app does the same before the first draw)
+Promise.all(['500 12px Heebo', '700 13px Heebo', '800 14px Heebo'].map(f => document.fonts.load(f))).catch(() => {}).then(() => {
+  page(document.getElementById('main'), { ...L, ...normal, live: true });
+  page(document.getElementById('se'), { ...S, ...normal, live: false });
+  states.forEach(s => page(ST, { ...SM, ...s, live: false }));
+});
+</script>
+</body>
+</html>
