@@ -44,4 +44,4 @@ Stage 1 replaces only the home (verdict) screen and the check-in / quick weigh-i
 2. Dark home, still (no WebGL yet): layout, lens with CSS glass, scale, "ניתוח", "עוד" sheet. Smoke test updated.
 3. Dark weigh-in screen.
 4. Galaxy + fallback + hero moment + intro. Reduce Motion and hidden-app stop tested.
-5. Review: design-critic once + hebrew-writer for the text. Then owner checks on the iPhone (incl. battery).
+5. (Order changed by the owner 23.10: step 4 before step 3.) Review: design-critic once + hebrew-writer for the text. Then owner checks on the iPhone (incl. battery).
