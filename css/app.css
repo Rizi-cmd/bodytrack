@@ -136,7 +136,9 @@ input[type=date].field{-webkit-appearance:none;appearance:none;display:flex;alig
 .toastAct{min-height:44px;padding:0 12px;border:1px solid var(--bg);color:var(--bg);font-weight:800;flex:none}
 
 /* no zoom: no double-tap or pinch zoom anywhere (owner 21.10); scrolling still works */
-html{touch-action:pan-x pan-y}
+html{touch-action:pan-x pan-y;overscroll-behavior:none}
+/* the dark home fits one screen: it never scrolls or bounces under a drag (owner 23.10) */
+html.dk,html.dk body{height:100%;overflow:hidden}
 /* long press on figure 1: readout of the weigh-in under the finger */
 .chartWrap{position:relative}
 #chart{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -242,7 +244,6 @@ html:not(.dk) body::before{content:"";position:fixed;top:0;left:0;right:0;height
 .hSub{font-size:12px;color:var(--mute)}
 .lensBtn{position:absolute;inset:0;border-radius:50%}
 .lensBtn:focus-visible{outline:2px solid var(--ice);outline-offset:4px}
-.hHint{margin:8px 0 0;font-size:13px;color:var(--faint);font-weight:600}
 .hScale{width:100%;min-width:0;overflow:hidden;margin-top:clamp(8px,2.5vh,24px)}
 .hScale svg .band{fill:rgba(169,196,255,.14)}
 .hScale svg .axis,.hScale svg .tick{stroke:var(--faint)}
@@ -257,7 +258,7 @@ html.gl .home{position:relative;z-index:1;background:none}
 html.gl .lens{background:radial-gradient(circle at 50% 18%,rgba(190,205,255,.26),rgba(60,70,170,.30) 45%,rgba(14,18,60,.62) 100%)}
 @media (prefers-reduced-motion:no-preference){
   html.intro .home>*{animation:hIn .6s ease-out both}
-  html.intro .home>.lens,html.intro .home>.hHint{animation-delay:.15s}
+  html.intro .home>.lens{animation-delay:.15s}
   html.intro .home>.hScale,html.intro .home>.hAna{animation-delay:.3s}
 }
 @keyframes hIn{from{opacity:0;transform:translateY(8px)}}

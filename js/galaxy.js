@@ -13,9 +13,9 @@ void main(){
   if(kind<.5){
     float r=aP.y*mix(1.7,1.,uIntro);
     float ang=aP.z+uTime*.035/(.25+aP.y);
-    vec2 d=vec2(cos(ang),sin(ang))*r; d.y*=.5;
+    vec2 d=vec2(cos(ang),sin(ang))*r; d.y*=.55;
     float cr=cos(-.2), sr=sin(-.2); d=vec2(d.x*cr-d.y*sr,d.x*sr+d.y*cr);
-    pos=uLens.xy+d*uLens.z*2.;
+    pos=uLens.xy+d*uLens.z*2.5;
     vCol=mix(vec3(.88,.88,1.),mix(vec3(.52,.60,1.),vec3(.62,.48,.96),smoothstep(.3,1.,aP.y)),smoothstep(0.,.3,aP.y));
     a=mix(.85,.6,smoothstep(0.,.35,aP.y))*(1.-smoothstep(.85,1.1,aP.y)*.6)*(.75+.25*sin(uTime*.8+seed*60.));
     size=2.4+2.2*fract(seed*7.31);
@@ -31,7 +31,7 @@ void main(){
   // inside the lens the dots fade, so text there sits on glass
   float ld=length(pos-uLens.xy)/uLens.z; a*=mix(.35,1.,smoothstep(.9,1.08,ld));
   // and they stay in the lens row, never behind the verdict word or the scale
-  if(kind<.5) a*=1.-smoothstep(.95,1.1,abs(pos.y-uLens.y)/uLens.z);
+  if(kind<.5) a*=1.-smoothstep(1.,1.2,abs(pos.y-uLens.y)/uLens.z);
   vA=a*uIntro;
   gl_PointSize=size*uDpr;
   gl_Position=vec4(pos.x/uRes.x*2.-1.,1.-pos.y/uRes.y*2.,0.,1.);
@@ -40,7 +40,7 @@ const FS = `#version 300 es
 precision mediump float; in vec3 vCol; in float vA; out vec4 o;
 void main(){float d=length(gl_PointCoord-.5)*2.;float a=1.-smoothstep(0.,1.,d);a*=a*vA;if(a<.003)discard;o=vec4(vCol*a,a);}`;
 
-const N_DISC = 4200, N_STARS = 420, INTRO_MS = 900;
+const N_DISC = 5600, N_STARS = 420, INTRO_MS = 900;
 
 function rnd(seed) { return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 

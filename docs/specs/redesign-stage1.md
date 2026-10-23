@@ -13,12 +13,13 @@ Stage 1 replaces only the home (verdict) screen and the check-in / quick weigh-i
 ## 2. Home layout (top to bottom)
 1. Line: date of the **last weigh-in** (not today) · "שבוע N ל<שלב>". When the last weigh-in is more than 10 days old the date line is louder (ink, 500 weight, "לפני N ימים"). Small "עוד" button at the top left.
 2. Verdict word with arrow (58px/800), and the label under it (same words as today's `verdictText`).
-3. **The lens**: glass circle (radius ≈ min(42% width, 20% height, 190px)). Inside: the last 4 weigh-ins as dots with their average line (magnified, these are the points the rate is computed from), and over a glass backing the rate (78px/800), "ק״ג לשבוע", "שיפוע ממוצע 4 שקילות". Under the lens a small hint "+ שקילה". The lens is a button (screen reader: "הוספת שקילה"). Tap → weigh-in screen.
+3. **The lens**: glass circle (radius ≈ min(42% width, 20% height, 190px)). Inside: the last 4 weigh-ins as dots with their average line (magnified, these are the points the rate is computed from), and over a glass backing the rate (78px/800), "ק״ג לשבוע", "שיפוע ממוצע 4 שקילות". No hint under the lens (owner 23.10: removed). The lens is a button (screen reader: "הוספת שקילה"). Tap → weigh-in screen.
 4. Scale −1..+1 kg/week with the ±0.2 stuck band and a marker at the rate (same geometry as `scaleGeometry`).
 5. Bottom: wide button "ניתוח ‹" → current analytics screen.
 - "עוד" opens a sheet: תמונות, היסטוריה, גיבוי, שלב (the existing phase sheet). History/backup open as today (light) until stage 3.
 - Fewer than 5 weigh-ins: lens shows the weigh-ins that exist, verdict "מוקדם להגיד" with the reason, no rate number (—).
-- No data: lens with "+ שקילה" and the text "עוד אין שקילות".
+- No data: lens with the text "עוד אין שקילות".
+- The home fits one screen and never scrolls or bounces under a drag (owner 23.10).
 
 ## 3. Slow verdict (owner, 23.10)
 - In cut/bulk, when the rate is toward the goal but below the target band (`rateView` zone `below`): the tone is muted good and a small word "איטי" sits next to the label. In range or above: full good, unchanged.

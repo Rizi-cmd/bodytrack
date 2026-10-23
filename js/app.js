@@ -15,7 +15,7 @@ import { initPhotos, openPhotos } from './photosScreen.js';
 import { startGalaxy } from './galaxy.js';
 import { heroTracks, heroAt, countAt, HERO_MS } from './motion.js';
 
-export const VERSION = '0.9.0';
+export const VERSION = '0.9.1';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -408,6 +408,8 @@ const ci = { data: null, tag: 'normal', dirty: false };
 // One view at a time. Sub-screens return to the screen they were opened from (home or the light report).
 const VIEWS = { home: '#homeView', main: '#main', checkin: '#checkinView', analytics: '#anaView', photos: '#phoView' };
 state.view = 'home'; state.back = 'home';
+// A drag on the home bends the galaxy but never moves the page (nothing to scroll there).
+$('#homeView').addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 const galaxy = startGalaxy($('#gal'), $('#lens'));
 function showView(v) {
   if (v === 'home' || v === 'main') state.back = v;
