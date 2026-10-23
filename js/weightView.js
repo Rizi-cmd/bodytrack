@@ -110,7 +110,9 @@ export function weightPage(S, records, today) {
     headLabel: segs.length ? (D === today ? 'היום' : fmtDay(D)) : '',
     todayT: stale ? day(today) : null,
     t0, t1: t0 + span + Math.max(2, span * 0.06),
-    y: yRange(kgs)
+    y: yRange(kgs),
+    // long press: the real weigh-ins inside the chart, the finger picks the nearest in time
+    picks: series.filter(s => day(s.date) >= t0).map(s => ({ t: day(s.date), date: s.date, kg: s.kg, avg: s.avg }))
   };
   out.figCap = !rec ? 'מהשקילה הראשונה' : target !== null ? 'מתחילת השלב עד היעד' : 'מתחילת השלב';
   out.key = segs.length

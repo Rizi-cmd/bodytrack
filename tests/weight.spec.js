@@ -163,3 +163,29 @@ test('weight page under Reduce Motion: one still frame', async ({ browser }) => 
   await expect.poll(() => page.locator('#wtChart').getAttribute('data-motion')).toBe('still');
   await ctx.close();
 });
+
+test('weight page: long press shows the real weigh-in nearest the finger, lifting hides it', async ({ page }) => {
+  const problems = await open(page);
+  await seed(page);
+  await page.locator('#lensBtn').click();
+  await page.waitForTimeout(800);
+  const b = await page.locator('#wtChart').boundingBox();
+  // a short tap shows nothing
+  await page.mouse.move(b.x + b.width * .5, b.y + b.height * .5); await page.mouse.down(); await page.waitForTimeout(120); await page.mouse.up();
+  await expect(page.locator('#wtRead')).not.toHaveClass(/on/);
+  // held: the box shows a date, a weight and the average; it follows the finger to the newest weigh-in
+  await page.mouse.down(); await page.waitForTimeout(500);
+  await expect(page.locator('#wtRead')).toHaveClass(/on/);
+  await expect(page.locator('#wtRead')).toContainText('ק״ג');
+  await page.mouse.move(b.x + b.width - 14, b.y + b.height * .5, { steps: 6 });
+  await expect(page.locator('#wtRead')).toContainText('10.10.2026');
+  await expect(page.locator('#wtRead b')).toHaveText('80.2 ק״ג');
+  await expect(page.locator('#wtRead')).toContainText('ממוצע 4 שקילות 80.6');
+  const box = await page.locator('#wtRead').boundingBox();
+  expect(box.x, 'box inside the chart').toBeGreaterThanOrEqual(b.x); expect(box.x + box.width).toBeLessThanOrEqual(b.x + b.width);
+  expect(box.x + box.width, 'finger on the right: box on the left of it').toBeLessThan(b.x + b.width - 14);
+  await gates(page, 'readout'); await shot(page, 'readout');
+  await page.mouse.up();
+  await expect(page.locator('#wtRead')).not.toHaveClass(/on/);
+  expect(problems).toEqual([]);
+});

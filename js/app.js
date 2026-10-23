@@ -17,7 +17,7 @@ import { heroTracks, heroAt, countAt, HERO_MS } from './motion.js';
 import { weightPage } from './weightView.js';
 import { initWeight, renderWeight, showWeight, relayoutWeight } from './weightScreen.js';
 
-export const VERSION = '0.12.1';
+export const VERSION = '0.13.0';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -582,7 +582,7 @@ async function openWeight() {
   try { await render(); } catch { renderWeight(null); galaxyFor(); }
 }
 $('#lensBtn').onclick = openWeight;
-initWeight({ back: () => showView('home'), add: openCheckin, phase: openPhase, retry: openWeight });
+initWeight({ back: () => showView('home'), add: openCheckin, phase: openPhase, retry: openWeight, readout: p => pointReadout(p, state.checkins) });
 $('#ciDate').onchange = () => {
   const v = $('#ciDate').value;
   if (!v) return;

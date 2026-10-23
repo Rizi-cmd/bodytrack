@@ -134,3 +134,10 @@ test('phase row text', () => {
   assert.equal(text(phaseRow(ph('2026-09-01', 'cut', 78), false)), 'שלב: חיטוב · מ-1.9 · יעד 78.0');
   assert.deepEqual(phaseRow(null, false), ['לא נבחר שלב · בחירת שלב']);
 });
+test('long press picks: every real weigh-in inside the chart, with its average', () => {
+  const p = page(CUT, [ph('2026-01-17', 'cut', 75)], '2026-02-21');
+  assert.equal(p.chart.picks.length, 5);   // only what is on the chart: it starts at the first weekly average after the phase start
+  assert.deepEqual(p.chart.picks[0], { t: day('2026-01-24'), date: '2026-01-24', kg: 80.5, avg: 81.25 });
+  assert.equal(p.chart.picks.at(-1).kg, 78.5); assert.ok(Math.abs(p.chart.picks.at(-1).avg - 79.25) < 1e-9);
+  const all = page(CUT, [], '2026-02-21').chart; assert.ok(all.picks.every(q => q.t >= all.t0 && q.t <= all.t1));
+});
