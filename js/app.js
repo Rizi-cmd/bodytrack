@@ -17,7 +17,7 @@ import { heroTracks, heroAt, countAt, HERO_MS } from './motion.js';
 import { weightPage } from './weightView.js';
 import { initWeight, renderWeight, showWeight, relayoutWeight } from './weightScreen.js';
 
-export const VERSION = '0.12.0';
+export const VERSION = '0.12.1';
 const $ = s => document.querySelector(s);
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const SVGNS = 'http://www.w3.org/2000/svg';

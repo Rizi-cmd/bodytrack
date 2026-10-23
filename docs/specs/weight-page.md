@@ -12,7 +12,7 @@ fitness-analyst, 23.10.2026. Builds on TE (`docs/specs/trend-engine.md`) and AN 
 ## 2. Journey series: `journeyPoints(series, records, today)`
 - Start `ps` = `phaseStart(records, today)`; no phase → first weigh-in date.
 - One point per calendar week, Sunday–Saturday. Week index = `floor((day(date)+4)/7)`. Point = last avg point in that week with `date ≥ ps`, at its real date and avg. No interpolation; last point is always `S.avg` at D. Calendar weeks are stable (adding a weigh-in never reshuffles older points).
-- Gaps: no avg point in a week → no point. Line drawn only between consecutive points ≤ 14 days apart (convention, same maxGap as `trendAt`); otherwise separate segments. The bolt runs only on drawn segments.
+- Gaps: no avg point in a week → no point. Line drawn only between consecutive points ≤ 14 days apart (convention, same maxGap as `trendAt`); otherwise separate segments. The draw-in runs only along drawn segments.
 - Start marker: `(base.date, base.kg)` from §3, hollow, no glow, labelled with its value.
 - n < 5: raw weigh-ins with `date ≥ ps` as dim dots; no line, no projection.
 - Phase started before the first weigh-in: points begin at the first avg point. Phase only 1–2 weigh-ins old: show the 1–2 points; if `base.date === D`, change is "—".
