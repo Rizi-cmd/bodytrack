@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BodyTrack · אנימציית הקו</title>
+<!-- Design file, sample data only (not the app). Three entrance animations for figure 1 on the weight page. -->
+<style>
+@font-face{font-family:Heebo;font-weight:400;src:url(../../fonts/heebo-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010}
+@font-face{font-family:Heebo;font-weight:400;src:url(../../fonts/heebo-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2212}
+@font-face{font-family:Heebo;font-weight:700;src:url(../../fonts/heebo-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010}
+@font-face{font-family:Heebo;font-weight:700;src:url(../../fonts/heebo-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2212}
+@font-face{font-family:Heebo;font-weight:800;src:url(../../fonts/heebo-hebrew-800-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010}
+@font-face{font-family:Heebo;font-weight:800;src:url(../../fonts/heebo-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2212}
+:root{--bg:#060818;--ink:#EEF1FF;--mut:#8F97C6;--line:rgba(190,200,255,.15)}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--bg);color:var(--ink);font-family:Heebo,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+body{padding:24px 16px 60px;max-width:480px;margin:0 auto}
+header h1{font-size:22px;font-weight:800}
+header p{font-size:14px;color:var(--mut);margin-top:6px;line-height:1.5}
+.card{margin-top:28px;border-top:1px solid var(--line);padding-top:18px}
+.card h2{font-size:18px;font-weight:800;display:flex;gap:10px;align-items:baseline}
+.card h2 span{font-size:13px;font-weight:700;color:#62c6ff;letter-spacing:.06em}
+.card>p{font-size:14px;color:var(--mut);margin-top:6px;line-height:1.5}
+.hero{margin-top:16px}
+.hero small{font-size:13px;color:var(--mut);display:block}
+.hero b{font-size:56px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}
+.hero i{font-style:normal;font-size:16px;color:var(--mut);margin-inline-start:6px}
+canvas{display:block;width:100%;height:290px;margin-top:6px}
+button{margin-top:10px;min-height:44px;padding:0 18px;border-radius:22px;border:1px solid rgba(190,200,255,.25);background:rgba(120,140,255,.08);color:var(--ink);font:700 15px Heebo,system-ui,sans-serif}
+</style>
+</head>
+<body>
+<header>
+  <h1>אנימציית הקו · 3 כיווני עיצוב</h1>
+  <p>נתוני דוגמה. כל אנימציה מתנגנת פעם אחת כשנכנסים לדף, בגדול, ואז נרגעת. רק נקודת היום ממשיכה לנשום לאט. ככה זה מרגיש כמו סרט ולא כמו לופ.</p>
+</header>
+
+<section class="card" data-fx="A">
+  <h2><span>A</span>הצתה</h2>
+  <p>כוכב שביט בוער רץ על המסע ומשאיר אחריו זנב אש. כל שבוע שהוא עובר מתפוצץ בטבעת אור, וכשהוא מגיע להיום יש הבזק וגל הדף. המספר יורד ביחד איתו.</p>
+  <div class="hero"><small>ממוצע 4 השקילות האחרונות</small><b>80.6</b><i>ק״ג</i></div>
+  <canvas></canvas><button type="button">▶ נגן שוב</button>
+</section>
+
+<section class="card" data-fx="B">
+  <h2><span>B</span>התגבשות</h2>
+  <p>מאות חלקיקים מהגלקסיה נשאבים פנימה ומסתחררים עד שהם בונים את הקו. אחר כך קרן אור עוברת לאורכו פעם אחת, והנקודות נדלקות.</p>
+  <div class="hero"><small>ממוצע 4 השקילות האחרונות</small><b>80.6</b><i>ק״ג</i></div>
+  <canvas></canvas><button type="button">▶ נגן שוב</button>
+</section>
+
+<section class="card" data-fx="C">
+  <h2><span>C</span>זוהר</h2>
+  <p>כל שבוע קופץ מהקרקע למקום שלו עם קפיצה קטנה, הקו נמתח ביניהם, ומתחתיו נשפך זוהר צפוני בסריקה של אור. בסוף פעימה כפולה בנקודת היום.</p>
+  <div class="hero"><small>ממוצע 4 השקילות האחרונות</small><b>80.6</b><i>ק״ג</i></div>
+  <canvas></canvas><button type="button">▶ נגן שוב</button>
+</section>
+
+<script>
+// ---- sample data -------------------------------------------------------------------------------
+const KG = [83.9, 83.7, 83.4, 83.1, 82.9, 82.6, 82.5, 82.1, 81.8, 81.6, 81.4, 81.1, 80.9, 80.6];
+const TARGET = 78.5, PROJ = 7, MONTHS = ['יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'];
+const rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---- helpers ------------------------------------------------------------------------------------
+const cl = v => Math.min(1, Math.max(0, v)), lerp = (a, b, t) => a + (b - a) * t;
+const E = {
+  io: t => t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2,
+  out: t => 1 - (1 - t) ** 3,
+  expo: t => t >= 1 ? 1 : 1 - 2 ** (-10 * t),
+  back: t => { const c = 1.9; return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2; },
+};
+const rand = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const fmt = v => v.toFixed(1);
+
+function geom(W, H) {
+  const P = { l: 22, r: 22, t: 46, b: 40 }, N = KG.length - 1 + PROJ;
+  const X = i => P.l + i / N * (W - P.l - P.r), lo = 78, hi = 84.5;
+  const Y = v => P.t + (hi - v) / (hi - lo) * (H - P.t - P.b);
+  const nodes = KG.map((v, i) => [X(i), Y(v)]);
+  const r = rand(7), stars = Array.from({ length: 70 }, () => [r() * W, r() * H, r() * .5 + .15, r() * 1.1 + .4]);
+  return { W, H, P, X, Y, N, nodes, head: nodes.at(-1), end: [X(N), Y(TARGET)], base: H - P.b + 10, stars };
+}
+// Catmull-Rom through the points (y clamped so it never overshoots), with arc length for partial drawing
+function curve(P) {
+  const pts = [], idx = [];
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || P[i + 1];
+    const lo = Math.min(p1[1], p2[1]), hi = Math.max(p1[1], p2[1]);
+    idx.push(pts.length);
+    for (let k = 0; k < 16; k++) {
+      const t = k / 16, t2 = t * t, t3 = t2 * t;
+      const q = [0, 1].map(j => .5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3));
+      q[1] = Math.min(hi, Math.max(lo, q[1])); pts.push(q);
+    }
+  }
+  idx.push(pts.length); pts.push(P.at(-1));
+  const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  return { pts, idx, cum, total: cum.at(-1) };
+}
+function upto(c, L) {
+  const out = [];
+  for (let i = 0; i < c.pts.length; i++) {
+    if (c.cum[i] <= L) { out.push(c.pts[i]); continue; }
+    const a = c.pts[i - 1], b = c.pts[i], f = (L - c.cum[i - 1]) / (c.cum[i] - c.cum[i - 1] || 1);
+    if (a) out.push([lerp(a[0], b[0], f), lerp(a[1], b[1], f)]); break;
+  }
+  return out;
+}
+function from(c, L0, L1) { return upto(c, L1).filter((p, i, a) => i === a.length - 1 || c.cum[i] >= L0); }
+function stroke(g, P, w, col, blur, bc) {
+  if (P.length < 2) return;
+  g.save(); g.lineJoin = g.lineCap = 'round'; g.lineWidth = w; g.strokeStyle = col;
+  if (blur) { g.shadowBlur = blur; g.shadowColor = bc || col; }
+  g.beginPath(); P.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); g.restore();
+}
+function glowDot(g, x, y, R, a, core = 'rgba(240,248,255,', mid = 'rgba(150,200,255,') {
+  const r = g.createRadialGradient(x, y, 0, x, y, R);
+  r.addColorStop(0, core + a + ')'); r.addColorStop(.25, mid + (.45 * a) + ')'); r.addColorStop(1, 'rgba(80,130,255,0)');
+  g.fillStyle = r; g.beginPath(); g.arc(x, y, R, 0, 7); g.fill();
+}
+function ring(g, x, y, R, w, col) { if (w <= 0) return; g.save(); g.lineWidth = w; g.strokeStyle = col; g.shadowBlur = 10; g.shadowColor = col; g.beginPath(); g.arc(x, y, R, 0, 7); g.stroke(); g.restore(); }
+function text(g, s, x, y, font, col, a = 1, scale = 1, align = 'center') {
+  if (a <= 0) return; g.save(); g.globalAlpha = a; g.translate(x, y); g.scale(scale, scale);
+  g.font = font; g.textAlign = align; g.fillStyle = col; g.direction = 'rtl'; g.fillText(s, 0, 0); g.restore();
+}
+function lineGrad(g, G) { const r = g.createLinearGradient(G.nodes[0][0], 0, G.head[0], 0); r.addColorStop(0, '#5b6cff'); r.addColorStop(.6, '#62c6ff'); r.addColorStop(1, '#ffffff'); return r; }
+function mainLine(g, G, P, a = 1) {
+  g.save(); g.globalAlpha = a; g.globalCompositeOperation = 'lighter';
+  stroke(g, P, 9, 'rgba(100,140,255,.10)', 18, 'rgba(110,160,255,.9)'); stroke(g, P, 2.6, lineGrad(g, G), 6, 'rgba(140,190,255,.8)');
+  g.restore();
+}
+// backdrop: stars, axis, months, start marker; target line revealed left→right by tg (0..1)
+function backdrop(g, G, tg = 1, startA = 1) {
+  const { W, H, P, base } = G;
+  G.stars.forEach(s => { g.fillStyle = `rgba(200,210,255,${s[2]})`; g.beginPath(); g.arc(s[0], s[1], s[3] * .6, 0, 7); g.fill(); });
+  g.strokeStyle = 'rgba(190,200,255,.15)'; g.lineWidth = 1; g.beginPath(); g.moveTo(P.l, base); g.lineTo(W - P.r, base); g.stroke();
+  MONTHS.forEach((m, i) => { const x = G.X(i * 3.8 + .4); g.beginPath(); g.moveTo(x, base); g.lineTo(x, base + 5); g.stroke(); text(g, m, x, H - 6, '400 12px Heebo', '#8F97C6'); });
+  if (tg > 0) {
+    const y = G.Y(TARGET); g.save(); g.setLineDash([2, 6]); g.strokeStyle = 'rgba(169,196,255,.5)';
+    g.beginPath(); g.moveTo(W - P.r, y); g.lineTo(lerp(W - P.r, P.l, tg), y); g.stroke(); g.restore();
+    text(g, 'יעד 78.5', P.l, y + 19, '700 13px Heebo', '#EEF1FF', tg, 1, 'left');
+  }
+  if (startA > 0) {
+    const [x, y] = G.nodes[0]; g.save(); g.globalAlpha = startA; g.strokeStyle = '#B0B7DA'; g.lineWidth = 1.6; g.fillStyle = '#060818';
+    g.beginPath(); g.arc(x, y, 5, 0, 7); g.fill(); g.stroke(); g.restore();
+    text(g, '83.9', x + 14, y - 14, '400 12px Heebo', '#B0B7DA', startA);
+  }
+}
+// projection dots popping one by one from today to the arrival month, starting at time t0
+function projection(g, G, t, t0) {
+  for (let k = 1; k <= 11; k++) {
+    const u = cl((t - t0 - k * 45) / 260); if (!u) continue;
+    const f = k / 12, x = lerp(G.head[0], G.end[0], f), y = lerp(G.head[1], G.end[1], f);
+    g.fillStyle = `rgba(190,215,255,${(.5 * (1 - f) + .15) * u})`; g.beginPath(); g.arc(x, y, 1.5 * E.back(u), 0, 7); g.fill();
+  }
+  const u = cl((t - t0 - 560) / 400);
+  if (u) { ring(g, G.end[0], G.end[1], 4.5 * E.back(u), 1.5, `rgba(169,196,255,${.9 * u})`); text(g, 'דצמ׳', G.end[0], G.end[1] - 13, '400 12px Heebo', '#B0B7DA', u); }
+}
+// today's point at rest: slow breath (one every 5 s)
+function breathe(g, G, t, a = 1) {
+  const br = (1 - Math.cos(t / 5000 * 2 * Math.PI)) / 2;
+  g.save(); g.globalCompositeOperation = 'lighter'; glowDot(g, G.head[0], G.head[1], 24 + 7 * br, a); g.restore();
+  g.save(); g.globalAlpha = a; g.fillStyle = '#fff'; g.beginPath(); g.arc(G.head[0], G.head[1], 4.5, 0, 7); g.fill(); g.restore();
+}
+function weekDot(g, x, y, s, a) { if (s <= 0) return; g.save(); g.globalCompositeOperation = 'lighter'; glowDot(g, x, y, 6 * s, .85 * a); g.restore(); }
+
+// ---- A · ignition: a burning comet runs the journey -------------------------------------------
+const A = {
+  dur: 3200,
+  reset() { this.sparks = []; this.passed = []; this.prev = 0; },
+  draw(g, G, t, num) {
+    const c = G.c || (G.c = curve(G.nodes)), T1 = 1750;
+    const p = E.io(cl(t / T1)), L = p * c.total;
+    num(lerp(KG[0], KG.at(-1), p));
+    // camera punch on arrival
+    const punch = t > T1 ? .045 * cl(1 - (t - T1) / 500) ** 3 : 0;
+    g.save(); g.translate(G.head[0], G.head[1]); g.scale(1 + punch, 1 + punch); g.translate(-G.head[0], -G.head[1]);
+    backdrop(g, G, E.out(cl((t - 150) / 900)), cl(t / 300));
+    mainLine(g, G, upto(c, L));
+    // hot trail behind the head
+    if (t < T1 + 250) {
+      const fade = cl(1 - (t - T1) / 250), tr = from(c, L - 140, L);
+      g.save(); g.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < tr.length - 1; i += 2) {
+        const f = i / tr.length; stroke(g, tr.slice(i, i + 3), 1.5 + 4 * f, `rgba(255,${200 + 55 * f | 0},${170 + 85 * f | 0},${(.85 * f * fade).toFixed(3)})`, 14, 'rgba(120,180,255,.9)');
+      }
+      g.restore();
+    }
+    // sparks thrown off the comet
+    const dt = Math.max(0, t - this.prev); this.prev = t;
+    if (t < T1 && L > 4) {
+      const h = upto(c, L).at(-1), b = upto(c, Math.max(0, L - 6)).at(-1), ang = Math.atan2(b[1] - h[1], b[0] - h[0]);
+      for (let k = 0; k < 3; k++) { const a = ang + (Math.random() - .5) * 1.6, v = .05 + Math.random() * .12; this.sparks.push({ x: h[0], y: h[1], vx: Math.cos(a) * v, vy: Math.sin(a) * v - .02, life: 0, max: 350 + Math.random() * 350 }); }
+    }
+    g.save(); g.globalCompositeOperation = 'lighter';
+    this.sparks = this.sparks.filter(s => (s.life += dt) < s.max);
+    this.sparks.forEach(s => { s.x += s.vx * dt; s.y += s.vy * dt; s.vy += .00025 * dt; const a = 1 - s.life / s.max; g.fillStyle = `rgba(210,230,255,${a.toFixed(3)})`; g.beginPath(); g.arc(s.x, s.y, 1.3 * a + .3, 0, 7); g.fill(); });
+    g.restore();
+    // week points burst as the comet passes
+    G.nodes.forEach((n, i) => {
+      if (i === 0 || i === G.nodes.length - 1) return;
+      const li = c.cum[c.idx[i]];
+      if (L >= li && this.passed[i] == null) this.passed[i] = t;
+      const tp = this.passed[i]; if (tp == null) return;
+      const u = cl((t - tp) / 600);
+      weekDot(g, n[0], n[1], E.back(cl((t - tp) / 320)), 1);
+      ring(g, n[0], n[1], 4 + 18 * E.expo(u), 2 * (1 - u), `rgba(170,210,255,${(1 - u).toFixed(3)})`);
+    });
+    // comet head
+    if (t < T1) { const h = upto(c, L).at(-1); g.save(); g.globalCompositeOperation = 'lighter'; glowDot(g, h[0], h[1], 30, 1); glowDot(g, h[0], h[1], 9, 1, 'rgba(255,255,255,', 'rgba(255,255,255,'); g.restore(); }
+    // arrival: flash, double shockwave, label slam
+    if (t >= T1) {
+      const a = t - T1;
+      g.save(); g.globalCompositeOperation = 'lighter';
+      const fl = Math.exp(-a / 220) * .55, fg = g.createRadialGradient(G.head[0], G.head[1], 0, G.head[0], G.head[1], G.W * .8);
+      fg.addColorStop(0, `rgba(200,225,255,${fl})`); fg.addColorStop(1, 'rgba(80,120,255,0)'); g.fillStyle = fg; g.fillRect(0, 0, G.W, G.H);
+      g.restore();
+      [[0, 120, 3.5], [140, 70, 2]].forEach(([d, R, w]) => { const u = cl((a - d) / 850); if (u > 0 && u < 1) ring(g, G.head[0], G.head[1], 6 + R * E.expo(u), w * (1 - u), `rgba(190,220,255,${(1 - u).toFixed(3)})`); });
+      breathe(g, G, a, 1);
+      const u = cl((a - 80) / 420); text(g, '10.10', G.head[0], G.head[1] + 32, '800 14px Heebo', '#EEF1FF', u, lerp(1.8, 1, E.back(u)));
+      projection(g, G, t, T1 + 300);
+    }
+    g.restore();
+  },
+};
+
+// ---- B · assembly: galaxy particles swirl in and become the line -------------------------------
+const B = {
+  dur: 3600,
+  reset() { this.ps = null; },
+  draw(g, G, t, num) {
+    const c = G.c || (G.c = curve(G.nodes));
+    if (!this.ps) {
+      const r = rand(42); this.ps = Array.from({ length: 650 }, () => {
+        const L = r() * c.total, tg = upto(c, L).at(-1), a = r() * Math.PI * 2, d = 120 + r() * 260;
+        return { s: [tg[0] + Math.cos(a) * d, tg[1] + Math.sin(a) * d], tg, sw: (r() - .5) * 140, d0: r() * 450 + L / c.total * 450, hue: r() };
+      });
+    }
+    num(lerp(KG[0], KG.at(-1), E.io(cl((t - 250) / 1700))));
+    backdrop(g, G, E.out(cl((t - 1500) / 700)), cl((t - 1300) / 400));
+    // particles
+    const fadeOut = 1 - cl((t - 1500) / 500);
+    if (fadeOut > 0) {
+      g.save(); g.globalCompositeOperation = 'lighter';
+      this.ps.forEach(p => {
+        const u = cl((t - p.d0) / 950), e = E.io(u), dx = p.tg[0] - p.s[0], dy = p.tg[1] - p.s[1], len = Math.hypot(dx, dy) || 1;
+        const sw = p.sw * Math.sin(Math.PI * e), x = lerp(p.s[0], p.tg[0], e) - dy / len * sw, y = lerp(p.s[1], p.tg[1], e) + dx / len * sw;
+        const a = (.15 + .85 * e) * fadeOut * cl(t / 200);
+        g.fillStyle = p.hue < .5 ? `rgba(150,190,255,${a.toFixed(3)})` : `rgba(120,220,255,${a.toFixed(3)})`;
+        g.beginPath(); g.arc(x, y, .8 + .9 * e, 0, 7); g.fill();
+      });
+      g.restore();
+    }
+    // the line solidifies, then one light sweep runs along it
+    const la = cl((t - 1250) / 450);
+    if (la) mainLine(g, G, c.pts, la);
+    const su = cl((t - 1550) / 900);
+    if (su > 0 && su < 1) {
+      const sx = lerp(G.nodes[0][0] - 70, G.head[0] + 70, E.io(su)), sg = g.createLinearGradient(sx - 70, 0, sx + 70, 0);
+      sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(.5, 'rgba(255,255,255,.95)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+      g.save(); g.globalCompositeOperation = 'lighter'; stroke(g, c.pts, 4.5, sg, 16, 'rgba(150,200,255,1)'); g.restore();
+    }
+    // week points light up as the sweep passes
+    G.nodes.forEach((n, i) => {
+      if (i === 0 || i === G.nodes.length - 1) return;
+      const tp = 1550 + E.io(cl((n[0] - G.nodes[0][0] + 70) / (G.head[0] - G.nodes[0][0] + 140))) * 900;
+      weekDot(g, n[0], n[1], E.back(cl((t - tp) / 350)), 1);
+    });
+    // today ignites, its label slides up into place
+    const a = t - 2400;
+    if (a > 0) {
+      const u = cl(a / 700); ring(g, G.head[0], G.head[1], 6 + 60 * E.expo(u), 2.5 * (1 - u), `rgba(170,220,255,${(1 - u).toFixed(3)})`);
+      breathe(g, G, a, E.out(cl(a / 300)));
+      const v = cl((a - 100) / 500); text(g, '10.10', G.head[0], G.head[1] + 32 + 14 * (1 - E.out(v)), '800 14px Heebo', '#EEF1FF', v);
+      projection(g, G, t, 2650);
+    }
+  },
+};
+
+// ---- C · aurora: the weeks spring up, an aurora pours beneath ---------------------------------
+const C = {
+  dur: 3200,
+  reset() {},
+  draw(g, G, t, num) {
+    num(lerp(KG[0], KG.at(-1), E.expo(cl(t / 1500))));
+    backdrop(g, G, E.out(cl((t - 1300) / 700)), cl(t / 300));
+    // each week springs up from the floor with a small overshoot
+    const pts = G.nodes.map((n, i) => { const u = cl((t - 120 - i * 55) / 650); return u > 0 ? [n[0], lerp(G.base, n[1], E.back(u)), u] : null; }).filter(Boolean);
+    if (pts.length < 2) return;
+    const c = curve(pts.map(p => [p[0], p[1]])), last = pts.at(-1);
+    // aurora fill under the line, revealed by a scan
+    const wu = cl((t - 1050) / 850), wx = lerp(G.nodes[0][0] - 10, G.head[0] + 20, E.io(wu));
+    if (wu > 0) {
+      g.save(); g.beginPath(); g.rect(0, 0, wx, G.H); g.clip();
+      const top = Math.min(...G.nodes.map(n => n[1])), ag = g.createLinearGradient(0, top, 0, G.base);
+      ag.addColorStop(0, 'rgba(120,110,255,.38)'); ag.addColorStop(.45, 'rgba(90,190,255,.14)'); ag.addColorStop(1, 'rgba(60,120,255,0)');
+      g.fillStyle = ag; g.beginPath(); c.pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]));
+      g.lineTo(last[0], G.base); g.lineTo(pts[0][0], G.base); g.closePath(); g.fill(); g.restore();
+      if (wu < 1) {
+        const sa = Math.sin(Math.PI * wu), sg = g.createLinearGradient(0, G.P.t - 20, 0, G.base);
+        sg.addColorStop(0, 'rgba(160,220,255,0)'); sg.addColorStop(.5, `rgba(200,235,255,${(.9 * sa).toFixed(3)})`); sg.addColorStop(1, 'rgba(160,220,255,0)');
+        g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = sg; g.shadowBlur = 18; g.shadowColor = 'rgba(120,200,255,1)'; g.fillRect(wx - 1.5, G.P.t - 20, 3, G.base - G.P.t + 20); g.restore();
+      }
+    }
+    mainLine(g, { ...G, head: last }, c.pts);
+    pts.forEach((p, i) => { if (i && i < G.nodes.length - 1) weekDot(g, p[0], p[1], E.back(cl(p[2] * 1.4)), 1); });
+    // double chromatic pulse at today
+    const a = t - 1900;
+    if (a > 0 && pts.length === G.nodes.length) {
+      [[0, 'rgba(150,120,255,', -1.5], [90, 'rgba(90,220,255,', 1.5]].forEach(([d, col, off]) => {
+        const u = cl((a - d) / 750); if (u > 0 && u < 1) ring(g, G.head[0] + off * (1 - u), G.head[1], 6 + 75 * E.expo(u), 3 * (1 - u), col + (1 - u).toFixed(3) + ')');
+      });
+      breathe(g, G, a, E.out(cl(a / 250)));
+      const v = cl((a - 60) / 450); text(g, '10.10', G.head[0], G.head[1] + 32, '800 14px Heebo', '#EEF1FF', v, lerp(.6, 1, E.back(v)));
+      projection(g, G, t, 2150);
+    } else if (pts.length === G.nodes.length) breathe(g, G, 0, 0);
+  },
+};
+
+// ---- runner: each card plays once when scrolled into view, replay on the button --------------
+const FX = { A, B, C };
+document.querySelectorAll('.card').forEach(card => {
+  const fx = Object.create(FX[card.dataset.fx]), cv = card.querySelector('canvas'), out = card.querySelector('.hero b');
+  const g = cv.getContext('2d'), num = v => { out.textContent = fmt(v); };
+  let G, t0 = 0, raf = 0, seen = false, visible = false;
+  const size = () => {
+    const b = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    cv.width = b.width * dpr; cv.height = b.height * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); G = geom(b.width, b.height);
+  };
+  const frame = now => {
+    raf = visible ? requestAnimationFrame(frame) : 0;
+    g.clearRect(0, 0, G.W, G.H); fx.draw(g, G, rm ? fx.dur + 5000 : now - t0, num);
+  };
+  const play = () => { fx.reset(); t0 = performance.now(); if (!raf && visible) raf = requestAnimationFrame(frame); };
+  size(); fx.reset();
+  document.fonts.ready.then(() => {
+    new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (visible && !seen) { seen = true; play(); } else if (visible && !raf) raf = requestAnimationFrame(frame);
+    }, { threshold: .55 }).observe(cv);
+  });
+  card.querySelector('button').onclick = play;
+  addEventListener('resize', () => { size(); fx.reset(); });
+});
+</script>
+</body>
+</html>
