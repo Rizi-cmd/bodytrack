@@ -70,5 +70,6 @@ fitness-analyst, 23.10.2026. Builds on TE (`docs/specs/trend-engine.md`) and AN 
 | P3 | journeyProjection | same, today 06-30 (10 days) | shown (boundary) |
 | W1 | phaseWeek | ps 09-01, today 09-01 / 09-07 / 09-08 | 1 / 1 / 2 |
 
-## 9. Owner decisions
-(pending)
+## 9. Decisions (23.10)
+- Owner: the 30-day change is removed; %/week of body weight with the target band takes its place (grid = kg/week · %/week · kg left).
+- Main agent: projection hidden when the last weigh-in is older than 10 days (`stale`); no "הגדרת יעד" link in maintenance; end label = month name only.
