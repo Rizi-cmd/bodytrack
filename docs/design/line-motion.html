@@ -27,14 +27,22 @@ header p{font-size:14px;color:var(--mut);margin-top:6px;line-height:1.5}
 .hero b{font-size:56px;font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}
 .hero i{font-style:normal;font-size:16px;color:var(--mut);margin-inline-start:6px}
 canvas{display:block;width:100%;height:290px;margin-top:6px}
+canvas.touch{touch-action:none}
 button{margin-top:10px;min-height:44px;padding:0 18px;border-radius:22px;border:1px solid rgba(190,200,255,.25);background:rgba(120,140,255,.08);color:var(--ink);font:700 15px Heebo,system-ui,sans-serif}
 </style>
 </head>
 <body>
 <header>
-  <h1>אנימציית הקו · 3 כיווני עיצוב</h1>
-  <p>נתוני דוגמה. כל אנימציה מתנגנת פעם אחת כשנכנסים לדף, בגדול, ואז נרגעת. רק נקודת היום ממשיכה לנשום לאט. ככה זה מרגיש כמו סרט ולא כמו לופ.</p>
+  <h1>אנימציית הקו</h1>
+  <p>נתוני דוגמה. D = השילוב שנבחר: כניסה גדולה, ואחריה קו חי שאף פעם לא חוזר על עצמו. A, B ו-C נשארו למטה להשוואה.</p>
 </header>
+
+<section class="card" data-fx="D">
+  <h2><span>D</span>התגבשות + הצתה, חי</h2>
+  <p>החלקיקים נשאבים ובונים את הקו, השביט מצית אותו עד היום עם גל הדף. אחר כך הקו נשאר חי: החלקיקים זורמים לאורכו לכיוון היום, כל אחד בקצב ובנדנוד משלו, ומנקודת היום עפים ניצוצות ברגעים אקראיים. העבר אצבע על הקו.</p>
+  <div class="hero"><small>ממוצע 4 השקילות האחרונות</small><b>80.6</b><i>ק״ג</i></div>
+  <canvas class="touch"></canvas><button type="button">▶ נגן שוב</button>
+</section>
 
 <section class="card" data-fx="A">
   <h2><span>A</span>הצתה</h2>
@@ -79,7 +87,7 @@ function geom(W, H) {
   const X = i => P.l + i / N * (W - P.l - P.r), lo = 78, hi = 84.5;
   const Y = v => P.t + (hi - v) / (hi - lo) * (H - P.t - P.b);
   const nodes = KG.map((v, i) => [X(i), Y(v)]);
-  const r = rand(7), stars = Array.from({ length: 70 }, () => [r() * W, r() * H, r() * .5 + .15, r() * 1.1 + .4]);
+  const r = rand(7), stars = Array.from({ length: 70 }, () => [r() * W, r() * H, r() * .5 + .15, r() * 1.1 + .4, .0004 + r() * .0016, r() * 7]);
   return { W, H, P, X, Y, N, nodes, head: nodes.at(-1), end: [X(N), Y(TARGET)], base: H - P.b + 10, stars };
 }
 // Catmull-Rom through the points (y clamped so it never overshoots), with arc length for partial drawing
@@ -132,9 +140,9 @@ function mainLine(g, G, P, a = 1) {
   g.restore();
 }
 // backdrop: stars, axis, months, start marker; target line revealed left→right by tg (0..1)
-function backdrop(g, G, tg = 1, startA = 1) {
+function backdrop(g, G, tg = 1, startA = 1, tw = null) {
   const { W, H, P, base } = G;
-  G.stars.forEach(s => { g.fillStyle = `rgba(200,210,255,${s[2]})`; g.beginPath(); g.arc(s[0], s[1], s[3] * .6, 0, 7); g.fill(); });
+  G.stars.forEach(s => { g.fillStyle = `rgba(200,210,255,${tw == null ? s[2] : (s[2] * (.55 + .45 * Math.sin(tw * s[4] + s[5]))).toFixed(3)})`; g.beginPath(); g.arc(s[0], s[1], s[3] * .6, 0, 7); g.fill(); });
   g.strokeStyle = 'rgba(190,200,255,.15)'; g.lineWidth = 1; g.beginPath(); g.moveTo(P.l, base); g.lineTo(W - P.r, base); g.stroke();
   MONTHS.forEach((m, i) => { const x = G.X(i * 3.8 + .4); g.beginPath(); g.moveTo(x, base); g.lineTo(x, base + 5); g.stroke(); text(g, m, x, H - 6, '400 12px Heebo', '#8F97C6'); });
   if (tg > 0) {
@@ -319,8 +327,111 @@ const C = {
   },
 };
 
+// ---- D · assembly + ignition, then alive -------------------------------------------------------
+// point and normal at arc length L (binary search on the curve's cumulative length)
+function at(c, L) {
+  let lo = 0, hi = c.cum.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (c.cum[m] <= L) lo = m; else hi = m; }
+  const a = c.pts[lo], b = c.pts[hi], f = cl((L - c.cum[lo]) / (c.cum[hi] - c.cum[lo] || 1)), dx = b[0] - a[0], dy = b[1] - a[1], n = Math.hypot(dx, dy) || 1;
+  return [lerp(a[0], b[0], f), lerp(a[1], b[1], f), -dy / n, dx / n];
+}
+const D = {
+  dur: 4200,
+  reset() { this.ps = null; this.passed = []; this.sparks = []; this.prev = 0; this.next = 0; },
+  draw(g, G, t, num) {
+    const c = G.c || (G.c = curve(G.nodes)), T0 = 1450, T1 = 2900, total = c.total;
+    const dt = Math.min(50, Math.max(0, t - this.prev)); this.prev = t;
+    if (!this.ps) {
+      const r = rand(42); this.ps = Array.from({ length: 700 }, () => {
+        const L0 = r() * total, tg = at(c, L0), a = r() * Math.PI * 2, d = 120 + r() * 260, halo = r() < .25;
+        return { L0, s: [tg[0] + Math.cos(a) * d, tg[1] + Math.sin(a) * d], sw: (r() - .5) * 140, d0: r() * 450 + L0 / total * 450,
+          v: 7 + r() * 26, amp: halo ? 6 + r() * 10 : 1 + r() * 4, f1: .0005 + r() * .0013, f2: .0011 + r() * .002, f3: .001 + r() * .003,
+          p1: r() * 7, p2: r() * 7, p3: r() * 7, sz: .6 + r() * 1.1, hue: r(), dx: 0, dy: 0 };
+      });
+    }
+    const cp = E.io(cl((t - T0) / (T1 - T0))), Lc = cp * total, comet = t >= T0 && t < T1;
+    num(lerp(KG[0], KG.at(-1), cp));
+    const punch = t > T1 ? .04 * cl(1 - (t - T1) / 500) ** 3 : 0;
+    g.save(); g.translate(G.head[0], G.head[1]); g.scale(1 + punch, 1 + punch); g.translate(-G.head[0], -G.head[1]);
+    backdrop(g, G, E.out(cl((t - 1500) / 800)), cl((t - 1100) / 400), t);
+    // the line: a dim solid line once the particles land, fully lit where the comet has passed
+    const la = cl((t - 1150) / 450);
+    if (la) mainLine(g, G, c.pts, .35 * la);
+    if (t >= T0) mainLine(g, G, upto(c, Lc));
+    // particles: swirl in, then flow along the line toward today, each with its own speed and sway
+    const P = G.ptr;
+    g.save(); g.globalCompositeOperation = 'lighter';
+    this.ps.forEach(p => {
+      const u = cl((t - p.d0) / 950); let x, y, a, L = p.L0;
+      if (u < 1) {
+        const e = E.io(u), tg = at(c, p.L0), dx = tg[0] - p.s[0], dy = tg[1] - p.s[1], len = Math.hypot(dx, dy) || 1, sw = p.sw * Math.sin(Math.PI * e);
+        x = lerp(p.s[0], tg[0], e) - dy / len * sw; y = lerp(p.s[1], tg[1], e) + dx / len * sw; a = (.15 + .85 * e) * cl(t / 200);
+      } else {
+        const tl = t - p.d0 - 950; L = (p.L0 + p.v * tl / 1000) % total;
+        const q = at(c, L), off = cl(tl / 1400) * p.amp * (Math.sin(t * p.f1 + p.p1) + .6 * Math.sin(t * p.f2 + p.p2));
+        x = q[0] + q[2] * off; y = q[1] + q[3] * off;
+        a = (.45 + .4 * Math.sin(t * p.f3 + p.p3)) * cl(L / 30) * cl((total - L) / 40) * (p.amp > 6 ? .55 : 1);
+      }
+      if (comet) a += 1.3 * Math.exp(-Math.abs(L - Lc) / 30);   // the comet energises what it passes
+      // the finger pushes particles aside, they spring back
+      if (P && P.on) { const ddx = x + p.dx - P.x, ddy = y + p.dy - P.y, d = Math.hypot(ddx, ddy); if (d < 64 && d > .1) { const f = (1 - d / 64) ** 2 * 3.2; p.dx += ddx / d * f; p.dy += ddy / d * f; } }
+      p.dx *= .93; p.dy *= .93;
+      a = Math.min(1, a); if (a <= .01) return;
+      g.fillStyle = p.hue < .5 ? `rgba(160,195,255,${a.toFixed(3)})` : `rgba(125,220,255,${a.toFixed(3)})`;
+      g.beginPath(); g.arc(x + p.dx, y + p.dy, p.sz, 0, 7); g.fill();
+    });
+    g.restore();
+    // comet: hot trail, sparks, head
+    if (t >= T0 && t < T1 + 250) {
+      const fade = cl(1 - (t - T1) / 250), tr = from(c, Lc - 140, Lc);
+      g.save(); g.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < tr.length - 1; i += 2) { const f = i / tr.length; stroke(g, tr.slice(i, i + 3), 1.5 + 4 * f, `rgba(255,${200 + 55 * f | 0},${170 + 85 * f | 0},${(.85 * f * fade).toFixed(3)})`, 14, 'rgba(120,180,255,.9)'); }
+      g.restore();
+    }
+    if (comet && Lc > 4) {
+      const h = at(c, Lc), ang = Math.atan2(-h[2], h[3]) + Math.PI;
+      for (let k = 0; k < 3; k++) { const a = ang + (Math.random() - .5) * 1.6, v = .05 + Math.random() * .12; this.sparks.push({ x: h[0], y: h[1], vx: Math.cos(a) * v, vy: Math.sin(a) * v - .02, life: 0, max: 350 + Math.random() * 350, g: .00025 }); }
+      g.save(); g.globalCompositeOperation = 'lighter'; glowDot(g, h[0], h[1], 30, 1); glowDot(g, h[0], h[1], 9, 1, 'rgba(255,255,255,', 'rgba(255,255,255,'); g.restore();
+    }
+    // alive: today's point throws a soft spark now and then, at random moments
+    if (!rm && t > T1 + 700 && t > this.next) {
+      const n = 1 + (Math.random() * 3 | 0);
+      for (let k = 0; k < n; k++) { const a = -Math.PI / 2 + (Math.random() - .5) * 2.4, v = .012 + Math.random() * .03; this.sparks.push({ x: G.head[0], y: G.head[1], vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 900 + Math.random() * 900, g: -.000004 }); }
+      this.next = t + 300 + Math.random() * 1700;
+    }
+    g.save(); g.globalCompositeOperation = 'lighter';
+    this.sparks = this.sparks.filter(s => (s.life += dt) < s.max);
+    this.sparks.forEach(s => { s.x += s.vx * dt; s.y += s.vy * dt; s.vy += s.g * dt; const a = 1 - s.life / s.max; g.fillStyle = `rgba(210,230,255,${a.toFixed(3)})`; g.beginPath(); g.arc(s.x, s.y, 1.3 * a + .3, 0, 7); g.fill(); });
+    g.restore();
+    // week points burst as the comet passes, then glow softly
+    G.nodes.forEach((n, i) => {
+      if (i === 0 || i === G.nodes.length - 1) return;
+      if (t >= T0 && Lc >= c.cum[c.idx[i]] && this.passed[i] == null) this.passed[i] = t;
+      const tp = this.passed[i]; if (tp == null) return;
+      const u = cl((t - tp) / 600);
+      weekDot(g, n[0], n[1], E.back(cl((t - tp) / 320)), 1);
+      ring(g, n[0], n[1], 4 + 18 * E.expo(u), 2 * (1 - u), `rgba(170,210,255,${(1 - u).toFixed(3)})`);
+    });
+    // arrival: flash, double shockwave, label slam, projection
+    if (t >= T1) {
+      const a = t - T1;
+      if (a < 1500) {
+        g.save(); g.globalCompositeOperation = 'lighter';
+        const fl = Math.exp(-a / 220) * .55, fg = g.createRadialGradient(G.head[0], G.head[1], 0, G.head[0], G.head[1], G.W * .8);
+        fg.addColorStop(0, `rgba(200,225,255,${fl})`); fg.addColorStop(1, 'rgba(80,120,255,0)'); g.fillStyle = fg; g.fillRect(0, 0, G.W, G.H);
+        g.restore();
+        [[0, 120, 3.5], [140, 70, 2]].forEach(([d, R, w]) => { const u = cl((a - d) / 850); if (u > 0 && u < 1) ring(g, G.head[0], G.head[1], 6 + R * E.expo(u), w * (1 - u), `rgba(190,220,255,${(1 - u).toFixed(3)})`); });
+      }
+      breathe(g, G, a, 1);
+      const u = cl((a - 80) / 420); text(g, '10.10', G.head[0], G.head[1] + 32, '800 14px Heebo', '#EEF1FF', u, lerp(1.8, 1, E.back(u)));
+      projection(g, G, t, T1 + 300);
+    }
+    g.restore();
+  },
+};
+
 // ---- runner: each card plays once when scrolled into view, replay on the button --------------
-const FX = { A, B, C };
+const FX = { A, B, C, D };
 document.querySelectorAll('.card').forEach(card => {
   const fx = Object.create(FX[card.dataset.fx]), cv = card.querySelector('canvas'), out = card.querySelector('.hero b');
   const g = cv.getContext('2d'), num = v => { out.textContent = fmt(v); };
@@ -342,6 +453,12 @@ document.querySelectorAll('.card').forEach(card => {
     }, { threshold: .55 }).observe(cv);
   });
   card.querySelector('button').onclick = play;
+  if (cv.classList.contains('touch')) {
+    const set = (e, on) => { const b = cv.getBoundingClientRect(); G.ptr = { x: e.clientX - b.left, y: e.clientY - b.top, on }; };
+    cv.addEventListener('pointerdown', e => set(e, true));
+    cv.addEventListener('pointermove', e => set(e, e.pointerType === 'mouse' || e.buttons > 0));
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(k => cv.addEventListener(k, e => set(e, false)));
+  }
   addEventListener('resize', () => { size(); fx.reset(); });
 });
 </script>
