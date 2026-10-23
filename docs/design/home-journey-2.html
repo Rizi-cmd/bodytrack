@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Home journey v2</title>
+<!-- Design file only (sample data). Home "המסע", three clean variations with the live electric line (23.10.2026). -->
+<style>
+@font-face{font-family:Heebo;font-weight:400;src:url(../../fonts/heebo-hebrew-400-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:500;src:url(../../fonts/heebo-hebrew-500-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:700;src:url(../../fonts/heebo-hebrew-700-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:800;src:url(../../fonts/heebo-hebrew-800-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-800-normal.woff2) format("woff2")}
+:root{--ink:#EEF1FF;--mute:#A9B0D6;--faint:#7E86B8;--good:#7DE3C1;--elec:#9FD4FF;--hair:rgba(190,200,255,.12);--rule:rgba(190,200,255,.24)}
+*{box-sizing:border-box}
+body{margin:0;background:#020309;color:var(--ink);font-family:Heebo,system-ui,sans-serif;padding:20px}
+.row{display:flex;flex-wrap:wrap;gap:22px;justify-content:center}
+.col{width:375px}
+.name{font-size:15px;font-weight:800;margin:0 0 2px}.why{font-size:13px;color:var(--mute);margin:0 0 10px;min-height:38px}
+.phone{width:375px;height:812px;border-radius:40px;overflow:hidden;position:relative;border:1px solid rgba(190,200,255,.10);
+  background:radial-gradient(110% 50% at 50% 46%,#15164a 0%,transparent 64%),radial-gradient(80% 40% at 0% 100%,#191552 0%,transparent 60%),#05060f;
+  display:flex;flex-direction:column;padding:22px 20px 22px}
+.phone>*{position:relative}
+.stars{position:absolute;inset:0;pointer-events:none}
+.n{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+/* header: today + time, "עוד" */
+.hd{display:flex;justify-content:space-between;align-items:flex-start}
+.today{font-size:13px;color:var(--mute);font-weight:500;line-height:1.35}
+.today b{display:block;color:var(--ink);font-size:15px;font-weight:700}
+.more{border:1px solid var(--rule);border-radius:16px;padding:5px 12px;font-size:13px;font-weight:700}
+.verdict{margin-top:22px;text-align:center}
+.verdict .w{font-size:40px;font-weight:800;color:var(--good);line-height:1}
+.verdict .l{font-size:14px;font-weight:500;color:var(--ink);margin-top:6px;opacity:.9}
+.verdict{margin-top:18px}
+canvas{display:block}
+.rate{text-align:center}
+.rate .big{font-size:56px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.rate .u{font-size:14px;font-weight:700;margin-top:6px}
+.rate .z{font-size:13px;color:var(--mute);margin-top:4px}
+.rate .z b{color:var(--good);font-weight:700}
+.foot{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:12px}
+.last{font-size:12px;color:var(--faint)}
+.ana{width:100%;min-height:50px;border-radius:25px;border:1px solid var(--rule);background:rgba(160,175,255,.08);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center}
+/* V2: instrument card + stat row */
+.pill{display:inline-flex;gap:8px;align-items:center;margin:18px auto 0;padding:6px 14px;border-radius:18px;background:rgba(125,227,193,.10);color:var(--good);font-weight:800;font-size:15px}
+.card{margin-top:16px;border-radius:24px;background:linear-gradient(180deg,rgba(30,34,90,.55),rgba(10,12,36,.55));border:1px solid var(--hair);padding:14px 0 6px}
+.card .ct{display:flex;justify-content:space-between;padding:0 16px;font-size:13px;color:var(--mute)}.card .ct b{color:var(--ink);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:18px}
+.stats div{text-align:center;padding:2px 4px}.stats div+div{border-right:1px solid var(--hair)}
+.stats b{display:block;font-size:24px;font-weight:800;line-height:1.1}.stats span{font-size:12px;color:var(--mute)}
+/* V3: horizon */
+.hero{text-align:center;margin-top:26px}
+.hero .k{font-size:13px;color:var(--mute);font-weight:500}
+.hero .v{font-size:76px;font-weight:800;letter-spacing:-.03em;line-height:1;margin-top:4px}
+.hero .v small{font-size:20px;font-weight:700;margin-inline-start:6px;letter-spacing:0}
+.chips{display:flex;gap:8px;justify-content:center;margin-top:14px}
+.chips>span{border:1px solid var(--hair);background:rgba(160,175,255,.06);border-radius:14px;padding:5px 12px;font-size:13px;font-weight:600}
+.chips .g{color:var(--good);border-color:rgba(125,227,193,.25)}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<script>
+// ---------------- sample data (the app computes all of these) ----------------
+const D = { start: 86.0, target: 78.0, avg: [86, 85.6, 84.9, 84.4, 83.7, 83.1, 82.4, 81.7, 81.0], rate: -0.62, zone: [0.41, 0.82], startMonth: 'אוג׳', etaMonth: 'דצמ׳', left: 3.0 };
+D.now = D.avg.length - 1; D.eta = D.now + (D.avg[D.now] - D.target) / -D.rate;
+const M = '−', DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'], MON = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+const now = new Date(), hhmm = () => new Date().toTimeString().slice(0, 5);
+const dayLine = `יום ${DAYS[now.getDay()]}, ${now.getDate()} ב${MON[now.getMonth()]}`;
+function rnd(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const NS = 'http://www.w3.org/2000/svg';
+function stars(ph, seed) { const s = document.createElementNS(NS, 'svg'); s.setAttribute('class', 'stars'); s.setAttribute('width', 375); s.setAttribute('height', 812); const r = rnd(seed);
+  for (let i = 0; i < 110; i++) { const c = document.createElementNS(NS, 'circle'); c.setAttribute('cx', r() * 375); c.setAttribute('cy', r() * 812); c.setAttribute('r', .4 + r() * .9); c.setAttribute('fill', '#C8D2FF'); c.setAttribute('opacity', .08 + r() * .3); s.append(c); } ph.prepend(s); }
+
+// ---------------- the electric line (canvas, additive light) ----------------
+// Catmull-Rom through the weekly averages → a smooth path sampled every ~2 px.
+function smooth(P) {
+  const out = [];
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || P[i + 1];
+    const n = Math.max(6, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / 2));
+    for (let k = 0; k < n; k++) { const t = k / n, t2 = t * t, t3 = t2 * t;
+      out.push([0, 1].map(j => .5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3))); }
+  }
+  out.push(P[P.length - 1]); return out;
+}
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function journey(cv, opt) {
+  const dpr = Math.min(devicePixelRatio || 1, 2), W = opt.w, H = opt.h;
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  const g = cv.getContext('2d'); g.scale(dpr, dpr);
+  const pad = opt.pad, tmax = D.eta + .6, lo = D.target - .8, hi = D.start + .6;
+  const X = t => pad.l + t / tmax * (W - pad.l - pad.r), Y = kg => pad.t + (hi - kg) / (hi - lo) * (H - pad.t - pad.b);
+  const pts = smooth(D.avg.map((v, i) => [X(i), Y(v)]));
+  const head = pts[pts.length - 1], tgtY = Y(D.target), etaX = X(D.eta);
+  const r = rnd(opt.seed || 5);
+  const sparks = [];
+  const font = (w, s) => `${w} ${s}px Heebo, system-ui, sans-serif`;
+
+  function stroke(path, width, color, blur, bc) {
+    g.save(); g.lineJoin = g.lineCap = 'round'; g.lineWidth = width; g.strokeStyle = color;
+    if (blur) { g.shadowBlur = blur; g.shadowColor = bc || color; }
+    g.beginPath(); path.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); g.restore();
+  }
+  // a short jagged filament leaving the line at point i (midpoint displacement)
+  function filament(i) {
+    const a = pts[Math.max(0, i - 2)], b = pts[Math.min(pts.length - 1, i + 2)], p = pts[i];
+    let nx = -(b[1] - a[1]), ny = b[0] - a[0]; const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
+    const side = r() < .5 ? -1 : 1, len = 8 + r() * 18, tx = (b[0] - a[0]) / (Math.hypot(b[0] - a[0], b[1] - a[1]) || 1) * (r() - .3) * len * .8;
+    const end = [p[0] + nx * side * len + tx, p[1] + ny * side * len];
+    const seg = [p]; const n = 4;
+    for (let k = 1; k < n; k++) { const t = k / n; seg.push([p[0] + (end[0] - p[0]) * t + (r() - .5) * 5, p[1] + (end[1] - p[1]) * t + (r() - .5) * 5]); }
+    seg.push(end); return seg;
+  }
+  function frame(ms) {
+    g.clearRect(0, 0, W, H);
+    // target: one quiet hairline + label; arrival month at its end
+    g.save(); g.setLineDash([2, 6]); g.strokeStyle = 'rgba(125,227,193,.45)'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(pad.l, tgtY); g.lineTo(W - pad.r, tgtY); g.stroke(); g.restore();
+    g.font = font(700, 13); g.fillStyle = '#7DE3C1'; g.textAlign = 'right'; g.direction = 'rtl';
+    g.fillText(opt.tgtLabel || 'יעד 78.0', W - pad.r, tgtY + 20);
+    // projection: small dots flowing from today toward the target, fading out
+    const flow = RM ? 0 : (ms / 1800) % 1, nd = 14;
+    for (let k = 0; k < nd; k++) { const t = (k + flow) / nd, x = head[0] + (etaX - head[0]) * t, y = head[1] + (tgtY - head[1]) * t;
+      g.fillStyle = `rgba(190,215,255,${(.55 * (1 - t) + .1).toFixed(3)})`; g.beginPath(); g.arc(x, y, 1.3, 0, 7); g.fill(); }
+    g.save(); g.strokeStyle = 'rgba(125,227,193,.9)'; g.lineWidth = 1.5; g.beginPath(); g.arc(etaX, tgtY, 4.5, 0, 7); g.stroke(); g.restore();
+    if (opt.etaLabel !== false) { g.font = font(500, 12); g.fillStyle = '#A9B0D6'; g.textAlign = 'center'; g.fillText(`צפי ${D.etaMonth}`, etaX, tgtY - 12); }
+
+    // the line: light adds up
+    g.save(); g.globalCompositeOperation = 'lighter';
+    const flick = RM ? 1 : .85 + .15 * Math.sin(ms / 90) * Math.sin(ms / 37);
+    const jit = RM ? pts : pts.map((p, i) => i === pts.length - 1 ? p : [p[0] + (r() - .5) * .9, p[1] + (r() - .5) * .9]);
+    stroke(pts, 16, `rgba(80,140,255,${.07 * flick})`, 26, 'rgba(90,150,255,.9)');   // wide bloom
+    stroke(pts, 5, `rgba(140,195,255,${.28 * flick})`, 10, 'rgba(150,200,255,1)');   // tight glow
+    stroke(jit, 1.6, 'rgba(255,255,255,.95)');                                        // white core
+    // the pulse: a brighter bead of light travelling start → today
+    if (!RM) {
+      const p = (ms / 2600) % 1, i = Math.floor(p * (pts.length - 1)), seg = pts.slice(Math.max(0, i - 14), i + 1);
+      if (seg.length > 1) { const a = Math.sin(p * Math.PI); stroke(seg, 6, `rgba(190,225,255,${.55 * a})`, 14, 'rgba(170,215,255,1)'); stroke(seg, 2, `rgba(255,255,255,${.9 * a})`); }
+      // filaments: born now and then, live ~120 ms
+      if (r() < .18) sparks.push({ seg: filament(Math.floor(r() * (pts.length - 4)) + 2), born: ms });
+      if (r() < .10) sparks.push({ seg: filament(pts.length - 1 - Math.floor(r() * 6)), born: ms });
+      for (let k = sparks.length - 1; k >= 0; k--) { const sp = sparks[k], age = (ms - sp.born) / 140; if (age > 1) { sparks.splice(k, 1); continue; }
+        stroke(sp.seg, 1, `rgba(200,228,255,${.75 * (1 - age)})`, 6, 'rgba(160,210,255,1)'); }
+    }
+    // today: a plasma point with a soft corona
+    const pr = RM ? 1 : 1 + .08 * Math.sin(ms / 260) + .05 * (r() - .5);
+    const cg = g.createRadialGradient(head[0], head[1], 0, head[0], head[1], 26 * pr);
+    cg.addColorStop(0, 'rgba(210,235,255,.85)'); cg.addColorStop(.25, 'rgba(140,195,255,.35)'); cg.addColorStop(1, 'rgba(80,140,255,0)');
+    g.fillStyle = cg; g.beginPath(); g.arc(head[0], head[1], 26 * pr, 0, 7); g.fill();
+    g.restore();
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(head[0], head[1], 4.2, 0, 7); g.fill();
+    // labels: start value, today value (above the point)
+    g.direction = 'rtl'; g.textAlign = 'center';
+    g.font = font(800, 15); g.fillStyle = '#EEF1FF'; g.fillText(opt.todayLabel || '81.0', head[0], head[1] - 22);
+    g.font = font(500, 12); g.fillStyle = '#A9B0D6';
+    const s0 = pts[0]; g.textAlign = 'left'; g.direction = 'ltr'; g.fillText('86.0', s0[0] - 2, s0[1] - 12);
+    if (opt.axis) {   // V2: quiet weight grid on the left + time ticks
+      g.font = font(500, 12); g.textAlign = 'left'; g.fillStyle = 'rgba(169,176,214,.75)';
+      for (const kg of [86, 84, 82, 80, 78]) { const y = Y(kg); g.strokeStyle = 'rgba(190,200,255,.07)'; g.beginPath(); g.moveTo(pad.l, y); g.lineTo(W - pad.r, y); g.stroke(); if (kg !== 78 && kg !== 86) g.fillText(kg, 4, y + 4); }
+    }
+    g.direction = 'rtl'; g.textAlign = 'center'; g.font = font(500, 12); g.fillStyle = '#7E86B8';
+    g.fillText(D.startMonth, s0[0], H - 6); g.fillStyle = '#EEF1FF'; g.font = font(700, 12); g.fillText('היום', head[0], H - 6);
+    if (!RM) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// ---------------- the three screens ----------------
+function phone(name, why, html, after, seed) {
+  const col = document.createElement('div'); col.className = 'col';
+  col.innerHTML = `<p class="name">${name}</p><p class="why">${why}</p><div class="phone">${html}</div>`;
+  document.getElementById('row').append(col); const ph = col.querySelector('.phone'); stars(ph, seed); after(ph);
+}
+const header = `<div class="hd"><div class="today"><b>${dayLine}</b><span class="n clock">${hhmm()}</span></div><span class="more">עוד</span></div>`;
+const rateBlock = `<div class="rate"><div class="big n">${M}0.62</div><div class="u">ק״ג לשבוע</div><div class="z"><b>בטווח היעד</b> · <span class="n">0.41–0.82</span></div></div>`;
+const foot = `<div class="foot"><div class="last">שקילה אחרונה <span class="n">21.10</span> · לפני יומיים</div><div class="ana">ניתוח ‹</div></div>`;
+
+phone('V1. פלזמה', 'הכי נקי: בלי צירים ובלי מסגרת. הקו החשמלי לבדו, היעד קו דק, הצפי נקודות שזורמות אליו. מתחת הקצב.',
+  `${header}<div class="verdict"><div class="w">↓ יורד</div><div class="l">לכיוון היעד</div></div><canvas style="margin-top:10px"></canvas><div style="margin-top:14px">${rateBlock}</div>${foot}`,
+  ph => journey(ph.querySelector('canvas'), { w: 335, h: 380, pad: { l: 18, r: 18, t: 40, b: 30 }, seed: 3 }), 11);
+
+phone('V2. מכשיר', 'הכי פרקטי: הגרף בכרטיס זכוכית עם קווי משקל עדינים, ומתחתיו 3 מספרים: קצב, נשאר, צפי. פסק הדין כתווית קטנה.',
+  `${header}<div style="text-align:center"><span class="pill">↓ יורד · בטווח היעד</span></div>
+   <div class="card"><div class="ct"><b>המסע ליעד</b><span>חיטוב · 8 שבועות</span></div><canvas></canvas></div>
+   <div class="stats"><div><b class="n">${M}0.62</b><span>ק״ג לשבוע</span></div><div><b class="n">3.0</b><span>ק״ג נשארו</span></div><div><b>דצמבר</b><span>צפי הגעה</span></div></div>${foot}`,
+  ph => journey(ph.querySelector('canvas'), { w: 333, h: 380, pad: { l: 30, r: 18, t: 34, b: 24 }, axis: true, seed: 8 }), 23);
+
+phone('V3. אופק', 'המספר הגדול הוא המשקל הממוצע היום. מתחת הקו החשמלי נמתח כמו אופק לכל הרוחב, עם שני תגים: הקצב ומה נשאר.',
+  `${header}<div class="hero"><div class="k">ממוצע 4 שקילות</div><div class="v n">81.0<small>ק״ג</small></div>
+   <div class="chips"><span class="g">↓ <span class="n">${M}0.62</span> לשבוע · בטווח</span><span>נשארו <span class="n">3.0</span></span></div></div>
+   <canvas style="margin:18px -20px 0"></canvas>${foot}`,
+  ph => journey(ph.querySelector('canvas'), { w: 375, h: 400, pad: { l: 26, r: 26, t: 44, b: 26 }, todayLabel: '81.0', seed: 13 }), 31);
+
+setInterval(() => document.querySelectorAll('.clock').forEach(e => e.textContent = hhmm()), 10000);
+</script>
+</body>
+</html>
