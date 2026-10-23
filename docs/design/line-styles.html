@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Line styles</title>
+<!-- Design file only (sample data). Five live looks for the journey line, to pick the visual language (23.10.2026). -->
+<style>
+@font-face{font-family:Heebo;font-weight:500;src:url(../../fonts/heebo-hebrew-500-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:Heebo;font-weight:800;src:url(../../fonts/heebo-hebrew-800-normal.woff2) format("woff2"),url(../../fonts/heebo-latin-800-normal.woff2) format("woff2")}
+*{box-sizing:border-box}
+body{margin:0;background:#020309;color:#EEF1FF;font-family:Heebo,system-ui,sans-serif;padding:20px}
+h1{font-size:20px;margin:0 0 4px}.intro{color:#A9B0D6;font-size:13px;margin:0 0 16px}
+.grid{display:flex;flex-wrap:wrap;gap:18px}
+.sw{width:380px}
+.sw h2{font-size:16px;margin:0 0 2px}.sw p{font-size:13px;color:#A9B0D6;margin:0 0 8px;min-height:36px}
+.box{width:380px;height:320px;border-radius:24px;overflow:hidden;border:1px solid rgba(190,200,255,.10);
+  background:radial-gradient(100% 70% at 50% 50%,#13143f 0%,transparent 70%),#05060f}
+canvas{display:block}
+</style>
+</head>
+<body>
+<h1>איך הקו נראה: 5 סגנונות</h1>
+<p class="intro">אותם נתונים לדוגמה בכל אחד (8 שבועות, 86.0 → 81.0, יעד 78.0). בוחרים רק את המראה של הקו; המסך סביבו יבנה אחרי.</p>
+<div class="grid" id="g"></div>
+<script>
+const AVG = [86, 85.6, 84.9, 84.4, 83.7, 83.1, 82.4, 81.7, 81.0], TARGET = 78, ETA = 8 + 3 / .62;
+const W = 380, H = 320, PAD = { l: 26, r: 26, t: 46, b: 34 }, TMAX = ETA + .5, LO = 77.2, HI = 86.6;
+const X = t => PAD.l + t / TMAX * (W - PAD.l - PAD.r), Y = kg => PAD.t + (HI - kg) / (HI - LO) * (H - PAD.t - PAD.b);
+function rnd(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function smooth(P, step = 2) {
+  const out = [];
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || P[i + 1];
+    const n = Math.max(4, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step));
+    for (let k = 0; k < n; k++) { const t = k / n, t2 = t * t, t3 = t2 * t;
+      out.push([0, 1].map(j => .5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3))); }
+  }
+  out.push(P[P.length - 1]); return out;
+}
+const NODES = AVG.map((v, i) => [X(i), Y(v)]), PTS = smooth(NODES), HEAD = NODES[NODES.length - 1];
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function swatch(title, why, draw) {
+  const d = document.createElement('div'); d.className = 'sw';
+  d.innerHTML = `<h2>${title}</h2><p>${why}</p><div class="box"><canvas></canvas></div>`;
+  document.getElementById('g').append(d);
+  const cv = d.querySelector('canvas'), dpr = Math.min(devicePixelRatio || 1, 2);
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  const g = cv.getContext('2d'); g.scale(dpr, dpr);
+  const st = {};
+  const loop = ms => { g.clearRect(0, 0, W, H); frame(g); draw(g, ms, st); labels(g); if (!RM) requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+// shared quiet frame: target hairline, labels
+function frame(g) {
+  g.save(); g.setLineDash([2, 6]); g.strokeStyle = 'rgba(125,227,193,.4)'; g.beginPath(); g.moveTo(PAD.l, Y(TARGET)); g.lineTo(W - PAD.r, Y(TARGET)); g.stroke(); g.restore();
+}
+function labels(g) {
+  g.save(); g.direction = 'rtl';
+  g.font = '800 15px Heebo'; g.fillStyle = '#EEF1FF'; g.textAlign = 'center'; g.fillText('81.0', HEAD[0], HEAD[1] - 24);
+  g.font = '500 12px Heebo'; g.fillStyle = '#A9B0D6'; g.fillText('86.0', NODES[0][0] + 6, NODES[0][1] - 14);
+  g.fillStyle = '#7DE3C1'; g.textAlign = 'right'; g.fillText('יעד 78.0', W - PAD.r, Y(TARGET) + 20);
+  g.restore();
+}
+const path = (g, P) => { g.beginPath(); P.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); };
+function stroke(g, P, w, c, blur, bc) { g.save(); g.lineJoin = g.lineCap = 'round'; g.lineWidth = w; g.strokeStyle = c; if (blur) { g.shadowBlur = blur; g.shadowColor = bc || c; } path(g, P); g.stroke(); g.restore(); }
+// fractal bolt between a and b (midpoint displacement)
+function bolt(a, b, rough, depth, r) {
+  if (depth === 0) return [a, b];
+  const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const nx = -(b[1] - a[1]) / (len || 1), ny = (b[0] - a[0]) / (len || 1), d = (r() - .5) * len * rough;
+  const m = [mx + nx * d, my + ny * d];
+  return [...bolt(a, m, rough, depth - 1, r).slice(0, -1), ...bolt(m, b, rough, depth - 1, r)];
+}
+
+// 1. Lightning
+swatch('1. ברק', 'ברק אמיתי: זיגזג חד שמתחלף כל רגע, עם ענפים קצרים שמתפצלים ונעלמים. חי מאוד, דרמטי.', (g, ms, st) => {
+  const r = rnd(Math.floor(ms / 70));
+  if (!st.t || ms - st.t > 70) {
+    st.t = ms; st.main = [];
+    for (let i = 0; i < NODES.length - 1; i++) st.main.push(...bolt(NODES[i], NODES[i + 1], .22, 4, r).slice(i ? 1 : 0));
+    st.br = []; for (let k = 0; k < 3; k++) { const i = 2 + Math.floor(r() * (st.main.length - 4)), a = st.main[i], ang = Math.atan2(st.main[i + 1][1] - a[1], st.main[i + 1][0] - a[0]) + (r() < .5 ? -1 : 1) * (.5 + r() * .7), L = 18 + r() * 34;
+      st.br.push(bolt(a, [a[0] + Math.cos(ang) * L, a[1] + Math.sin(ang) * L], .35, 3, r)); }
+    st.flash = r() < .08 ? 1.6 : 1;
+  }
+  g.save(); g.globalCompositeOperation = 'lighter';
+  stroke(g, st.main, 12, `rgba(120,110,255,${.10 * st.flash})`, 24, '#7a6cff');
+  stroke(g, st.main, 3.5, `rgba(170,185,255,${.55 * st.flash})`, 8, '#aab9ff');
+  stroke(g, st.main, 1.3, '#ffffff');
+  for (const b of st.br) { stroke(g, b, 2, 'rgba(170,185,255,.45)', 6, '#aab9ff'); stroke(g, b, .8, 'rgba(255,255,255,.9)'); }
+  const cg = g.createRadialGradient(HEAD[0], HEAD[1], 0, HEAD[0], HEAD[1], 30 * st.flash); cg.addColorStop(0, 'rgba(230,235,255,.9)'); cg.addColorStop(.3, 'rgba(140,130,255,.35)'); cg.addColorStop(1, 'rgba(90,80,255,0)');
+  g.fillStyle = cg; g.beginPath(); g.arc(HEAD[0], HEAD[1], 30 * st.flash, 0, 7); g.fill(); g.restore();
+});
+
+// 2. Neon
+swatch('2. ניאון', 'צינור ניאון עבה וחלק כמו שלט, צבע תכלת רווי עם הילה חזקה. "זמזום" עדין: לפעמים מהבהב לרגע.', (g, ms, st) => {
+  const r = rnd(Math.floor(ms / 50)), hum = r() < .03 ? .45 : .92 + .08 * Math.sin(ms / 60);
+  g.save(); g.globalCompositeOperation = 'lighter';
+  stroke(g, PTS, 22, `rgba(0,190,255,${.08 * hum})`, 34, '#00bfff');
+  stroke(g, PTS, 9, `rgba(40,215,255,${.30 * hum})`, 14, '#28d7ff');
+  stroke(g, PTS, 4.5, `rgba(130,240,255,${.95 * hum})`);
+  stroke(g, PTS, 1.6, '#ffffff');
+  NODES.forEach((p, i) => { if (i === NODES.length - 1) return; g.fillStyle = `rgba(200,250,255,${.8 * hum})`; g.beginPath(); g.arc(p[0], p[1], 2.6, 0, 7); g.fill(); });
+  const cg = g.createRadialGradient(HEAD[0], HEAD[1], 0, HEAD[0], HEAD[1], 24); cg.addColorStop(0, 'rgba(220,255,255,1)'); cg.addColorStop(.35, 'rgba(40,215,255,.45)'); cg.addColorStop(1, 'rgba(0,190,255,0)');
+  g.fillStyle = cg; g.beginPath(); g.arc(HEAD[0], HEAD[1], 24, 0, 7); g.fill(); g.restore();
+});
+
+// 3. Particle stream
+const LEN = (() => { let s = 0; for (let i = 1; i < PTS.length; i++) s += Math.hypot(PTS[i][0] - PTS[i - 1][0], PTS[i][1] - PTS[i - 1][1]); return s; })();
+const at = u => { const f = u * (PTS.length - 1), i = Math.min(PTS.length - 2, Math.floor(f)), k = f - i, a = PTS[i], b = PTS[i + 1]; return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, b[0] - a[0], b[1] - a[1]]; };
+swatch('3. זרם של חלקיקים', 'אלפי נקודות אור זורמות לאורך הדרך, כמו הגלקסיה של מסך הבית, ומתרכזות בנקודה של היום. רך ויוקרתי.', (g, ms, st) => {
+  if (!st.p) { const r = rnd(4); st.p = Array.from({ length: 1400 }, () => ({ u: r(), sp: .03 + r() * .05, off: (r() + r() + r() - 1.5) * 4.2, s: .6 + r() * 1.3, h: r() })); st.last = ms; }
+  const dt = Math.min(ms - st.last, 50) / 1000; st.last = ms;
+  g.save(); g.globalCompositeOperation = 'lighter';
+  stroke(g, PTS, 10, 'rgba(110,120,255,.06)', 20, '#6e78ff');
+  for (const q of st.p) {
+    q.u += q.sp * dt; if (q.u > 1) q.u -= 1;
+    const [x, y, dx, dy] = at(q.u), l = Math.hypot(dx, dy) || 1, spread = .4 + .6 * (1 - q.u);
+    const px = x - dy / l * q.off * spread, py = y + dx / l * q.off * spread;
+    const a = (.25 + .55 * q.u) * (q.u > .97 ? (1 - q.u) / .03 : 1);
+    g.fillStyle = q.h < .5 ? `rgba(200,210,255,${a})` : `rgba(150,170,255,${a})`;
+    g.fillRect(px, py, q.s, q.s);
+  }
+  const cg = g.createRadialGradient(HEAD[0], HEAD[1], 0, HEAD[0], HEAD[1], 28); cg.addColorStop(0, 'rgba(235,240,255,.95)'); cg.addColorStop(.3, 'rgba(150,160,255,.35)'); cg.addColorStop(1, 'rgba(100,110,255,0)');
+  g.fillStyle = cg; g.beginPath(); g.arc(HEAD[0], HEAD[1], 28, 0, 7); g.fill(); g.restore();
+});
+
+// 4. Tesla arcs between the weigh-in points
+swatch('4. קשת טסלה', 'כל שבוע הוא אלקטרודה זוהרת, וביניהן קשתות חשמל דקות שקופצות ומתפתלות כל הזמן. רואים את הנקודות האמיתיות.', (g, ms, st) => {
+  const r = rnd(Math.floor(ms / 60));
+  g.save(); g.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < NODES.length - 1; i++) for (let k = 0; k < 3; k++) {
+    const b = bolt(NODES[i], NODES[i + 1], .5, 4, r);
+    stroke(g, b, 3, 'rgba(150,120,255,.10)', 10, '#9678ff'); stroke(g, b, .9, `rgba(215,215,255,${.35 + r() * .45})`);
+  }
+  NODES.forEach((p, i) => { const R = i === NODES.length - 1 ? 26 : 9, cg = g.createRadialGradient(p[0], p[1], 0, p[0], p[1], R);
+    cg.addColorStop(0, 'rgba(245,245,255,1)'); cg.addColorStop(.3, 'rgba(170,150,255,.5)'); cg.addColorStop(1, 'rgba(120,90,255,0)');
+    g.fillStyle = cg; g.beginPath(); g.arc(p[0], p[1], R, 0, 7); g.fill(); });
+  g.restore();
+});
+
+// 5. Clean premium: gradient line + area + a glint
+swatch('5. קו נקי עם ברק עובר', 'הכי נקי: קו חלק בהדרגה של צבע (סגול → תכלת → לבן), שטח זוהר עדין מתחתיו, וניצוץ אור אחד שחולף עליו מדי פעם.', (g, ms) => {
+  const grad = g.createLinearGradient(NODES[0][0], 0, HEAD[0], 0); grad.addColorStop(0, '#7b5cff'); grad.addColorStop(.6, '#5fc8ff'); grad.addColorStop(1, '#ffffff');
+  const area = g.createLinearGradient(0, PAD.t, 0, Y(TARGET)); area.addColorStop(0, 'rgba(110,140,255,.28)'); area.addColorStop(1, 'rgba(110,140,255,0)');
+  g.save(); path(g, PTS); g.lineTo(HEAD[0], Y(TARGET)); g.lineTo(NODES[0][0], Y(TARGET)); g.closePath(); g.fillStyle = area; g.fill(); g.restore();
+  stroke(g, PTS, 3, grad, 12, 'rgba(110,170,255,.9)');
+  const p = (ms / 3200) % 1; if (p < .6) { const [x, y] = at(p / .6), cg = g.createRadialGradient(x, y, 0, x, y, 22), a = Math.sin(p / .6 * Math.PI);
+    cg.addColorStop(0, `rgba(255,255,255,${a})`); cg.addColorStop(1, 'rgba(160,210,255,0)'); g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = cg; g.beginPath(); g.arc(x, y, 22, 0, 7); g.fill(); g.restore(); }
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(HEAD[0], HEAD[1], 5, 0, 7); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(HEAD[0], HEAD[1], 10 + 3 * Math.sin(ms / 400), 0, 7); g.stroke();
+});
+</script>
+</body>
+</html>
