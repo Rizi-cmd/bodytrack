@@ -214,7 +214,7 @@ svg .bar{fill:#3A3A37}
 
 /* ===== Dark home (redesign stage 1, docs/specs/redesign-stage1.md). Light screens keep the Swiss Lab tokens until stages 2–3. ===== */
 .home,.dark{
-  --bg:#060818;--ink:#EEF1FF;--mute:#B0B7DA;--faint:#8F97C6;--good:#4ADE80;--good-slow:#3FA56A;--bad:#FF7A70;--ice:#A9C4FF;
+  --bg:#060818;--ink:#EEF1FF;--mute:#B0B7DA;--faint:#8F97C6;--good:#7DE3C1;--good-slow:#4F9A86;--bad:#FF8F87;--ice:#A9C4FF;
   --hair:rgba(190,200,255,.15);--rule:rgba(190,200,255,.28);color-scheme:dark;color:var(--ink)}
 html.dk,html.dk body{background:#060818}
 /* status bar text is white (black-translucent): light screens get a dark strip under it */

@@ -4,7 +4,7 @@ Source: workshop decisions in `docs/PROJECT.md` §7 (23.10), prototype `docs/des
 Stage 1 replaces only the home (verdict) screen and the check-in / quick weigh-in screens. Analytics, photos, history and backup stay light until stages 2–3.
 
 ## 1. Look
-- Tokens (from the prototype): background `#060818`, ink `#EEF1FF`, muted `#B0B7DA`, faint `#8F97C6`, good `#4ADE80`, bad `#FF7A70`, ice `#A9C4FF`, hairline `rgba(190,200,255,.15)`.
+- Tokens (from the prototype): background `#060818`, ink `#EEF1FF`, muted `#B0B7DA`, faint `#8F97C6`, good `#7DE3C1` (soft mint, owner 23.10), bad `#FF8F87` (soft coral), ice `#A9C4FF`, hairline `rgba(190,200,255,.15)`.
 - Muted good (slow, see §3): good at about 55% strength, still with arrow + word. Checked for contrast ≥ 4.5:1 on the background.
 - Font: the app's self-hosted Heebo (static weights). No CDN.
 - All rules from PROJECT.md still hold: RTL, numbers LTR with the sign on the left (U+2212), min 12px, green/red only for goal direction with arrow + Hebrew word.
